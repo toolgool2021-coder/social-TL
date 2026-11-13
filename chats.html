@@ -1,0 +1,463 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090f1d">
+<title>Личные сообщения | TL Social</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #090f1d;
+  --panel: #121d30;
+  --line: #2c3a56;
+  --muted: #9baac5;
+  --accent: #7989ff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at 80% 0%, #1b2d50, transparent 55%), var(--bg);
+  color: #eaf0ff;
+  font: 15px system-ui, Arial, sans-serif;
+}
+header {
+  padding: 16px 5%;
+  background: #111b30;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+a { color: #9fb7ff; text-decoration: none; }
+main {
+  max-width: 1100px;
+  margin: 20px auto;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  padding: 0 12px;
+  height: calc(100dvh - 100px);
+  min-height: 400px;
+}
+section {
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, #142139, #101929);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+.head {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+h2 { margin: 0 0 12px; }
+input, button {
+  font: inherit;
+  border-radius: 12px;
+  padding: 12px;
+}
+input {
+  background: #0c1527;
+  color: white;
+  border: 1px solid #364663;
+  width: 100%;
+  outline: none;
+}
+input:focus { border-color: var(--accent); }
+button {
+  border: 0;
+  background: linear-gradient(120deg, #5575ec, #8c73f5);
+  color: white;
+  cursor: pointer;
+}
+button:disabled { opacity: .5; cursor: default; }
+.scroll {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+.person {
+  padding: 15px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background .2s;
+}
+.person:hover { background: #243653; }
+.person b { display: block; margin-bottom: 4px; }
+.bubble {
+  margin: 10px 14px;
+  padding: 11px 14px;
+  background: #293a59;
+  border-radius: 16px;
+  max-width: 80%;
+  width: max-content;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  animation: appear .2s ease;
+}
+.mine {
+  margin-left: auto;
+  background: linear-gradient(135deg, #485ec0, #6959b7);
+}
+.bubble small {
+  display: block;
+  text-align: right;
+  opacity: .7;
+  margin-top: 5px;
+  font-size: 10px;
+}
+.compose {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+}
+.compose button { min-width: 50px; }
+.muted { color: var(--muted); font-size: 13px; }
+.notice { padding: 15px; color: #ffc5c5; }
+.empty {
+  padding: 25px;
+  text-align: center;
+  color: var(--muted);
+}
+#back { display: none; }
+@keyframes appear {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media(max-width: 650px) {
+  main {
+    display: block;
+    height: calc(100dvh - 85px);
+    margin: 8px auto;
+  }
+  section { height: 100%; }
+  main:not(.open) #conversation,
+  main.open #sidebar { display: none; }
+  #back {
+    display: inline-block;
+    margin-right: 8px;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <strong>TL Social · Сообщения</strong>
+  <a href="./">← Главная</a>
+</header>
+
+<main id="layout">
+  <section id="sidebar">
+    <div class="head">
+      <h2>Личные сообщения</h2>
+      <input id="search" placeholder="Поиск пользователя">
+      <p class="muted">Найди человека и начни переписку</p>
+    </div>
+
+    <div id="people"></div>
+
+    <div class="head">
+      <b>Мои диалоги</b>
+    </div>
+
+    <div id="chats" class="scroll"></div>
+  </section>
+
+  <section id="conversation">
+    <div class="head">
+      <button id="back">←</button>
+      <b id="peer">Выбери собеседника</b>
+    </div>
+
+    <div id="error" class="notice" hidden></div>
+
+    <div id="messages" class="scroll">
+      <div class="empty">
+        Сообщения доступны только участникам диалога
+      </div>
+    </div>
+
+    <form id="form" class="compose">
+      <input
+        id="message"
+        maxlength="2000"
+        placeholder="Написать сообщение"
+        required
+        disabled
+        autocomplete="off"
+      >
+      <button id="send" disabled>➤</button>
+    </form>
+  </section>
+</main>
+
+<script type="module">
+import { initializeApp } from
+  'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+
+import { getAuth, onAuthStateChanged } from
+  'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDocs,
+  query,
+  where,
+  limit,
+  orderBy,
+  onSnapshot,
+  writeBatch,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",
+  authDomain: "toolchat-bfac8.firebaseapp.com",
+  projectId: "toolchat-bfac8",
+  storageBucket: "toolchat-bfac8.firebasestorage.app",
+  messagingSenderId: "52396840735",
+  appId: "1:52396840735:web:a608b9c037c8481f2dc22a",
+  measurementId: "G-WSR0SZ40M7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+let me = null;
+let users = {};
+let active = null;
+let stopMessages = null;
+let stopChats = null;
+
+const esc = s => String(s ?? '').replace(
+  /[&<>"']/g,
+  c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c])
+);
+
+const chatId = (a, b) => [a, b].sort().join('_');
+
+function showError(message) {
+  $('error').hidden = false;
+  $('error').textContent = message;
+}
+
+function personRow(uid, subtitle = '') {
+  return `
+    <div class="person" data-user="${esc(uid)}">
+      <b>${esc(users[uid]?.name || 'Пользователь')}</b>
+      <div class="muted">${esc(subtitle)}</div>
+    </div>
+  `;
+}
+
+function searchUsers() {
+  if (!me) return;
+
+  const term = $('search').value.toLowerCase().trim();
+
+  $('people').innerHTML = term
+    ? Object.keys(users)
+        .filter(uid =>
+          uid !== me.uid &&
+          users[uid].name?.toLowerCase().includes(term)
+        )
+        .slice(0, 20)
+        .map(uid => personRow(uid, 'Написать сообщение'))
+        .join('') || '<div class="empty">Не найдено</div>'
+    : '';
+}
+
+$('search').oninput = searchUsers;
+
+document.addEventListener('click', event => {
+  const item = event.target.closest('[data-user]');
+  if (item) openChat(item.dataset.user);
+});
+
+$('back').onclick = () => {
+  $('layout').classList.remove('open');
+};
+
+function openChat(uid) {
+  if (!me || uid === me.uid || !users[uid]) return;
+
+  active = uid;
+
+  $('layout').classList.add('open');
+  $('peer').textContent = users[uid].name;
+  $('message').disabled = false;
+  $('send').disabled = false;
+  $('error').hidden = true;
+
+  if (stopMessages) stopMessages();
+
+  const id = chatId(me.uid, uid);
+
+  stopMessages = onSnapshot(
+    query(
+      collection(db, 'chats', id, 'messages'),
+      orderBy('createdAt', 'asc'),
+      limit(200)
+    ),
+    snapshot => {
+      const element = $('messages');
+
+      element.innerHTML = snapshot.docs.map(document => {
+        const message = document.data();
+
+        const date = message.createdAt?.toDate?.()
+          .toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+          }) || '';
+
+        return `
+          <div class="bubble ${
+            message.senderId === me.uid ? 'mine' : ''
+          }">
+            ${esc(message.text)}
+            <small>${esc(date)}</small>
+          </div>
+        `;
+      }).join('') || '<div class="empty">Сообщений пока нет</div>';
+
+      element.scrollTop = element.scrollHeight;
+    },
+    error => showError('Ошибка загрузки: ' + error.message)
+  );
+}
+
+$('form').onsubmit = async event => {
+  event.preventDefault();
+
+  if (!me || !active) return;
+
+  const text = $('message').value.trim();
+
+  if (!text || text.length > 2000) return;
+
+  const id = chatId(me.uid, active);
+  const batch = writeBatch(db);
+
+  batch.set(
+    doc(db, 'chats', id),
+    {
+      participants: [me.uid, active].sort(),
+      updatedAt: serverTimestamp(),
+      lastText: text.slice(0, 100)
+    },
+    { merge: true }
+  );
+
+  batch.set(
+    doc(collection(db, 'chats', id, 'messages')),
+    {
+      senderId: me.uid,
+      text,
+      createdAt: serverTimestamp()
+    }
+  );
+
+  $('send').disabled = true;
+
+  try {
+    await batch.commit();
+    $('message').value = '';
+  } catch (error) {
+    showError('Ошибка отправки: ' + error.message);
+  } finally {
+    $('send').disabled = false;
+  }
+};
+
+onAuthStateChanged(auth, async user => {
+  if (stopChats) {
+    stopChats();
+    stopChats = null;
+  }
+
+  if (stopMessages) {
+    stopMessages();
+    stopMessages = null;
+  }
+
+  if (!user) {
+    me = null;
+    document.querySelector('main').innerHTML = `
+      <section style="padding:25px">
+        <h2>Войди в аккаунт</h2>
+        <p>Для использования личных сообщений нужна авторизация.</p>
+        <a href="./">Перейти на главную</a>
+      </section>
+    `;
+    return;
+  }
+
+  me = user;
+
+  try {
+    const snapshot = await getDocs(
+      query(collection(db, 'users'), limit(200))
+    );
+
+    users = {};
+
+    snapshot.forEach(document => {
+      users[document.id] = document.data();
+    });
+
+    searchUsers();
+
+    stopChats = onSnapshot(
+      query(
+        collection(db, 'chats'),
+        where('participants', 'array-contains', user.uid),
+        limit(100)
+      ),
+      snapshot => {
+        const chats = snapshot.docs.sort((a, b) =>
+          (b.data().updatedAt?.seconds || 0) -
+          (a.data().updatedAt?.seconds || 0)
+        );
+
+        $('chats').innerHTML = chats.map(document => {
+          const data = document.data();
+
+          const other = data.participants.find(
+            id => id !== user.uid
+          );
+
+          return personRow(
+            other,
+            data.lastText || 'Диалог'
+          );
+        }).join('') || '<div class="empty">Пока нет диалогов</div>';
+      },
+      error => showError(
+        'Ошибка списка диалогов: ' + error.message
+      )
+    );
+  } catch (error) {
+    showError('Ошибка пользователей: ' + error.message);
+  }
+});
+</script>
+</body>
+</html>
