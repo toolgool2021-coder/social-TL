@@ -50,7 +50,7 @@ const firebaseConfig = {
   measurementId: "G-WSR0SZ40M7"
 };
 
-const OWNER_UID = "FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
+const OWNER_UID = "ElpAtxZIBCZVsLBcLzgdsr8T1w2";
 
 const app = getApps()[0] || initializeApp(firebaseConfig);
 const auth = getAuth(app);
