@@ -7,7 +7,7 @@ import {
   deleteDoc,serverTimestamp,onSnapshot
 } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
-const firebaseConfig={
+const config={
   apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
   authDomain:'toolchat-bfac8.firebaseapp.com',
   projectId:'toolchat-bfac8',
@@ -16,107 +16,113 @@ const firebaseConfig={
   appId:'1:52396840735:web:a608b9c037c8481f2dc22a'
 };
 
-const app=getApps()[0]||initializeApp(firebaseConfig);
+const app=getApps()[0]||initializeApp(config);
 const auth=getAuth(app);
 const db=getFirestore(app);
 const $=id=>document.getElementById(id);
 
 let me=null;
-let activePanel=null;
-let noticeTimer=null;
+let panelName='';
 let presenceTimer=null;
-let stopNotifications=null;
-let stopPresence=null;
-let decoratedProfile=null;
+let profileUnsubscribe=null;
+let notificationsUnsubscribe=null;
+let currentProfileUid=null;
+let currentProfileName='';
+let profileRequest=0;
+let noticeTimeout=null;
 
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
-  '&':'&amp;',
-  '<':'&lt;',
-  '>':'&gt;',
-  '"':'&quot;',
-  "'":'&#39;'
-}[c]));
+const escapeHTML=value=>String(value??'').replace(
+  /[&<>"']/g,
+  char=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  })[char]
+);
 
-function notify(message){
-  const element=$('nx21notice');
-  if(!element)return;
-  clearTimeout(noticeTimer);
-  element.textContent=message;
-  element.hidden=false;
-  noticeTimer=setTimeout(()=>{
-    element.hidden=true;
-  },4000);
+function toast(message){
+  const box=$('nx21notice');
+  if(!box)return;
+
+  clearTimeout(noticeTimeout);
+  box.textContent=message;
+  box.hidden=false;
+
+  noticeTimeout=setTimeout(()=>{
+    box.hidden=true;
+  },4500);
 }
 
-function errorMessage(error){
+function errorText(error){
   if(error?.code==='permission-denied'){
-    return 'Firebase отклонил запрос. Проверь правила Firestore.';
+    return 'Нет доступа. Проверь Firestore Rules.';
   }
   return error?.message||'Неизвестная ошибка';
 }
 
-function dateLabel(timestamp){
-  if(!timestamp?.toDate)return '';
-  return timestamp.toDate().toLocaleString('ru-RU',{
+function formatTime(timestamp){
+  return timestamp?.toDate?.().toLocaleString('ru-RU',{
     day:'numeric',
     month:'short',
     hour:'2-digit',
     minute:'2-digit'
-  });
+  })||'';
 }
 
-function openPanel(kind){
+function showPanel(name){
   if(!me){
-    notify('Сначала войди в аккаунт');
+    toast('Сначала войди в аккаунт');
     return;
   }
 
-  activePanel=kind;
+  panelName=name;
 
   for(const page of ['feed','search','profile','settings']){
     $(page+'Page')?.classList.add('hidden');
   }
 
-  const panel=$('nx21panel');
-  panel.classList.remove('hidden');
+  $('nx21panel').classList.remove('hidden');
 
   $('nx21title').textContent={
     saved:'Сохранённые публикации',
     notifications:'Уведомления',
     verification:'Верификация'
-  }[kind]||'NEXORA';
+  }[name]||'NEXORA';
 
   $('nx21body').textContent='Загрузка...';
 
-  if(kind==='saved')loadSaved();
-  if(kind==='notifications')loadNotifications();
-  if(kind==='verification')loadVerification();
+  if(name==='saved')loadSaved();
+  if(name==='notifications')loadNotifications();
+  if(name==='verification')loadVerification();
 }
 
 function closePanel(){
-  activePanel=null;
+  panelName='';
   $('nx21panel')?.classList.add('hidden');
   $('feedPage')?.classList.remove('hidden');
 }
 
 document.querySelectorAll('[data-nx-panel]').forEach(button=>{
   button.addEventListener('click',()=>{
-    openPanel(button.dataset.nxPanel);
+    showPanel(button.dataset.nxPanel);
   });
 });
 
-$('nx21back').onclick=closePanel;
+if($('nx21back')){
+  $('nx21back').onclick=closePanel;
+}
 
 document.querySelectorAll('[data-page]').forEach(button=>{
   button.addEventListener('click',()=>{
-    activePanel=null;
+    panelName='';
     $('nx21panel')?.classList.add('hidden');
   });
 });
 
 async function loadSaved(){
   const body=$('nx21body');
-  if(!body)return;
 
   try{
     const snapshot=await getDocs(query(
@@ -124,106 +130,108 @@ async function loadSaved(){
       limit(100)
     ));
 
-    const elements=await Promise.all(
-      snapshot.docs.map(async item=>{
-        try{
-          const post=await getDoc(doc(db,'posts',item.id));
-          if(!post.exists())return null;
+    const html=await Promise.all(snapshot.docs.map(async saved=>{
+      const post=await getDoc(doc(db,'posts',saved.id));
 
-          const data=post.data();
+      if(!post.exists())return '';
 
-          return `
-            <article class="nx21item">
-              <p>${esc(data.text||'')}</p>
-              <small class="muted">
-                ${esc(dateLabel(data.createdAt))}
-              </small>
-              <div class="nx21actions">
-                <button type="button"
-                  data-nx-unsave="${esc(item.id)}">
-                  Убрать из сохранённого
-                </button>
-              </div>
-            </article>
-          `;
-        }catch{
-          return null;
-        }
-      })
-    );
+      const data=post.data();
 
-    if(activePanel!=='saved')return;
+      return `
+        <article class="nx21item">
+          <p>${escapeHTML(data.text||'')}</p>
+          <small class="muted">
+            ${escapeHTML(formatTime(data.createdAt))}
+          </small>
+          <div class="nx21actions">
+            <button type="button"
+              data-nx-unsave="${escapeHTML(saved.id)}">
+              Удалить из сохранённого
+            </button>
+          </div>
+        </article>
+      `;
+    }));
 
-    body.innerHTML=elements.filter(Boolean).join('')||
+    if(panelName!=='saved')return;
+
+    body.innerHTML=html.filter(Boolean).join('')||
       '<p class="muted">Сохранённых публикаций пока нет.</p>';
   }catch(error){
-    body.textContent=errorMessage(error);
+    if(panelName==='saved'){
+      body.textContent=errorText(error);
+    }
   }
 }
 
 async function loadNotifications(){
   const body=$('nx21body');
-  if(!body)return;
 
   try{
     const snapshot=await getDocs(query(
       collection(db,'users',me.uid,'notifications'),
-      limit(50)
+      limit(100)
     ));
-
-    if(activePanel!=='notifications')return;
 
     const records=snapshot.docs.sort((a,b)=>
       (b.data().createdAt?.seconds||0)-
       (a.data().createdAt?.seconds||0)
     );
 
+    if(panelName!=='notifications')return;
+
     body.innerHTML=records.map(item=>{
       const data=item.data();
 
       return `
         <div class="nx21item">
-          <p>${esc(data.text||'Уведомление')}</p>
+          <p>${escapeHTML(data.text||'Уведомление')}</p>
           <small class="muted">
-            ${esc(dateLabel(data.createdAt))}
+            ${escapeHTML(formatTime(data.createdAt))}
           </small>
+          ${data.read!==true?`
+            <div class="nx21actions">
+              <button data-nx-read="${escapeHTML(item.id)}">
+                Отметить прочитанным
+              </button>
+            </div>
+          `:''}
         </div>
       `;
     }).join('')||
       '<p class="muted">Уведомлений пока нет.</p>';
   }catch(error){
-    body.textContent=errorMessage(error);
+    if(panelName==='notifications'){
+      body.textContent=errorText(error);
+    }
   }
 }
 
 async function loadVerification(){
   const body=$('nx21body');
-  if(!body)return;
 
   try{
     const snapshot=await getDoc(
       doc(db,'verificationRequests',me.uid)
     );
 
-    if(activePanel!=='verification')return;
+    if(panelName!=='verification')return;
 
     if(snapshot.exists()){
-      const request=snapshot.data();
+      const data=snapshot.data();
       const status={
         pending:'На рассмотрении',
         approved:'Одобрена',
         rejected:'Отклонена'
-      }[request.status]||request.status;
+      }[data.status]||data.status;
 
       body.innerHTML=`
         <div class="nx21item">
           <h3>Твоя заявка</h3>
-          <p>Статус: <b>${esc(status)}</b></p>
-          <p class="muted">
-            ${esc(request.reason||'')}
-          </p>
+          <p>Статус: <b>${escapeHTML(status)}</b></p>
+          <p>${escapeHTML(data.reason||'')}</p>
           <small class="muted">
-            ${esc(dateLabel(request.createdAt))}
+            ${escapeHTML(formatTime(data.createdAt))}
           </small>
         </div>
       `;
@@ -233,8 +241,9 @@ async function loadVerification(){
     body.innerHTML=`
       <p class="muted">
         Верификация подтверждает статус аккаунта.
-        Подача заявки не гарантирует получение значка.
+        Заявка рассматривается администрацией.
       </p>
+
       <form id="nx21verifyForm" class="stack">
         <label>
           Тип верификации
@@ -249,10 +258,10 @@ async function loadVerification(){
         </label>
 
         <label>
-          Обоснование заявки
+          Обоснование
           <textarea id="nx21verifyReason"
             required minlength="15" maxlength="500"
-            placeholder="Почему твой аккаунт должен получить верификацию?"></textarea>
+            placeholder="Почему аккаунт должен получить верификацию?"></textarea>
         </label>
 
         <button class="primary" type="submit">
@@ -269,7 +278,7 @@ async function loadVerification(){
       const type=Number($('nx21verifyType').value);
 
       if(reason.length<15){
-        notify('Напиши более подробное обоснование');
+        toast('Обоснование слишком короткое');
         return;
       }
 
@@ -287,83 +296,114 @@ async function loadVerification(){
           }
         );
 
-        notify('Заявка отправлена');
+        toast('Заявка отправлена');
         await loadVerification();
       }catch(error){
-        notify(errorMessage(error));
+        toast(errorText(error));
       }finally{
         button.disabled=false;
       }
     };
   }catch(error){
-    body.textContent=errorMessage(error);
+    if(panelName==='verification'){
+      body.textContent=errorText(error);
+    }
   }
 }
 
-async function savePost(postId){
+async function savePost(id){
   await setDoc(
-    doc(db,'users',me.uid,'saved',postId),
+    doc(db,'users',me.uid,'saved',id),
     {
-      postId,
+      postId:id,
       createdAt:serverTimestamp()
     }
   );
-
-  notify('Публикация сохранена');
+  toast('Публикация сохранена');
 }
 
-async function removeSaved(postId){
+async function unsavePost(id){
   await deleteDoc(
-    doc(db,'users',me.uid,'saved',postId)
+    doc(db,'users',me.uid,'saved',id)
   );
-
-  notify('Удалено из сохранённого');
+  toast('Удалено из сохранённого');
   await loadSaved();
 }
 
-async function reportPost(postId){
-  const reason=prompt(
-    'Почему ты жалуешься на эту публикацию?'
-  );
+async function reportPost(id){
+  const reason=prompt('Укажи причину жалобы');
 
   if(reason===null)return;
 
-  const clean=reason.trim();
+  const text=reason.trim();
 
-  if(clean.length<10||clean.length>500){
-    notify('Причина должна содержать 10–500 символов');
+  if(text.length<10||text.length>500){
+    toast('Причина должна содержать 10–500 символов');
     return;
   }
 
   await addDoc(collection(db,'reports'),{
     reporterId:me.uid,
-    targetId:postId,
     kind:'post',
-    reason:clean,
+    targetId:id,
+    reason:text,
     status:'pending',
     createdAt:serverTimestamp()
   });
 
-  notify('Жалоба отправлена');
+  toast('Жалоба отправлена');
 }
 
-async function pinPost(postId){
+async function pinPost(id){
+  const post=await getDoc(doc(db,'posts',id));
+
+  if(!post.exists()){
+    throw Error('Публикация не найдена');
+  }
+
+  if(post.data().uid!==me.uid){
+    throw Error('Можно закреплять только свои публикации');
+  }
+
   await updateDoc(doc(db,'users',me.uid),{
-    pinnedPostId:postId
+    pinnedPostId:id
   });
 
-  notify('Публикация закреплена в профиле');
+  toast('Публикация закреплена');
+  refreshPinnedPost();
+}
+
+async function unpinPost(){
+  await updateDoc(doc(db,'users',me.uid),{
+    pinnedPostId:null
+  });
+
+  toast('Закрепление снято');
+  refreshPinnedPost();
+}
+
+async function markNotification(id){
+  await updateDoc(
+    doc(db,'users',me.uid,'notifications',id),
+    {read:true}
+  );
+
+  await loadNotifications();
 }
 
 document.addEventListener('click',async event=>{
   if(!me)return;
 
   const button=event.target.closest(
-    '[data-nx-save],[data-nx-unsave],'+
-    '[data-nx-report],[data-nx-pin]'
+    '[data-nx-save],'+
+    '[data-nx-unsave],'+
+    '[data-nx-report],'+
+    '[data-nx-pin],'+
+    '[data-nx-unpin],'+
+    '[data-nx-read]'
   );
 
-  if(!button)return;
+  if(!button||button.disabled)return;
 
   button.disabled=true;
 
@@ -371,14 +411,18 @@ document.addEventListener('click',async event=>{
     if(button.dataset.nxSave){
       await savePost(button.dataset.nxSave);
     }else if(button.dataset.nxUnsave){
-      await removeSaved(button.dataset.nxUnsave);
+      await unsavePost(button.dataset.nxUnsave);
     }else if(button.dataset.nxReport){
       await reportPost(button.dataset.nxReport);
     }else if(button.dataset.nxPin){
       await pinPost(button.dataset.nxPin);
+    }else if(button.hasAttribute('data-nx-unpin')){
+      await unpinPost();
+    }else if(button.dataset.nxRead){
+      await markNotification(button.dataset.nxRead);
     }
   }catch(error){
-    notify(errorMessage(error));
+    toast(errorText(error));
   }finally{
     button.disabled=false;
   }
@@ -388,8 +432,8 @@ function decoratePosts(){
   document.querySelectorAll('[data-post]').forEach(post=>{
     if(post.querySelector('.nx21actions'))return;
 
-    const postId=post.dataset.post;
-    if(!postId)return;
+    const id=post.dataset.post;
+    if(!id)return;
 
     const actions=document.createElement('div');
     actions.className='nx21actions';
@@ -397,24 +441,22 @@ function decoratePosts(){
     const save=document.createElement('button');
     save.type='button';
     save.textContent='☆ Сохранить';
-    save.dataset.nxSave=postId;
+    save.dataset.nxSave=id;
 
     const report=document.createElement('button');
     report.type='button';
     report.textContent='⚑ Жалоба';
-    report.dataset.nxReport=postId;
+    report.dataset.nxReport=id;
 
     actions.append(save,report);
 
-    const own=post.querySelector(
-      '[data-action="delete-post"]'
-    );
-
-    if(own){
+    // В действующем app.js эта кнопка есть
+    // только у автора публикации.
+    if(post.querySelector('[data-action="delete-post"]')){
       const pin=document.createElement('button');
       pin.type='button';
       pin.textContent='📌 Закрепить';
-      pin.dataset.nxPin=postId;
+      pin.dataset.nxPin=id;
       actions.append(pin);
     }
 
@@ -422,63 +464,175 @@ function decoratePosts(){
   });
 }
 
-async function showPresence(uid,element){
-  stopPresence?.();
-  stopPresence=null;
+async function refreshPinnedPost(){
+  const profile=$('profilePage');
+  const posts=$('profilePosts');
 
-  if(!uid||!element)return;
+  if(!profile||!posts||profile.classList.contains('hidden')){
+    return;
+  }
 
-  stopPresence=onSnapshot(
-    doc(db,'presence',uid),
-    snapshot=>{
-      if(!element.isConnected)return;
+  const uid=currentProfileUid;
+  if(!uid)return;
 
-      if(!snapshot.exists()){
-        element.textContent='Статус неизвестен';
-        return;
-      }
+  const token=++profileRequest;
 
-      const seen=snapshot.data().lastSeen?.toMillis?.();
+  try{
+    const profileSnapshot=await getDoc(
+      doc(db,'users',uid)
+    );
 
-      if(!seen){
-        element.textContent='Статус неизвестен';
-        return;
-      }
-
-      const age=Date.now()-seen;
-      const online=age>=0&&age<120000;
-
-      element.textContent=online
-        ?'● Недавно был активен'
-        :'○ Не в сети';
-      element.classList.toggle('nx21online',online);
-    },
-    ()=>{
-      element.textContent='Статус скрыт';
+    if(token!==profileRequest||currentProfileUid!==uid){
+      return;
     }
-  );
+
+    const pinnedId=profileSnapshot.data()?.pinnedPostId;
+
+    posts.querySelectorAll('.nx21pinned').forEach(el=>{
+      el.classList.remove('nx21pinned');
+      el.querySelector('.nx21pinlabel')?.remove();
+    });
+
+    const oldUnpin=$('nx21unpin');
+    oldUnpin?.remove();
+
+    if(!pinnedId)return;
+
+    let article=[...posts.querySelectorAll('[data-post]')]
+      .find(el=>el.dataset.post===pinnedId);
+
+    // Публикация могла не попасть в первые 50
+    // загруженных постов.
+    if(!article){
+      const snapshot=await getDoc(
+        doc(db,'posts',pinnedId)
+      );
+
+      if(!snapshot.exists()||snapshot.data().uid!==uid){
+        return;
+      }
+
+      article=document.createElement('article');
+      article.className='glass panel';
+      article.dataset.post=pinnedId;
+
+      const text=document.createElement('div');
+      text.className='posttext';
+      text.textContent=snapshot.data().text||'';
+
+      article.append(text);
+    }
+
+    if(token!==profileRequest||currentProfileUid!==uid){
+      return;
+    }
+
+    posts.prepend(article);
+    article.classList.add('nx21pinned');
+
+    const label=document.createElement('div');
+    label.className='nx21pinlabel muted';
+    label.textContent='📌 Закреплённая публикация';
+    article.prepend(label);
+
+    if(uid===me?.uid){
+      const button=document.createElement('button');
+      button.id='nx21unpin';
+      button.className='quiet';
+      button.textContent='Снять закрепление';
+      button.dataset.nxUnpin='';
+      $('profileControls')?.append(button);
+    }
+
+    decoratePosts();
+  }catch(error){
+    console.warn('Pinned post:',error.message);
+  }
 }
 
-function decorateProfile(){
-  const name=$('profileName');
+function stopProfilePresence(){
+  profileUnsubscribe?.();
+  profileUnsubscribe=null;
+}
+
+function watchProfilePresence(uid){
+  stopProfilePresence();
+
   const controls=$('profileControls');
+  if(!controls)return;
 
-  if(!name||!controls||!me)return;
-  if(name.textContent==='Загрузка...')return;
-
-  const uid=window.__nxProfileUid||null;
-
-  if(controls.querySelector('.nx21status'))return;
+  controls.querySelector('.nx21status')?.remove();
 
   const status=document.createElement('span');
   status.className='nx21status';
   status.textContent='Статус неизвестен';
-
   controls.append(status);
 
-  if(uid){
-    showPresence(uid,status);
+  profileUnsubscribe=onSnapshot(
+    doc(db,'presence',uid),
+    snapshot=>{
+      if(currentProfileUid!==uid||!status.isConnected){
+        return;
+      }
+
+      const seen=snapshot.data()?.lastSeen?.toMillis?.();
+
+      if(!seen){
+        status.textContent='Статус неизвестен';
+        return;
+      }
+
+      const online=Date.now()-seen<120000;
+
+      status.textContent=online
+        ?'● Недавно был активен'
+        :'○ Не в сети';
+
+      status.classList.toggle('nx21online',online);
+    },
+    ()=>{
+      status.textContent='Статус недоступен';
+    }
+  );
+}
+
+function observeProfile(){
+  const name=$('profileName');
+  const controls=$('profileControls');
+
+  if(!name||!controls||!me)return;
+  if($('profilePage')?.classList.contains('hidden'))return;
+  if(!name.textContent.trim()||
+     name.textContent.trim()==='Загрузка...')return;
+
+  const label=name.textContent.trim();
+
+  // У app.js нет публичного API для viewUid.
+  // Поэтому используем UID из ссылки на ЛС,
+  // которую он создаёт при просмотре чужого профиля.
+  const messageLink=controls.querySelector(
+    'a[href*="chats.html?user="]'
+  );
+
+  let uid=me.uid;
+
+  if(messageLink){
+    try{
+      uid=new URL(messageLink.href,location.href)
+        .searchParams.get('user')||me.uid;
+    }catch{}
   }
+
+  const changed=uid!==currentProfileUid||
+    label!==currentProfileName;
+
+  if(!changed)return;
+
+  currentProfileUid=uid;
+  currentProfileName=label;
+
+  watchProfilePresence(uid);
+  refreshPinnedPost();
 }
 
 async function heartbeat(){
@@ -490,7 +644,7 @@ async function heartbeat(){
       lastSeen:serverTimestamp()
     },{merge:true});
   }catch(error){
-    console.warn('Nexora presence:',error.message);
+    console.warn('Presence:',error.message);
   }
 }
 
@@ -498,11 +652,15 @@ onAuthStateChanged(auth,async user=>{
   me=user;
 
   clearInterval(presenceTimer);
-  stopNotifications?.();
-  stopNotifications=null;
+  notificationsUnsubscribe?.();
+  notificationsUnsubscribe=null;
+  stopProfilePresence();
+
+  currentProfileUid=null;
+  currentProfileName='';
 
   if(!user){
-    activePanel=null;
+    panelName='';
     $('nx21panel')?.classList.add('hidden');
     return;
   }
@@ -513,11 +671,11 @@ onAuthStateChanged(auth,async user=>{
 
   presenceTimer=setInterval(heartbeat,60000);
 
-  stopNotifications=onSnapshot(
+  notificationsUnsubscribe=onSnapshot(
     collection(db,'users',user.uid,'notifications'),
     snapshot=>{
       const count=snapshot.docs.filter(
-        d=>d.data().read!==true
+        item=>item.data().read!==true
       ).length;
 
       const button=document.querySelector(
@@ -530,28 +688,40 @@ onAuthStateChanged(auth,async user=>{
           :'Уведомления';
       }
     },
-    error=>{
-      console.warn('Notifications:',error.message);
-    }
+    error=>console.warn('Notifications:',error.message)
   );
 });
 
-const observer=new MutationObserver(records=>{
-  const relevant=records.some(record=>
-    [...record.addedNodes].some(node=>
-      node.nodeType===1 &&
-      !node.classList?.contains('nx21actions')
-    )
-  );
+// Наблюдаем только за обновлением ленты и профиля,
+// а не за всеми изменениями страницы.
+let scheduled=false;
 
-  if(!relevant)return;
+const observer=new MutationObserver(()=>{
+  if(scheduled)return;
 
-  decoratePosts();
+  scheduled=true;
+
+  requestAnimationFrame(()=>{
+    scheduled=false;
+    decoratePosts();
+    observeProfile();
+  });
 });
 
-observer.observe(document.body,{
-  childList:true,
-  subtree:true
-});
+for(const id of [
+  'feedList',
+  'profilePosts',
+  'profileControls',
+  'profileName'
+]){
+  const element=$(id);
+
+  if(element){
+    observer.observe(element,{
+      childList:true,
+      subtree:true
+    });
+  }
+}
 
 decoratePosts();
