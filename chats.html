@@ -5,13 +5,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080d19">
-<title>Сообщения | NEXORA 2.2</title>
+<title>NEXORA 2.2 | Сообщения</title>
 <style>
 :root{
  color-scheme:dark;
- --bg:#080d19;--panel:#141d31ed;
- --line:#ffffff20;--text:#edf3ff;
- --muted:#9baac5;--blue:#82a9ff
+ --bg:#080d19;
+ --panel:#141d31ed;
+ --line:#ffffff20;
+ --text:#edf3ff;
+ --muted:#9baac5;
+ --blue:#82a9ff
 }
 *{box-sizing:border-box}
 body{
@@ -22,16 +25,17 @@ body{
  radial-gradient(ellipse at 90% 90%,#6743ac30,transparent 55%),
  var(--bg)
 }
-button,input,select{font:inherit}
+button,input,textarea,select{font:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
 a{color:#b3c9ff;text-decoration:none}
+[hidden]{display:none!important}
 header{
  height:64px;padding:0 max(16px,calc((100vw - 1180px)/2));
  display:flex;align-items:center;justify-content:space-between;
  background:#0c1424ee;border-bottom:1px solid var(--line)
 }
-.brand{font-size:19px;font-weight:900;letter-spacing:.4px}
+.brand{font-size:19px;font-weight:900}
 .brand span{font-size:10px;color:var(--blue)}
 #layout{
  max-width:1180px;height:calc(100dvh - 88px);
@@ -46,18 +50,17 @@ header{
 }
 .head{padding:17px;border-bottom:1px solid var(--line)}
 .head h2{margin:0 0 14px}
-input{
+input,textarea{
  width:100%;min-width:0;padding:12px 14px;color:white;
  background:#0b1424;border:1px solid #394861;
  border-radius:12px;outline:none
 }
-input:focus{border-color:var(--blue)}
+input:focus,textarea:focus{border-color:var(--blue)}
 .scroll{overflow:auto;flex:1;min-height:0}
 .person{
  width:100%;display:flex;gap:11px;align-items:center;
  padding:13px;color:var(--text);background:transparent;
- border:0;border-bottom:1px solid var(--line);
- text-align:left;transition:background .15s
+ border:0;border-bottom:1px solid var(--line);text-align:left
 }
 .person:hover,.person.active{background:#34466b80}
 .avatar{
@@ -68,13 +71,13 @@ input:focus{border-color:var(--blue)}
 }
 .avatar img{width:100%;height:100%;object-fit:cover}
 .person-info{min-width:0;flex:1}
-.person-name{
- font-weight:750;display:inline-flex;
- align-items:center;gap:5px;flex-wrap:wrap
+.person-name,#peer{
+ display:flex;align-items:center;gap:5px;
+ flex-wrap:wrap;font-weight:800
 }
+#peer{font-size:16px}
 .verified-icon{
- width:18px;height:18px;object-fit:contain;
- vertical-align:middle;flex-shrink:0
+ width:18px;height:18px;object-fit:contain
 }
 .preview{
  margin-top:5px;color:var(--muted);font-size:12px;
@@ -86,14 +89,10 @@ input:focus{border-color:var(--blue)}
  color:var(--muted);line-height:1.6
 }
 .chathead{
- display:flex;align-items:center;gap:12px;padding:14px;
- min-height:74px;border-bottom:1px solid var(--line)
+ display:flex;align-items:center;gap:12px;
+ padding:14px;min-height:74px;border-bottom:1px solid var(--line)
 }
 #peerInfo{min-width:0;flex:1}
-#peer{
- font-size:16px;font-weight:800;display:flex;
- align-items:center;gap:6px;flex-wrap:wrap
-}
 #peerStatus{margin-top:5px}
 .online{color:#78e6b0}
 .typing{color:#9db5ff}
@@ -101,12 +100,21 @@ input:focus{border-color:var(--blue)}
  padding:9px 12px;border-bottom:1px solid var(--line)
 }
 .chattools input{padding:9px 11px}
+#pinned{
+ padding:10px 14px;background:#253657;
+ border-bottom:1px solid var(--line);
+ display:flex;align-items:center;gap:10px
+}
+#pinnedText{
+ min-width:0;flex:1;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap
+}
 #messages{
  padding:12px 0;display:flex;flex-direction:column;
  scroll-behavior:smooth
 }
 .bubble{
- width:max-content;max-width:min(75%,470px);
+ width:max-content;max-width:min(82%,500px);
  margin:5px 14px;padding:11px 14px;
  border:1px solid #ffffff12;
  border-radius:17px 17px 17px 5px;
@@ -121,32 +129,45 @@ input:focus{border-color:var(--blue)}
  display:block;margin-top:7px;text-align:right;
  opacity:.75;font-size:10px
 }
-.bubble.sticker{padding:5px;border:0;background:transparent}
+.bubble.sticker{background:transparent;border:0}
 .sticker img{
  width:150px;height:150px;max-width:100%;object-fit:contain
 }
-.replybtn{
- display:block;margin-top:8px;padding:5px 9px;
- border:0;border-radius:8px;background:#ffffff18;
- color:#e6edff;font-size:11px
+.message-actions{
+ display:flex;flex-wrap:wrap;gap:5px;
+ margin-top:8px
 }
-.replybtn:hover{background:#ffffff30}
+.message-actions button,.reaction{
+ padding:5px 8px;color:#eaf1ff;
+ background:#ffffff17;border:1px solid #ffffff17;
+ border-radius:8px;font-size:11px
+}
+.message-actions button:hover,.reaction:hover{
+ background:#ffffff30
+}
+.reactions{
+ display:flex;flex-wrap:wrap;gap:5px;margin-top:7px
+}
+.reaction.selected{
+ background:#91aaff50;border-color:#b5c7ff
+}
+.reply-preview{
+ padding:7px 9px;margin-bottom:8px;
+ border-left:3px solid #a4baff;
+ background:#ffffff13;border-radius:5px;
+ font-size:12px;opacity:.9
+}
+.compose-wrap{
+ position:relative;border-top:1px solid var(--line)
+}
 .replybar{
  display:flex;align-items:center;justify-content:space-between;
  gap:10px;padding:10px 14px;background:#223450;
- border-bottom:1px solid var(--line);
- color:#c9d9ff;font-size:12px
+ font-size:12px
 }
 #replyText{
  min-width:0;overflow:hidden;
  text-overflow:ellipsis;white-space:nowrap
-}
-.replybar button{
- border:0;background:transparent;
- color:white;font-size:20px
-}
-.compose-wrap{
- position:relative;border-top:1px solid var(--line)
 }
 #form{
  display:flex;align-items:center;gap:8px;padding:12px
@@ -157,19 +178,18 @@ input:focus{border-color:var(--blue)}
  border:1px solid #40506d;background:#20304c
 }
 .primary{
- border:0;
- background:linear-gradient(120deg,#4779eb,#8b74ef);
+ border:0;background:linear-gradient(120deg,#4779eb,#8b74ef);
  font-weight:750
 }
 #stickerPanel{
- position:absolute;bottom:calc(100% + 5px);left:10px;
- z-index:5;width:min(360px,calc(100vw - 40px));
+ position:absolute;bottom:calc(100% + 5px);
+ left:10px;z-index:5;
+ width:min(360px,calc(100vw - 40px));
  max-height:340px;display:flex;flex-direction:column;
  overflow:hidden;border:1px solid #526487;
  border-radius:15px;background:#17243c;
  box-shadow:0 15px 45px #0009
 }
-[hidden]{display:none!important}
 .sticker-head{
  display:flex;gap:8px;padding:12px;
  border-bottom:1px solid var(--line)
@@ -186,7 +206,6 @@ input:focus{border-color:var(--blue)}
  padding:5px;background:#ffffff09;
  border:1px solid transparent;border-radius:10px
 }
-#stickerGrid button:hover{border-color:var(--blue)}
 #stickerGrid img{
  width:100%;aspect-ratio:1;object-fit:contain
 }
@@ -194,16 +213,32 @@ input:focus{border-color:var(--blue)}
  padding:12px;color:#ffb9c0;
  background:#7a273035;font-size:12px
 }
-#back{display:none}
 .loading{
  display:flex;align-items:center;justify-content:center;
- gap:10px;padding:24px;color:var(--muted);font-size:13px
+ gap:10px;padding:24px;color:var(--muted)
 }
 .spinner{
  width:17px;height:17px;border-radius:50%;
  border:2px solid #ffffff25;border-top-color:#92b3ff;
  animation:spin .7s linear infinite
 }
+.dialog-overlay{
+ position:fixed;inset:0;z-index:50;
+ display:grid;place-items:center;padding:18px;
+ background:#030712bc;backdrop-filter:blur(7px)
+}
+.dialog{
+ width:min(440px,100%);padding:22px;
+ background:#19253e;border:1px solid #ffffff30;
+ border-radius:19px;box-shadow:0 20px 70px #0008
+}
+.dialog h3{margin:0 0 12px}
+.dialog textarea{min-height:120px;resize:vertical}
+.dialog-actions{
+ display:flex;justify-content:flex-end;
+ gap:9px;margin-top:15px
+}
+#back{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes rise{
  from{opacity:0;transform:translateY(6px)}
@@ -219,7 +254,8 @@ input:focus{border-color:var(--blue)}
  #layout:not(.open) #conversation,
  #layout.open #sidebar{display:none}
  #back{display:block}
- .bubble{max-width:85%}
+ .bubble{max-width:88%}
+ .message-actions button{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){
  .bubble{animation:none}
@@ -228,7 +264,6 @@ input:focus{border-color:var(--blue)}
 </style>
 </head>
 <body>
-
 <header>
  <div class="brand">NEXORA <span>2.2</span></div>
  <a href="./index.html">← Главная</a>
@@ -263,10 +298,15 @@ input:focus{border-color:var(--blue)}
 
   <div id="error" hidden></div>
 
+  <div id="pinned" hidden>
+   <span>📌</span>
+   <span id="pinnedText"></span>
+   <button id="unpin" class="action" type="button">×</button>
+  </div>
+
   <div class="chattools">
    <input id="chatSearch" type="search"
-    placeholder="Поиск в переписке"
-    aria-label="Поиск в переписке">
+    placeholder="Поиск в переписке">
   </div>
 
   <div id="messages" class="scroll">
@@ -276,8 +316,7 @@ input:focus{border-color:var(--blue)}
   <div class="compose-wrap">
    <div id="replyBar" class="replybar" hidden>
     <span id="replyText"></span>
-    <button id="cancelReply" type="button"
-     aria-label="Отменить ответ">×</button>
+    <button id="cancelReply" class="action" type="button">×</button>
    </div>
 
    <div id="stickerPanel" hidden>
@@ -299,6 +338,18 @@ input:focus{border-color:var(--blue)}
  </section>
 </main>
 
+<div id="editOverlay" class="dialog-overlay" hidden>
+ <div class="dialog" role="dialog" aria-modal="true"
+  aria-labelledby="editTitle">
+  <h3 id="editTitle">Редактировать сообщение</h3>
+  <textarea id="editText" maxlength="2000"></textarea>
+  <div class="dialog-actions">
+   <button id="editCancel" class="action">Отмена</button>
+   <button id="editSave" class="primary">Сохранить</button>
+  </div>
+ </div>
+</div>
+
 <script type="module">
 import {initializeApp} from
 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
@@ -309,7 +360,8 @@ import {getAuth,onAuthStateChanged} from
 import {
  getFirestore,collection,doc,getDoc,getDocs,
  query,where,limit,orderBy,onSnapshot,
- writeBatch,serverTimestamp,setDoc
+ writeBatch,serverTimestamp,setDoc,
+ updateDoc,deleteDoc
 } from
 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
@@ -335,14 +387,20 @@ let stopChats=null;
 let stopPresence=null;
 let stopTyping=null;
 let currentMessages=[];
+let chatRecords=[];
 let typingTimeout=null;
 let typingActive=false;
 let reading=false;
 let chatGeneration=0;
 let peerOnline=false;
 let peerTyping=false;
-let chatRecords=[];
 let replyTo=null;
+let editingId=null;
+let pinnedId=null;
+let pinnedText='';
+let actionBusy=false;
+
+const EMOJIS=['❤️','👍','😂','😮','😢','🔥'];
 
 const escapeHTML=value=>String(value??'').replace(
  /[&<>"']/g,
@@ -356,11 +414,15 @@ function chatId(a,b){
  return [a,b].sort().join('_');
 }
 
+function currentChatId(){
+ return activeUid&&me?chatId(me.uid,activeUid):null;
+}
+
 function safeImage(url){
  try{
   const parsed=new URL(url);
   return parsed.protocol==='https:' &&
-   !parsed.username && !parsed.password ? parsed.href:'';
+   !parsed.username&&!parsed.password?parsed.href:'';
  }catch{return ''}
 }
 
@@ -368,8 +430,8 @@ function avatar(user){
  const url=safeImage(user?.avatarUrl);
  return url
   ?`<img src="${escapeHTML(url)}" alt=""
-      loading="lazy" referrerpolicy="no-referrer"
-      onerror="this.remove()">`
+    loading="lazy" referrerpolicy="no-referrer"
+    onerror="this.remove()">`
   :escapeHTML((user?.name||'N').slice(0,2).toUpperCase());
 }
 
@@ -377,10 +439,10 @@ function badge(user){
  const v=Number(user?.verification||0);
  return v>=1&&v<=5
   ?`<img class="verified-icon"
-     src="./image/Verified_${v}.png"
-     alt="Верификация"
-     title="Верифицированный аккаунт"
-     onerror="this.remove()">`
+    src="./image/Verified_${v}.png"
+    alt="Верификация"
+    title="Верифицированный аккаунт"
+    onerror="this.remove()">`
   :'';
 }
 
@@ -458,6 +520,11 @@ function updatePeerStatus(){
  }
 }
 
+function clearReply(){
+ replyTo=null;
+ $('replyBar').hidden=true;
+}
+
 function stopActive(){
  stopMessages?.();
  stopPresence?.();
@@ -472,10 +539,14 @@ function stopActive(){
  peerOnline=false;
  peerTyping=false;
  currentMessages=[];
- replyTo=null;
+ pinnedId=null;
+ pinnedText='';
+ editingId=null;
+ clearReply();
 
- $('replyBar').hidden=true;
+ $('pinned').hidden=true;
  $('chatSearch').value='';
+ $('editOverlay').hidden=true;
 
  chatGeneration++;
 }
@@ -496,6 +567,11 @@ function renderChatList(){
  '<div class="empty">Диалогов пока нет</div>';
 }
 
+function renderPinned(){
+ $('pinned').hidden=!pinnedId;
+ $('pinnedText').textContent=pinnedText||'Сообщение';
+}
+
 async function openChat(uid){
  if(!me||uid===me.uid)return;
 
@@ -504,8 +580,11 @@ async function openChat(uid){
  const generation=chatGeneration;
 
  clearError();
-
  $('layout').classList.add('open');
+ $('message').disabled=true;
+ $('send').disabled=true;
+ $('stickers').disabled=true;
+
  $('messages').innerHTML=`
   <div class="loading">
    <span class="spinner"></span>
@@ -522,7 +601,6 @@ async function openChat(uid){
    }
 
    if(generation!==chatGeneration)return;
-
    users[uid]=snapshot.data();
   }catch(error){
    if(generation===chatGeneration){
@@ -559,7 +637,7 @@ async function openChat(uid){
    const lastSeen=snapshot.data()?.lastSeen?.toMillis?.();
 
    peerOnline=Boolean(
-    lastSeen && Math.abs(Date.now()-lastSeen)<120000
+    lastSeen&&Math.abs(Date.now()-lastSeen)<120000
    );
 
    updatePeerStatus();
@@ -576,9 +654,7 @@ async function openChat(uid){
    const last=data?.updatedAt?.toMillis?.()||0;
 
    peerTyping=Boolean(
-    data?.typing &&
-    last &&
-    Math.abs(Date.now()-last)<10000
+    data?.typing&&last&&Math.abs(Date.now()-last)<10000
    );
 
    updatePeerStatus();
@@ -606,6 +682,27 @@ async function openChat(uid){
    'Не удалось загрузить переписку: '+error.message
   )
  );
+
+ // Закрепление хранится в документе самого диалога.
+ const chatRef=doc(db,'chats',id);
+
+ const unsubscribePin=onSnapshot(
+  chatRef,
+  snapshot=>{
+   if(generation!==chatGeneration)return;
+
+   pinnedId=snapshot.data()?.pinnedMessageId||null;
+   pinnedText=snapshot.data()?.pinnedText||'';
+   renderPinned();
+  },
+  error=>console.warn('Pinned:',error.message)
+ );
+
+ const previousStop=stopMessages;
+ stopMessages=()=>{
+  previousStop?.();
+  unsubscribePin();
+ };
 }
 
 function stickerSource(key){
@@ -614,13 +711,9 @@ function stickerSource(key){
  const parts=key.split('/');
  if(parts.length!==2)return '';
 
- const pack=STICKER_PACKS.find(
-  p=>p.id===parts[0]
- );
+ const pack=STICKER_PACKS.find(p=>p.id===parts[0]);
 
- if(!pack||!pack.files.includes(parts[1])){
-  return '';
- }
+ if(!pack||!pack.files.includes(parts[1]))return '';
 
  return './image/stic/'+parts[0]+'/'+parts[1];
 }
@@ -637,15 +730,13 @@ function renderMessages(){
 
  box.innerHTML=visible.map(message=>{
   const mine=message.senderId===me.uid;
+  const isSticker=message.type==='sticker';
+  const src=isSticker?stickerSource(message.sticker):'';
 
   const time=message.createdAt?.toDate?.()
    .toLocaleTimeString('ru-RU',{
-    hour:'2-digit',
-    minute:'2-digit'
+    hour:'2-digit',minute:'2-digit'
    })||'';
-
-  const isSticker=message.type==='sticker';
-  const src=isSticker?stickerSource(message.sticker):'';
 
   const content=isSticker
    ?src
@@ -653,22 +744,66 @@ function renderMessages(){
     :'<span>Стикер недоступен</span>'
    :escapeHTML(message.text||'');
 
-  const status=mine
-   ?message.readAt?' · Прочитано':' · Отправлено'
-   :'';
+  const reactions=message.reactions||{};
+  const reactionButtons=EMOJIS.map(emoji=>{
+   const ids=Array.isArray(reactions[emoji])
+    ?reactions[emoji]:[];
+
+   const selected=ids.includes(me.uid);
+
+   return `
+    <button class="reaction ${selected?'selected':''}"
+     data-react="${escapeHTML(emoji)}"
+     data-id="${escapeHTML(message.id)}">
+     ${emoji}${ids.length?' '+ids.length:''}
+    </button>
+   `;
+  }).join('');
 
   return `
-   <div class="bubble
-    ${mine?'mine':''}
-    ${isSticker?'sticker':''}">
-    ${content}
-    <small>${escapeHTML(time+status)}</small>
-    ${!isSticker?`
-     <button type="button" class="replybtn"
-      data-reply="${escapeHTML(message.id)}">
-      ↩ Ответить
-     </button>
+   <div class="bubble ${mine?'mine':''}
+    ${isSticker?'sticker':''}"
+    data-message="${escapeHTML(message.id)}">
+
+    ${message.replyText?`
+     <div class="reply-preview">
+      ↩ ${escapeHTML(message.replyText)}
+     </div>
     `:''}
+
+    ${content}
+
+    <small>
+     ${escapeHTML(time)}
+     ${message.editedAt?' · Изменено':''}
+     ${mine
+      ?message.readAt?' · Прочитано':' · Отправлено'
+      :''}
+    </small>
+
+    <div class="reactions">${reactionButtons}</div>
+
+    <div class="message-actions">
+     <button data-action="reply"
+      data-id="${escapeHTML(message.id)}">↩ Ответить</button>
+
+     <button data-action="pin"
+      data-id="${escapeHTML(message.id)}">📌</button>
+
+     ${mine&&!isSticker?`
+      <button data-action="edit"
+       data-id="${escapeHTML(message.id)}">
+       Изменить
+      </button>
+     `:''}
+
+     ${mine?`
+      <button data-action="delete"
+       data-id="${escapeHTML(message.id)}">
+       Удалить
+      </button>
+     `:''}
+    </div>
    </div>
   `;
  }).join('')||
@@ -677,33 +812,181 @@ function renderMessages(){
  if(!term)box.scrollTop=box.scrollHeight;
 }
 
-$('chatSearch').addEventListener(
- 'input',renderMessages
-);
+$('chatSearch').addEventListener('input',renderMessages);
 
-$('messages').addEventListener('click',event=>{
- const button=event.target.closest('[data-reply]');
+function findMessage(id){
+ return currentMessages.find(message=>message.id===id);
+}
+
+function messageRef(id){
+ return doc(db,'chats',currentChatId(),'messages',id);
+}
+
+$('messages').addEventListener('click',async event=>{
+ const reaction=event.target.closest('[data-react]');
+
+ if(reaction){
+  await toggleReaction(
+   reaction.dataset.id,
+   reaction.dataset.react
+  );
+  return;
+ }
+
+ const button=event.target.closest('[data-action]');
  if(!button)return;
 
- const message=currentMessages.find(
-  m=>m.id===button.dataset.reply
- );
-
+ const message=findMessage(button.dataset.id);
  if(!message)return;
 
- replyTo=message;
+ switch(button.dataset.action){
+  case 'reply':
+   replyTo=message;
+   $('replyText').textContent=
+    'Ответ на: '+String(message.text||'Стикер').slice(0,110);
+   $('replyBar').hidden=false;
+   $('message').focus();
+   break;
 
- $('replyText').textContent=
-  'Ответ на: '+String(message.text||'').slice(0,110);
+  case 'edit':
+   if(message.senderId!==me.uid)return;
+   editingId=message.id;
+   $('editText').value=message.text||'';
+   $('editOverlay').hidden=false;
+   $('editText').focus();
+   break;
 
- $('replyBar').hidden=false;
- $('message').focus();
+  case 'delete':
+   await removeMessage(message);
+   break;
+
+  case 'pin':
+   await pinMessage(message);
+   break;
+ }
 });
 
-$('cancelReply').onclick=()=>{
- replyTo=null;
- $('replyBar').hidden=true;
+async function toggleReaction(id,emoji){
+ if(!me||!activeUid||actionBusy)return;
+ if(!EMOJIS.includes(emoji))return;
+
+ const message=findMessage(id);
+ if(!message)return;
+
+ actionBusy=true;
+
+ try{
+  const ref=messageRef(id);
+  const snapshot=await getDoc(ref);
+
+  if(!snapshot.exists()){
+   throw Error('Сообщение не найдено');
+  }
+
+  const reactions=snapshot.data().reactions||{};
+  const ids=Array.isArray(reactions[emoji])
+   ?reactions[emoji]:[];
+
+  const next=ids.includes(me.uid)
+   ?ids.filter(uid=>uid!==me.uid)
+   :[...ids,me.uid];
+
+  await updateDoc(ref,{
+   [`reactions.${emoji}`]:next
+  });
+ }catch(error){
+  showError('Ошибка реакции: '+error.message);
+ }finally{
+  actionBusy=false;
+ }
+}
+
+async function removeMessage(message){
+ if(message.senderId!==me.uid)return;
+
+ if(!confirm('Удалить это сообщение?'))return;
+
+ try{
+  await deleteDoc(messageRef(message.id));
+
+  if(pinnedId===message.id){
+   await updateDoc(
+    doc(db,'chats',currentChatId()),
+    {pinnedMessageId:null,pinnedText:''}
+   );
+  }
+ }catch(error){
+  showError('Ошибка удаления: '+error.message);
+ }
+}
+
+async function pinMessage(message){
+ if(!me||!activeUid)return;
+
+ try{
+  await updateDoc(
+   doc(db,'chats',currentChatId()),
+   {
+    pinnedMessageId:message.id,
+    pinnedText:String(
+     message.text||'Стикер'
+    ).slice(0,160)
+   }
+  );
+ }catch(error){
+  showError('Ошибка закрепления: '+error.message);
+ }
+}
+
+$('unpin').onclick=async()=>{
+ if(!currentChatId())return;
+
+ try{
+  await updateDoc(
+   doc(db,'chats',currentChatId()),
+   {pinnedMessageId:null,pinnedText:''}
+  );
+ }catch(error){
+  showError('Ошибка открепления: '+error.message);
+ }
 };
+
+$('editCancel').onclick=()=>{
+ editingId=null;
+ $('editOverlay').hidden=true;
+};
+
+$('editSave').onclick=async()=>{
+ if(!editingId||!me)return;
+
+ const text=$('editText').value.trim();
+ const message=findMessage(editingId);
+
+ if(!message||message.senderId!==me.uid)return;
+
+ if(!text||text.length>2000){
+  showError('Введите текст до 2000 символов');
+  return;
+ }
+
+ $('editSave').disabled=true;
+
+ try{
+  await updateDoc(messageRef(editingId),{
+   text,
+   editedAt:serverTimestamp()
+  });
+
+  editingId=null;
+  $('editOverlay').hidden=true;
+ }catch(error){
+  showError('Ошибка редактирования: '+error.message);
+ }finally{
+  $('editSave').disabled=false;
+ }
+};
+
+$('cancelReply').onclick=clearReply;
 
 async function markRead(id,peerUid){
  if(reading||!me||activeUid!==peerUid)return;
@@ -774,15 +1057,22 @@ async function sendMessage(payload){
   {merge:true}
  );
 
+ const data={
+  senderId:me.uid,
+  type:payload.type||'text',
+  text:payload.text||'',
+  sticker:payload.sticker||'',
+  createdAt:serverTimestamp()
+ };
+
+ if(payload.replyText){
+  data.replyText=payload.replyText;
+  data.replyTo=payload.replyTo;
+ }
+
  batch.set(
   doc(collection(db,'chats',id,'messages')),
-  {
-   senderId:me.uid,
-   type:payload.type||'text',
-   text:payload.text||'',
-   sticker:payload.sticker||'',
-   createdAt:serverTimestamp()
-  }
+  data
  );
 
  await batch.commit();
@@ -791,32 +1081,26 @@ async function sendMessage(payload){
 $('form').onsubmit=async event=>{
  event.preventDefault();
 
- const inputText=$('message').value.trim();
+ const text=$('message').value.trim();
 
- const quote=replyTo
-  ?'↩ '+String(replyTo.text||'')
-    .replace(/\s+/g,' ')
-    .slice(0,100)+'\n'
-  :'';
-
- const text=quote+inputText;
-
- if(!inputText)return;
-
- if(text.length>2000){
-  showError('Ответ превышает 2000 символов');
-  return;
- }
+ if(!text||text.length>2000)return;
 
  $('send').disabled=true;
 
  try{
-  await sendMessage({type:'text',text});
+  const payload={type:'text',text};
+
+  if(replyTo){
+   payload.replyTo=replyTo.id;
+   payload.replyText=String(
+    replyTo.text||'Стикер'
+   ).slice(0,160);
+  }
+
+  await sendMessage(payload);
 
   $('message').value='';
-  replyTo=null;
-  $('replyBar').hidden=true;
-
+  clearReply();
   await setTyping(false);
  }catch(error){
   showError('Ошибка отправки: '+error.message);
