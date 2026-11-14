@@ -69,3 +69,14 @@ Status: incremental migration. Do not deploy new Firestore rules until they have
 - New chat documents require a canonical ID: lexicographically sorted participant UIDs joined by `_`, with `updatedAt == request.time`.
 - The current `chats.html` client uses the same sorted UID scheme and server timestamps.
 - These checks are only a source-level review. Firebase Emulator and two-account integration tests are still required before deploying.
+
+## Local Firestore security tests
+
+Run on a computer with Node.js and Java installed:
+
+```bash
+npm install
+npm run test:rules
+```
+
+The test command starts a local Firestore emulator and runs `tests/firestore.rules.test.mjs`. It does **not** deploy to the live Firebase project. Tests cover self-escalation, owner role changes, post authorship, private chat access, per-user reactions, chat IDs, and notifications. The tests have been committed but **not executed** in this environment. Review test failures before deploying.
