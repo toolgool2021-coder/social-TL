@@ -418,6 +418,29 @@ service cloud.firestore {
         getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.kind == 'clan';
       allow update,delete: if false;
     }
+    // Live randomizer: only the fixed Firebase Auth owner may publish draws.
+    match /randomizerLive/{drawId} {
+      allow get: if authd() && drawId == 'current';
+      allow list: if false;
+      allow create,update: if authd() && request.auth.uid == ownerUid() &&
+        drawId == 'current' &&
+        request.resource.data.keys().hasOnly(['status','mode','participants','winners','startedAt','updatedAt','durationMs']) &&
+        request.resource.data.status in ['running','finished'] &&
+        request.resource.data.mode in ['all','selected'] &&
+        request.resource.data.participants is list &&
+        request.resource.data.participants.size() >= 1 &&
+        request.resource.data.participants.size() <= 2000 &&
+        request.resource.data.winners is list &&
+        request.resource.data.winners.size() >= 1 &&
+        request.resource.data.winners.size() <= 10 &&
+        request.resource.data.winners.size() <= request.resource.data.participants.size() &&
+        request.resource.data.durationMs is int &&
+        request.resource.data.durationMs >= 1000 &&
+        request.resource.data.durationMs <= 60000 &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.startedAt == request.time;
+      allow delete: if false;
+    }
     match /{document=**} { allow read,write: if false; }
   }
 }
