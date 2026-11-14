@@ -399,7 +399,7 @@ onAuthStateChanged(auth,async user=>{
   }
 
   if(user.uid!==OWNER_UID){
-    $("status").textContent="Доступ запрещён: UID текущего аккаунта не совпадает с UID владельца. Текущий UID: "+user.uid+". Ожидаемый UID: "+OWNER_UID+". Проверь, что вошёл в нужный аккаунт и обновил страницу без кеша.";
+    $("status").textContent="Доступ запрещён.";
     return;
   }
 
@@ -408,7 +408,7 @@ onAuthStateChanged(auth,async user=>{
     if(auth.currentUser?.uid!==user.uid)return;
 
     if(!snap.exists()||snap.data().role!=="owner"){
-      $("status").textContent="Роль владельца не подтверждена.";
+      $("status").textContent="Доступ запрещён.";
       return;
     }
 
