@@ -27,7 +27,10 @@ import {
   limit,
   onSnapshot,
   serverTimestamp,
-  runTransaction
+  runTransaction,
+  updateDoc,
+  deleteField,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import {
@@ -201,7 +204,7 @@ function imageURL(raw) {
 
   const url = new URL(raw);
 
-  if (!/\.(png|jpe?g|webp)$/i.test(url.pathname)) {
+  if (!/\.(png|jpe?g|webp)$/i.test(decodeURIComponent(url.pathname))) {
     throw Error(
       "Поддерживаются прямые ссылки PNG, JPG и WebP."
     );
@@ -215,7 +218,7 @@ function safeStoredImage(raw) {
 
   const url = new URL(raw);
 
-  return /\.(png|jpe?g|webp)$/i.test(url.pathname)
+  return /\.(png|jpe?g|webp)$/i.test(decodeURIComponent(url.pathname))
     ? url.href
     : "";
 }
@@ -743,6 +746,24 @@ async function ensureUser(uid) {
   return users[uid];
 }
 
+// Upload image files to Firebase Storage, not Firestore documents.
+async function uploadPostImage(file) {
+  if (!me || !me.emailVerified) throw Error("Подтверди почту перед загрузкой.");
+  if (!["image/png","image/jpeg","image/webp"].includes(file?.type))
+    throw Error("Выбери PNG, JPG или WebP.");
+  if (file.size > 5 * 1024 * 1024 || file.size === 0)
+    throw Error("Размер изображения должен быть от 1 байта до 5 МБ.");
+  const {getStorage,ref,uploadBytes,getDownloadURL} = await import(
+    "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js"
+  );
+  const ext = file.type === "image/png" ? "png" :
+    file.type === "image/webp" ? "webp" : "jpg";
+  const path = `posts/${me.uid}/${crypto.randomUUID()}.${ext}`;
+  const object = ref(getStorage(app),path);
+  await uploadBytes(object,file,{contentType:file.type});
+  return imageURL(await getDownloadURL(object));
+}
+
 /* =========================================
    POST CREATION
 ========================================= */
@@ -781,9 +802,11 @@ $("postForm").addEventListener(
     button.disabled = true;
 
     try {
-      const imageUrl = imageURL(
-        $("postImage").value.trim()
-      );
+      const file = $("postImageFile")?.files?.[0];
+      const imageUrl = file
+        ? await uploadPostImage(file)
+        : imageURL($("postImage").value.trim());
+      const imagePosition = $("postImagePosition").value === "top" ? "top" : "bottom";
 
       const data = {
         uid: me.uid,
@@ -793,6 +816,7 @@ $("postForm").addEventListener(
 
       if (imageUrl) {
         data.imageUrl = imageUrl;
+        data.imagePosition = imagePosition;
       }
 
       await addDoc(
@@ -803,6 +827,8 @@ $("postForm").addEventListener(
       lastSent.post = Date.now();
       $("postInput").value = "";
       $("postImage").value = "";
+      $("postImageFile").value = "";
+      $("postImagePosition").value = "bottom";
       $("postCount").textContent = "0";
 
       toast("Публикация создана.");
