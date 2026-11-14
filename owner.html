@@ -276,6 +276,7 @@ const config={
   appId:"1:52396840735:web:a608b9c037c8481f2dc22a"
 };
 
+import {mountMaintenanceControl} from './maintenance.js';
 const OWNER_UID="FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
 
 const app=getApps()[0]||initializeApp(config);
@@ -412,6 +413,7 @@ onAuthStateChanged(auth,async user=>{
     }
 
     ownerVerified=true;
+    if(!document.querySelector('.mg-control'))mountMaintenanceControl($("dashboard"));
     $("status").textContent="✓ Доступ владельца подтверждён";
     $("dashboard").classList.remove("hidden");
     await loadUsers();
