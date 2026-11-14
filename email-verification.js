@@ -1,298 +1,178 @@
-
 import {
-  getAuth,
-  onAuthStateChanged,
-  sendEmailVerification,
-  reload
+  getAuth, onAuthStateChanged, sendEmailVerification, reload, signOut, getIdToken
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-
-import {
-  getApps,
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getApps, initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",
-  authDomain: "toolchat-bfac8.firebaseapp.com",
-  projectId: "toolchat-bfac8",
-  storageBucket: "toolchat-bfac8.firebasestorage.app",
-  messagingSenderId: "52396840735",
-  appId: "1:52396840735:web:a608b9c037c8481f2dc22a"
+  apiKey:"AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",
+  authDomain:"toolchat-bfac8.firebaseapp.com",
+  projectId:"toolchat-bfac8",
+  storageBucket:"toolchat-bfac8.firebasestorage.app",
+  messagingSenderId:"52396840735",
+  appId:"1:52396840735:web:a608b9c037c8481f2dc22a"
 };
-
 const app = getApps()[0] || initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 let currentUser = null;
-let sending = false;
-let checking = false;
+let busy = false;
 let lastUid = null;
+let lastCheck = 0;
+let lastSend = 0;
+let generation = 0;
 
 const style = document.createElement("style");
-
 style.textContent = `
-.nx-email-box {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 9999;
-  width: min(390px, calc(100vw - 40px));
-  padding: 20px;
-  border: 1px solid rgba(170,190,255,.22);
-  border-radius: 20px;
-  background: rgba(18,27,46,.96);
-  color: #f1f5ff;
-  box-shadow: 0 18px 60px rgba(0,0,0,.45);
-  backdrop-filter: blur(24px);
-  animation: nxEmailIn .35s ease both;
-  font: 14px/1.5 system-ui,sans-serif;
-}
-
-.nx-email-box[hidden] {
-  display: none !important;
-}
-
-.nx-email-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.nx-email-head strong {
-  font-size: 16px;
-}
-
-.nx-email-close {
-  border: 0;
-  background: transparent;
-  color: #aebcda;
-  cursor: pointer;
-  font-size: 22px;
-}
-
-.nx-email-box p {
-  color: #aebcda;
-  margin: 0 0 15px;
-  overflow-wrap: anywhere;
-}
-
-.nx-email-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-}
-
-.nx-email-actions button {
-  padding: 10px 13px;
-  border-radius: 11px;
-  border: 1px solid rgba(180,200,255,.25);
-  background: #293954;
-  color: white;
-  font: inherit;
-  cursor: pointer;
-}
-
-.nx-email-actions button:first-child {
-  border-color: transparent;
-  background: linear-gradient(120deg,#647fea,#937be5);
-}
-
-.nx-email-actions button:disabled {
-  opacity: .5;
-  cursor: not-allowed;
-}
-
-.nx-email-message {
-  margin-top: 12px;
-  font-size: 12px;
-  color: #b8c7ff;
-}
-
-@keyframes nxEmailIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media(max-width:600px) {
-  .nx-email-box {
-    bottom: 12px;
-    right: 12px;
-    width: calc(100vw - 24px);
-  }
-}
+.nx-email-gate[hidden]{display:none!important}
+.nx-email-gate{position:fixed;inset:0;z-index:2147483640;display:grid;place-items:center;
+  padding:20px;overflow:auto;background:radial-gradient(circle at 25% 10%,#30498055,transparent 52%),
+  radial-gradient(circle at 90% 95%,#62449d44,transparent 50%),#080d19;color:#edf3ff;
+  font:14px/1.55 system-ui,sans-serif}
+.nx-email-card{width:min(460px,100%);padding:clamp(24px,5vw,36px);border-radius:26px;
+  border:1px solid #a9bfff38;background:#141e30ed;box-shadow:0 24px 90px #0008;
+  backdrop-filter:blur(24px);text-align:center;animation:nxEmailAppear .35s ease both}
+.nx-email-symbol{display:grid;place-items:center;margin:0 auto 17px;width:66px;height:66px;
+  border-radius:20px;background:linear-gradient(140deg,#6988f9,#a17bee);font-size:29px;
+  box-shadow:0 10px 36px #7187f544}
+.nx-email-card h1{font-size:clamp(23px,5vw,29px);margin:0 0 10px}
+.nx-email-card p{color:#aebcda;margin:0 0 19px;overflow-wrap:anywhere}
+.nx-email-address{display:block;color:#fff;font-weight:700;margin:8px 0}
+.nx-email-actions{display:grid;gap:10px}
+.nx-email-actions button{min-height:45px;padding:11px 15px;border-radius:13px;
+  border:1px solid #ffffff2d;background:#27344f;color:#f4f6ff;cursor:pointer;font:inherit;font-weight:650}
+.nx-email-actions button:first-child{border:0;background:linear-gradient(115deg,#6585ed,#9274e8)}
+.nx-email-actions button:disabled{opacity:.55;cursor:wait}
+.nx-email-actions button:last-child{background:transparent;color:#b7c5de;border-color:transparent}
+.nx-email-message{min-height:24px;margin-top:15px;color:#b8c7ff;font-size:13px;overflow-wrap:anywhere}
+@keyframes nxEmailAppear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.nx-email-card{animation:none}}
 `;
-
 document.head.append(style);
 
-const box = document.createElement("aside");
-
-box.className = "nx-email-box";
-box.hidden = true;
-box.setAttribute("aria-label", "Подтверждение электронной почты");
-
-box.innerHTML = `
-  <div class="nx-email-head">
-    <strong>✉ Подтверди почту</strong>
-    <button class="nx-email-close"
-      type="button"
-      aria-label="Закрыть">×</button>
-  </div>
-
-  <p id="nxEmailDescription"></p>
-
-  <div class="nx-email-actions">
-    <button id="nxEmailSend" type="button">
-      Отправить письмо
-    </button>
-
-    <button id="nxEmailCheck" type="button">
-      Проверить
-    </button>
-  </div>
-
-  <div id="nxEmailMessage"
-    class="nx-email-message"
-    role="status"
-    aria-live="polite"></div>
-`;
-
-document.body.append(box);
-
+const gate = document.createElement("section");
+gate.className = "nx-email-gate";
+gate.hidden = true;
+gate.setAttribute("role","dialog");
+gate.setAttribute("aria-modal","true");
+gate.setAttribute("aria-labelledby","nxEmailTitle");
+gate.innerHTML = `
+  <div class="nx-email-card">
+    <div class="nx-email-symbol" aria-hidden="true">✉</div>
+    <h1 id="nxEmailTitle">Подтверди электронную почту</h1>
+    <p>Чтобы пользоваться NEXORA, перейди по ссылке из письма, отправленного на
+      <span class="nx-email-address" id="nxEmailAddress"></span>
+    </p>
+    <div class="nx-email-actions">
+      <button id="nxEmailCheck" type="button">✓ Я подтвердил почту</button>
+      <button id="nxEmailSend" type="button">Отправить письмо повторно</button>
+      <button id="nxEmailLogout" type="button">Выйти из аккаунта</button>
+    </div>
+    <div class="nx-email-message" id="nxEmailMessage" role="status" aria-live="polite"></div>
+  </div>`;
+document.body.append(gate);
 const $ = id => document.getElementById(id);
-
-function message(text) {
-  $("nxEmailMessage").textContent = text;
-}
-
+const message = value => { $("nxEmailMessage").textContent = value; };
 function errorText(error) {
   const messages = {
-    "auth/too-many-requests":
-      "Слишком много запросов. Попробуй позже.",
-    "auth/network-request-failed":
-      "Ошибка соединения с интернетом.",
-    "auth/requires-recent-login":
-      "Для этой операции нужно заново войти в аккаунт."
+    "auth/too-many-requests":"Слишком много запросов. Попробуй позже.",
+    "auth/network-request-failed":"Нет соединения с интернетом.",
+    "auth/requires-recent-login":"Выйди и войди в аккаунт заново.",
+    "auth/unauthorized-continue-uri":"Добавь домен NEXORA в Authorized domains Firebase Authentication.",
+    "auth/invalid-continue-uri":"Неверный адрес возврата из письма."
   };
-
-  return messages[error?.code] ||
-    error?.message ||
-    "Произошла ошибка.";
+  return messages[error?.code] || error?.message || "Не удалось выполнить действие.";
 }
-
 function updateButtons() {
-  $("nxEmailSend").disabled = sending || checking;
-  $("nxEmailCheck").disabled = sending || checking;
+  $("nxEmailCheck").disabled = busy;
+  $("nxEmailSend").disabled = busy;
+  $("nxEmailLogout").disabled = busy;
 }
-
 function render() {
   const user = currentUser;
-
-  if (!user || user.emailVerified) {
-    box.hidden = true;
+  gate.hidden = !user || user.emailVerified === true;
+  if (!gate.hidden) {
+    $("nxEmailAddress").textContent = user.email || "твою почту";
+    // Underlying app and links must not be interactive while gated.
+    document.querySelectorAll("body > *:not(.nx-email-gate):not(script)").forEach(el => {
+      if (el !== gate) el.inert = true;
+    });
+    $("nxEmailCheck").focus({preventScroll:true});
+  } else {
+    document.querySelectorAll("body > *:not(.nx-email-gate):not(script)").forEach(el => {
+      el.inert = false;
+    });
+  }
+}
+async function sendLetter() {
+  if (!currentUser || busy) return;
+  if (Date.now() - lastSend < 60000) {
+    message("Подожди минуту перед повторной отправкой.");
     return;
   }
-
-  $("nxEmailDescription").textContent =
-    "Адрес " + (user.email || "") +
-    " пока не подтверждён. Отправь письмо и перейди по ссылке из него.";
-
-  box.hidden = false;
-}
-
-async function sendLetter() {
-  if (!currentUser || sending || checking) return;
-
-  sending = true;
+  busy = true;
   updateButtons();
-  message("Отправка письма...");
-
+  message("Отправляем письмо...");
   try {
-    await sendEmailVerification(currentUser, {
-      url: location.origin + "/"
-    });
-
-    message(
-      "Письмо отправлено. Проверь входящие и папку «Спам»."
-    );
-  } catch (error) {
+    await sendEmailVerification(currentUser, {url:location.origin + "/"});
+    lastSend = Date.now();
+    message("Письмо отправлено. Проверь входящие и папку «Спам».");
+  } catch(error) {
     message(errorText(error));
   } finally {
-    sending = false;
+    busy = false;
     updateButtons();
   }
 }
-
-async function checkVerification() {
-  if (!currentUser || checking || sending) return;
-
-  checking = true;
+async function checkVerification(silent=false) {
+  if (!currentUser || busy || currentUser.emailVerified) return;
+  const now = Date.now();
+  if (silent && now-lastCheck < 15000) return;
+  lastCheck = now;
+  const user = currentUser;
+  const session = generation;
+  busy = true;
   updateButtons();
-  message("Проверяем подтверждение...");
-
+  if (!silent) message("Проверяем подтверждение...");
   try {
-    await reload(currentUser);
-
-    if (currentUser.emailVerified) {
-      message("Почта подтверждена!");
-      box.hidden = true;
-
-      window.dispatchEvent(
-        new CustomEvent("nexora:email-verified", {
-          detail: {
-            uid: currentUser.uid
-          }
-        })
-      );
-    } else {
-      message(
-        "Подтверждение пока не найдено. Открой ссылку из письма и повтори проверку."
-      );
+    await reload(user);
+    if (auth.currentUser?.uid !== user.uid || generation !== session) return;
+    if (user.emailVerified) {
+      // Firestore Rules use the verified claim in the ID token.
+      await getIdToken(user,true);
+      message("Почта подтверждена. Добро пожаловать!");
+      render();
+      window.dispatchEvent(new CustomEvent("nexora:email-verified",{detail:{uid:user.uid}}));
+    } else if (!silent) {
+      message("Почта ещё не подтверждена. Открой ссылку из письма и повтори проверку.");
     }
-  } catch (error) {
-    message(errorText(error));
+  } catch(error) {
+    if (!silent) message(errorText(error));
   } finally {
-    checking = false;
+    busy = false;
     updateButtons();
   }
 }
-
-$("nxEmailSend").addEventListener("click", sendLetter);
-$("nxEmailCheck").addEventListener("click", checkVerification);
-
-box.querySelector(".nx-email-close").addEventListener(
-  "click",
-  () => {
-    box.hidden = true;
-  }
-);
-
-onAuthStateChanged(auth, user => {
+$("nxEmailSend").addEventListener("click",sendLetter);
+$("nxEmailCheck").addEventListener("click",()=>checkVerification());
+$("nxEmailLogout").addEventListener("click",async()=>{
+  if (busy) return;
+  busy = true;
+  updateButtons();
+  try { await signOut(auth); } catch(error) { message(errorText(error)); }
+  finally { busy = false; updateButtons(); }
+});
+onAuthStateChanged(auth,user=>{
   currentUser = user;
-
+  generation++;
   if (user?.uid !== lastUid) {
     lastUid = user?.uid || null;
+    lastCheck = 0;
+    lastSend = 0;
     message("");
   }
-
   render();
 });
-
-document.addEventListener("visibilitychange", () => {
-  if (
-    document.visibilityState === "visible" &&
-    currentUser &&
-    !currentUser.emailVerified
-  ) {
-    // Пользователь сам нажимает «Проверить».
-    // Автоматически не отправляем сетевые запросы.
-    render();
-  }
+document.addEventListener("visibilitychange",()=>{
+  if (document.visibilityState === "visible") void checkVerification(true);
 });
+window.addEventListener("focus",()=>void checkVerification(true));
