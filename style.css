@@ -1,0 +1,345 @@
+
+:root {
+  color-scheme: dark;
+  --bg: #080d19;
+  --surface: #141d2cbd;
+  --line: #ffffff1c;
+  --text: #edf3ff;
+  --muted: #9baac5;
+  --blue: #82a9ff;
+  --accent: #8d79f6;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px system-ui, Arial, sans-serif;
+}
+button, input, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:disabled { opacity: .5; cursor: wait; }
+a { color: #a9c5ff; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.hidden { display: none !important; }
+
+.ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 10% 0%, #315b9b35, transparent 55%),
+    radial-gradient(ellipse at 95% 80%, #6743ac25, transparent 50%);
+}
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 35px #0003;
+  backdrop-filter: blur(18px);
+  border-radius: 20px;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #0c1424e8;
+  border-bottom: 1px solid var(--line);
+  padding: 12px max(16px, calc((100vw - 1160px)/2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+.brand img { width: 32px; height: 32px; object-fit: contain; }
+.brand small { font-size: 9px; color: #9faaf8; letter-spacing: 1px; }
+.topuser { display: flex; align-items: center; gap: 12px; }
+
+.layout {
+  max-width: 1180px;
+  margin: 24px auto;
+  padding: 0 14px;
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr) 245px;
+  gap: 18px;
+  position: relative;
+}
+.sidebar {
+  padding: 10px;
+  height: max-content;
+  position: sticky;
+  top: 83px;
+}
+.nav { display: grid; gap: 5px; }
+.nav button, .nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: none;
+  color: #b9c8e5;
+  text-align: left;
+  padding: 13px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+.nav .active, .nav button:hover, .nav a:hover {
+  background: #34466b90;
+  color: white;
+}
+.panel {
+  padding: 19px;
+  margin-bottom: 16px;
+  animation: up .25s ease;
+}
+.panel h2 { margin: 0 0 15px; font-size: 20px; }
+.panel h3 { margin: 0 0 9px; }
+.muted { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.stack { display: grid; gap: 12px; }
+.stack label { font-size: 13px; color: #c8d4e8; }
+.stack label input, .stack label textarea { margin-top: 7px; }
+.fieldlabel { margin-bottom: -8px; }
+
+input, textarea {
+  width: 100%;
+  background: #0b1424;
+  color: white;
+  border: 1px solid #394861;
+  border-radius: 12px;
+  padding: 12px;
+  outline: none;
+}
+textarea { resize: vertical; min-height: 90px; }
+input:focus, textarea:focus { border-color: var(--blue); }
+
+.primary {
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 16px;
+  color: white;
+  background: linear-gradient(120deg, #4779eb, #8b74ef);
+  font-weight: 700;
+}
+.quiet {
+  border: 1px solid #40506d;
+  background: #1b2940;
+  color: #dbe6ff;
+  border-radius: 11px;
+  padding: 10px 13px;
+}
+.linkbutton {
+  background: none;
+  border: 0;
+  color: #b0c8ff;
+  margin-top: 12px;
+}
+.auth {
+  max-width: 440px;
+  margin: 7vh auto;
+  padding: 25px;
+  position: relative;
+  text-align: center;
+}
+.auth h1 { margin: 9px 0; }
+.heroicon img { width: 72px; height: 72px; object-fit: contain; }
+.auth .stack { text-align: left; margin-top: 24px; }
+.between, .sectionhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.sectionhead h2 { margin-bottom: 13px; }
+.userrow { display: flex; gap: 11px; align-items: center; }
+
+.avatar {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #537cda, #a073d7);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  overflow: hidden;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar.large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid #172139;
+  font-size: 25px;
+}
+.name { font-weight: 700; overflow-wrap: anywhere; }
+.namegroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.badgeicon {
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+}
+.badgeicon img { width: 20px; height: 20px; object-fit: contain; }
+.badgeicon:focus-visible { outline: 2px solid var(--blue); }
+
+.posttext {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  margin: 15px 0;
+}
+.postimage {
+  display: block;
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 13px;
+  margin: 10px 0;
+  background: #090e19;
+}
+.buttons, .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions { margin-top: 14px; }
+.actions button {
+  border: 1px solid #35445e;
+  background: #1a2840;
+  color: #c7d4ed;
+  padding: 8px 11px;
+  border-radius: 10px;
+}
+.actions .liked { color: #ff7c9e; }
+.comment {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.comment p { margin: 5px 0; }
+
+.cover {
+  height: 145px;
+  border-radius: 14px;
+  background: linear-gradient(115deg, #1a477b, #63458b, #173657);
+  background-size: cover;
+  background-position: center;
+}
+.profilebody { padding: 0 10px; }
+.profilebody .avatar { margin-top: -40px; position: relative; }
+.profilename {
+  font-size: 22px;
+  font-weight: 800;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.stats {
+  display: flex;
+  gap: 17px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.stats b { color: white; }
+.socials { display: grid; gap: 9px; }
+.social {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #1b2b45;
+}
+.help { margin-top: 18px; color: #dce5f8; }
+.help summary { cursor: pointer; }
+.help p { font-size: 13px; line-height: 1.6; }
+
+.toast {
+  position: fixed;
+  z-index: 100;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #293d5de8;
+  border: 1px solid #6483b6;
+  padding: 13px 18px;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px #0008;
+  max-width: min(500px, 90vw);
+  text-align: center;
+  animation: toastIn .22s ease;
+}
+.modal {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  background: #000a;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+.dialog { width: min(440px, 100%); padding: 24px; text-align: center; }
+.warning { font-size: 32px; }
+.dialog p { color: var(--muted); line-height: 1.6; }
+.dialog .buttons { justify-content: center; }
+.urlbox {
+  padding: 12px;
+  background: #0a1426;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+  margin: 15px 0;
+  font-size: 13px;
+}
+.empty { padding: 30px; text-align: center; color: var(--muted); }
+
+@keyframes up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (max-width: 950px) {
+  .layout { grid-template-columns: 190px minmax(0, 1fr); }
+  .right { display: none; }
+}
+@media (max-width: 650px) {
+  .layout { display: block; padding: 0 10px 85px; margin: 12px auto; }
+  .sidebar {
+    position: fixed;
+    z-index: 30;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+    padding: 5px;
+    background: #101a2cf5;
+  }
+  .nav { display: flex; justify-content: space-around; }
+  .nav button, .nav a {
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 5px;
+    font-size: 16px;
+  }
+  .nav span { font-size: 10px; }
+  .panel { padding: 14px; }
+  .topbar { padding: 10px 13px; }
+  .brand { font-size: 17px; }
+  .topuser { font-size: 12px; }
+  .toast { bottom: 78px; }
+}
