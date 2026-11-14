@@ -583,14 +583,6 @@ $("logout").addEventListener("click", async () => {
   } catch (error) {
     toast(friendlyError(error));
   }
-}
-
-onAuthStateChanged(auth, applyAuthState);
-window.addEventListener("nexora:email-verified", event => {
-  const user = auth.currentUser;
-  if (user && user.emailVerified && event.detail?.uid === user.uid) {
-    return applyAuthState(user);
-  }
 });
 
 /* =========================================
@@ -686,6 +678,14 @@ async function applyAuthState(user) {
         "Ошибка загрузки: " + friendlyError(error)
       );
     }
+  }
+}
+
+onAuthStateChanged(auth, applyAuthState);
+window.addEventListener("nexora:email-verified", event => {
+  const user = auth.currentUser;
+  if (user && user.emailVerified && event.detail?.uid === user.uid) {
+    return applyAuthState(user);
   }
 });
 
