@@ -118,3 +118,10 @@ The test command starts a local Firestore emulator and runs `tests/firestore.rul
 - Both handlers ignore non-pending records, suppress self-notifications, and use deterministic notification IDs to avoid duplicate alerts on event retries.
 - Firebase Rules regression tests now cover report creation/review permissions, verification review permissions, owner-only audit logs, and the prohibition on client-created moderation alerts.
 - All Cloud Functions remain **committed but not deployed**. Rules tests remain **unexecuted** until dependencies and a Firebase emulator are available.
+
+## Missing private chat reads (security review)
+
+- The chat client calls `getDoc(chats/{id})` before creating a new conversation. The earlier `allow get,list` rule required `resource.data.participants` even when the document did not exist, potentially causing a permission-denied error on first contact.
+- The revised `allow get` supports authenticated existence checks for **missing** chat IDs that include the caller's UID in the expected participant position. For **existing** chats, the rule still requires actual membership in `participants`.
+- `allow list` continues to restrict listing to chat members; the client queries using `where('participants','array-contains',uid)`.
+- New test cases assert a missing-chat probe succeeds without exposing existing chats to outsiders. These tests remain unexecuted until Firebase Emulator dependencies are installed.
