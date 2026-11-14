@@ -1,0 +1,59 @@
+/* NEXORA unified UI · 2026-11-14. Loaded after page-specific styles. */
+:root{color-scheme:dark;--nx-bg:#080c15;--nx-card:rgba(19,27,44,.78);--nx-border:rgba(173,196,255,.16);--nx-ink:#f0f4ff;--nx-muted:#a0aec9;--nx-primary:#8b9dff;--nx-purple:#ad8aff;--nx-radius:20px;--nx-shadow:0 20px 60px rgba(0,0,0,.24)}
+html{scroll-behavior:smooth}
+body{color:var(--nx-ink);background-color:var(--nx-bg)!important;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 60% 55% at 2% -10%,rgba(82,112,208,.22),transparent 78%),radial-gradient(ellipse 55% 60% at 100% 95%,rgba(125,78,192,.18),transparent 78%)}
+button,input,textarea,select{font:inherit}
+button,.button{transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease!important;border-radius:13px!important}
+button:not(:disabled):hover,.button:hover{transform:translateY(-2px);border-color:rgba(154,176,255,.48)!important}
+button:not(:disabled):active{transform:scale(.98)}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--nx-primary);outline-offset:3px}
+button.primary,.primary:not(input):not(textarea){background:linear-gradient(125deg,#587ded,#8d70df)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 7px 22px rgba(95,111,235,.18)}
+button.primary:hover,.primary:not(input):not(textarea):hover{box-shadow:0 10px 28px rgba(95,111,235,.34)}
+input:not([type="checkbox"]):not([type="radio"]),textarea,select{background:rgba(10,18,33,.85)!important;border:1px solid rgba(175,198,255,.20)!important;color:#f0f4ff!important;border-radius:13px!important;transition:border-color .2s,box-shadow .2s}
+input:not([type="checkbox"]):focus,textarea:focus,select:focus{border-color:rgba(151,172,255,.75)!important;box-shadow:0 0 0 3px rgba(118,140,255,.11);outline:none}
+input::placeholder,textarea::placeholder{color:#8291af}
+.glass,.panel,.card{border-color:var(--nx-border)!important;box-shadow:var(--nx-shadow)}
+.glass{background:var(--nx-card)!important;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-radius:var(--nx-radius)!important}
+.tabs{gap:9px!important}
+.tabs button{border-radius:12px!important}
+.tabs button.active{background:linear-gradient(125deg,rgba(95,126,236,.30),rgba(141,108,218,.20))!important;border-color:rgba(143,167,255,.55)!important;color:#fff}
+.muted,.small{color:var(--nx-muted)}
+h1,h2,h3{letter-spacing:-.025em}
+h1{line-height:1.17}
+a{transition:color .2s,opacity .2s}
+a:hover{color:#d5dfff}
+[hidden],.hidden{display:none!important}
+@keyframes nx-page-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes nx-ambient{0%,100%{opacity:.45}50%{opacity:.8}}
+main>h1,main>p,main>.tabs,main>section,main>.stats{animation:nx-page-in .42s cubic-bezier(.2,.7,.2,1) both}
+main>section:nth-of-type(2){animation-delay:.06s}
+main>section:nth-of-type(3){animation-delay:.1s}
+body[data-nx-page="groups"] main{max-width:1120px}
+body[data-nx-page="groups"] header{background:rgba(14,23,40,.65);border:1px solid var(--nx-border);padding:14px 18px;border-radius:17px;backdrop-filter:blur(20px)}
+body[data-nx-page="groups"] .card{transition:transform .2s,border-color .2s;background:linear-gradient(145deg,rgba(36,50,81,.75),rgba(17,25,43,.8))!important}
+body[data-nx-page="groups"] .card:hover{transform:translateY(-4px);border-color:rgba(139,157,255,.48)!important}
+body[data-nx-page="groups"] .tag{background:rgba(118,146,255,.16);border:1px solid rgba(137,166,255,.22);color:#c6d6ff}
+body[data-nx-page="groups"] #notice:not(:empty){padding:12px 15px;margin:12px 0;border-radius:13px;background:rgba(122,149,255,.12);border:1px solid rgba(122,149,255,.22)}
+body[data-nx-page="groups"] #chatMessages{background:rgba(7,13,26,.48);border:1px solid var(--nx-border)}
+body[data-nx-page="groups"] .bubble{max-width:88%;align-self:flex-start;border:1px solid rgba(255,255,255,.07)}
+body[data-nx-page="groups"] .bubble.mine{align-self:flex-end;background:rgba(90,115,227,.28)}
+body[data-nx-page="explore"] header,body[data-nx-page="owner"] header{border-bottom:1px solid var(--nx-border)!important;background:rgba(12,20,36,.82)!important;backdrop-filter:blur(24px)}
+body[data-nx-page="explore"] .panel,body[data-nx-page="owner"] .panel{background:var(--nx-card)!important}
+body[data-nx-page="owner"] .stat{background:linear-gradient(140deg,rgba(41,55,90,.86),rgba(19,27,44,.85))!important}
+body[data-nx-page="chats"] .app>.panel{background:rgba(18,27,45,.88)!important;border:1px solid var(--nx-border)!important;backdrop-filter:blur(24px);box-shadow:var(--nx-shadow)}
+body[data-nx-page="chats"] .chathead,body[data-nx-page="chats"] .sidehead{border-color:var(--nx-border)!important}
+body[data-nx-page="chats"] .bubble{border-radius:17px}
+@media(max-width:700px){
+ body[data-nx-page="groups"] main{padding:14px 12px 80px}
+ body[data-nx-page="groups"] header{gap:9px;margin-bottom:22px}
+ body[data-nx-page="groups"] .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-nx-page="groups"] .tabs button{min-width:0;padding:11px 8px}
+ body[data-nx-page="groups"] .glass{padding:16px}
+ body[data-nx-page="groups"] #chatForm{flex-wrap:wrap}
+ body[data-nx-page="groups"] #chatForm input{min-width:0;flex:1 1 180px}
+ body[data-nx-page="owner"] main,body[data-nx-page="explore"] main{padding-left:13px;padding-right:13px}
+ body[data-nx-page="owner"] header,body[data-nx-page="explore"] header{padding-left:14px;padding-right:14px}
+ body[data-nx-page="owner"] .panel,body[data-nx-page="explore"] .panel{padding:16px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
