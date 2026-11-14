@@ -80,3 +80,12 @@ npm run test:rules
 ```
 
 The test command starts a local Firestore emulator and runs `tests/firestore.rules.test.mjs`. It does **not** deploy to the live Firebase project. Tests cover self-escalation, owner role changes, post authorship, private chat access, per-user reactions, chat IDs, and notifications. The tests have been committed but **not executed** in this environment. Review test failures before deploying.
+
+## Cloud Functions notification backend (new, not deployed)
+
+- `functions/index.js` implements Firestore on-create triggers for post comments, chat messages, and new followers.
+- Functions derive the notification recipient from trusted Firestore documents rather than client-supplied recipient IDs. Self-notifications are skipped. Notification IDs are deterministic to prevent duplicate delivery on event retries.
+- The browser's existing notification panel reads `users/{uid}/notifications`; client creation remains forbidden by Firestore Rules. The backend uses the Admin SDK.
+- Deploying Cloud Functions requires a Firebase project with billing enabled (Blaze plan) and the appropriate IAM permissions. **Do not enable billing or deploy without the project owner's approval.**
+- When ready to deploy, install dependencies in `functions/` and use the Firebase CLI with the correct project selected. Run the Firestore emulator tests first. Existing deployed functions must be reviewed to avoid replacing or unintentionally removing them.
+- This does not yet include rate limiting, content moderation, Firebase Storage policies, or an end-to-end test. These features must not be represented as finished.
