@@ -1250,17 +1250,30 @@ async function markRead(cid,peer){
 }
 
 async function ensureChat(uid){
+  if(!me||!uid||uid===me.uid)throw Error("Недопустимый собеседник");
   const cid=chatId(me.uid,uid);
   const ref=doc(db,"chats",cid);
-  const snap=await getDoc(ref);
 
-  if(!snap.exists()){
-    await setDoc(ref,{
+  // Atomic create-if-absent: two clients opening the same conversation
+  // cannot overwrite its latest message preview with an empty value.
+  await runTransaction(db,async transaction=>{
+    const existing=await transaction.get(ref);
+    if(existing.exists()){
+      const participants=existing.data().participants;
+      if(!Array.isArray(participants)||
+         participants.length!==2||
+         !participants.includes(me.uid)||
+         !participants.includes(uid)){
+        throw Error("Некорректные участники диалога");
+      }
+      return;
+    }
+    transaction.set(ref,{
       participants:[me.uid,uid].sort(),
       updatedAt:serverTimestamp(),
       lastText:""
     });
-  }
+  });
 
   return cid;
 }
