@@ -514,7 +514,7 @@ import {
   getFirestore,collection,doc,getDoc,getDocs,
   query,where,limit,orderBy,onSnapshot,
   writeBatch,serverTimestamp,setDoc,updateDoc,
-  deleteDoc,runTransaction,FieldPath
+  deleteDoc,runTransaction
 } from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
@@ -539,6 +539,8 @@ let chatRecords=[];
 let currentMessages=[];
 let stopChats=null;
 let stopMessages=null;
+let stopReactions=null;
+let chatReactions={};
 let stopPresence=null;
 let stopTyping=null;
 let stopPin=null;
@@ -708,11 +710,14 @@ function hideMenus(){
 
 function stopActive(){
   stopMessages?.();
+  stopReactions?.();
   stopPresence?.();
   stopTyping?.();
   stopPin?.();
 
   stopMessages=null;
+  stopReactions=null;
+  chatReactions={};
   stopPresence=null;
   stopTyping=null;
   stopPin=null;
@@ -810,6 +815,24 @@ async function openChat(uid){
       ()=>{}
     );
 
+    stopReactions=onSnapshot(
+      collection(db,"chats",cid,"reactions"),
+      snap=>{
+        if(g!==generation)return;
+        const next={};
+        snap.forEach(d=>{
+          const x=d.data();
+          if(typeof x.messageId!=="string"||!EMOJIS.includes(x.emoji))return;
+          if(!next[x.messageId])next[x.messageId]={};
+          if(!next[x.messageId][x.emoji])next[x.messageId][x.emoji]=[];
+          next[x.messageId][x.emoji].push(x.uid);
+        });
+        chatReactions=next;
+        renderMessages();
+      },
+      err=>showError("Реакции: "+err.message)
+    );
+
     stopMessages=onSnapshot(
       query(
         collection(db,"chats",cid,"messages"),
@@ -881,7 +904,7 @@ function renderMessages(forceBottom=false){
     const sticker=m.type==="sticker";
     const src=sticker?stickerSource(m.sticker):"";
 
-    const reactions=m.reactions||{};
+    const reactions=chatReactions[m.id]||{};
     const reactionHTML=EMOJIS.map(emoji=>{
       const ids=Array.isArray(reactions[emoji])
         ?reactions[emoji]:[];
@@ -1069,34 +1092,21 @@ $("emojiPicker").addEventListener("click",async event=>{
 });
 
 async function toggleReaction(id,emoji){
-  if(!me||!activeChat()||!EMOJIS.includes(emoji))return;
-
+  if(!me||!activeChat()||!EMOJIS.includes(emoji)||!id)return;
   const cid=activeChat();
   const uid=me.uid;
-
+  const ref=doc(db,"chats",cid,"reactions",id+"_"+uid);
   try{
-    await runTransaction(db,async tx=>{
-      const ref=doc(db,"chats",cid,"messages",id);
-      const snap=await tx.get(ref);
-
-      if(!snap.exists()){
-        throw Error("Сообщение удалено");
-      }
-
-      const reactions=snap.data().reactions||{};
-      const old=Array.isArray(reactions[emoji])
-        ?reactions[emoji]:[];
-
-      const next=old.includes(uid)
-        ?old.filter(x=>x!==uid)
-        :[...old,uid];
-
-      tx.update(
-        ref,
-        new FieldPath("reactions",emoji),
-        next
-      );
-    });
+    const message=await getDoc(doc(db,"chats",cid,"messages",id));
+    if(!message.exists())throw Error("Сообщение удалено");
+    const current=await getDoc(ref);
+    if(current.exists()&&current.data().emoji===emoji){
+      await deleteDoc(ref);
+    }else{
+      await setDoc(ref,{
+        uid,messageId:id,emoji,createdAt:serverTimestamp()
+      });
+    }
   }catch(err){
     showError("Реакция: "+err.message);
   }
