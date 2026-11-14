@@ -282,7 +282,34 @@
       }
     }
   </style>
-</head>
+<style>
+#nxRandomizer{--rx:#879bff;color:#eaf0ff;padding:8px 0 30px}
+#nxRandomizer[hidden]{display:none!important}
+#nxRandomizer .rx-hero,#nxRandomizer .rx-card{border:1px solid #a1b3ff32;border-radius:24px;background:linear-gradient(140deg,#1b2641e8,#0c1427ed);box-shadow:0 20px 55px #0004;padding:22px;margin-bottom:18px}
+#nxRandomizer .rx-hero{background:radial-gradient(circle at 90% 0%,#7c5cff42,transparent 45%),linear-gradient(135deg,#1b2b53,#111829)}
+#nxRandomizer h2{font-size:clamp(28px,5vw,42px);letter-spacing:-.045em;margin:8px 0}
+#nxRandomizer .rx-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#nxRandomizer .rx-tab,#nxRandomizer button{border-radius:13px;border:1px solid #a0b4ff40;background:#263657;color:#fff;padding:12px 17px;font-weight:700;cursor:pointer}
+#nxRandomizer button.rx-active,#nxRandomizer button.rx-primary{background:linear-gradient(115deg,#527bf0,#9463df);border-color:#a6b6ff55;box-shadow:0 8px 25px #596ee94b}
+#nxRandomizer button:disabled{opacity:.5;cursor:wait}
+#nxRandomizer .rx-muted{color:#aab9d7}#nxRandomizer .rx-reelbox{overflow:hidden;position:relative;border:1px solid #809cff55;border-radius:18px;padding:20px 0;background:#080f21}
+#nxRandomizer .rx-reelbox:after{content:"";position:absolute;top:0;bottom:0;left:50%;width:3px;background:#fff;box-shadow:0 0 22px #a7baff}
+#nxRandomizer .rx-reel{display:flex;gap:10px;transition:transform 3.5s cubic-bezier(.12,.77,.12,1);will-change:transform}
+#nxRandomizer .rx-tile{flex:0 0 130px;text-align:center;border-radius:14px;background:#26375c;padding:22px 8px;border:1px solid #849aff66;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#nxRandomizer .rx-wheelbox{width:min(78vw,320px);aspect-ratio:1;position:relative;margin:22px auto;filter:drop-shadow(0 0 25px #6577ff44)}
+#nxRandomizer .rx-wheel{width:100%;height:100%;border-radius:50%;border:10px solid #273455;background:conic-gradient(#61e2b5 0 var(--rx-chance),#ec7395 var(--rx-chance) 100%);transition:transform 4s cubic-bezier(.12,.75,.1,1);box-shadow:inset 0 0 0 4px #ffffff1c}
+#nxRandomizer .rx-pointer{position:absolute;z-index:2;left:50%;top:-8px;transform:translateX(-50%);border-left:16px solid transparent;border-right:16px solid transparent;border-top:30px solid white}
+#nxRandomizer .rx-wheelbox:after{content:"✦";position:absolute;inset:32%;border-radius:50%;display:grid;place-items:center;background:#101a30;border:4px solid #b1c4ff40;font-size:42px}
+#nxRandomizer .rx-result{font-size:25px;font-weight:900;text-align:center;min-height:45px;animation:rx-pop .45s ease}
+#nxRandomizer .rx-success{color:#61e2b5}#nxRandomizer .rx-fail{color:#ff8ca8}
+#nxRandomizer input{background:#111b31;color:white;border:1px solid #849aff55;border-radius:10px;padding:9px;max-width:120px}
+#nxRandomizer input[type=range]{max-width:none;width:100%;accent-color:#9a8aff}
+#nxRandomizer .rx-people{display:flex;flex-wrap:wrap;gap:8px;max-height:200px;overflow:auto}
+#nxRandomizer .rx-people button{font-size:12px;padding:8px 10px}
+#nxRandomizer .rx-people button[aria-pressed=true]{background:#506dd3}
+@keyframes rx-pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#nxRandomizer .rx-wheel,#nxRandomizer .rx-reel{transition-duration:.01ms}}
+</style></head>
 
 <body>
 
@@ -423,6 +450,12 @@
     <!-- MAIN CONTENT -->
     <main id="mainContent">
 
+      <section id="nxRandomizer" hidden aria-label="NEXORA Randomizer">
+<div class="rx-hero"><small class="rx-muted">NEXORA · LIVE STUDIO</small><h2>✦ Рандомайзер</h2><p class="rx-muted">Прямой эфир, открытие кейсов и колесо вероятности. Без ставок.</p><div class="rx-row"><button id="rxCaseTab" class="rx-active">◈ CASE ROLL</button><button id="rxLuckTab">◎ LUCK UPGRADE</button></div></div>
+<div class="rx-card"><div id="rxNotice" role="status" class="rx-muted">Подключение…</div></div>
+<div id="rxCase"><div class="rx-card"><h3>◈ Открытие кейса</h3><div id="rxOwnerCase" hidden><div class="rx-row"><label>Победителей <input id="rxCount" type="number" min="1" max="10" value="1"></label><label><input type="checkbox" id="rxSelectedOnly"> Только выбранные</label></div><p class="rx-muted">Участники: <span id="rxPeopleCount">0</span></p><div id="rxPeople" class="rx-people"></div></div><div class="rx-row" style="margin:15px 0"><button id="rxRoll" class="rx-primary">✦ Открыть кейс</button><button id="rxCaseReplay" hidden>↻ Повтор</button></div><div class="rx-reelbox"><div id="rxReel" class="rx-reel"><div class="rx-tile">✦ NEXORA</div></div></div><p id="rxCaseStatus" class="rx-muted">Ожидание розыгрыша</p><div id="rxWinners"></div></div></div>
+<div id="rxLuck" hidden><div class="rx-card"><h3>◎ Luck Upgrade</h3><div id="rxOwnerLuck" hidden><label>Шанс успеха: <strong id="rxChanceText">50%</strong><input type="range" id="rxChance" min="1" max="99" value="50"></label></div><div class="rx-wheelbox"><div class="rx-pointer"></div><div id="rxWheel" class="rx-wheel" style="--rx-chance:50%"></div></div><div id="rxLuckResult" class="rx-result"></div><div class="rx-row" style="justify-content:center"><button id="rxSpin" class="rx-primary">◎ Запустить вращение</button><button id="rxLuckReplay" hidden>↻ Повтор</button></div><p id="rxLuckStatus" class="rx-muted">Ожидание вращения</p></div></div>
+</section>
       <!-- FEED -->
       <section id="feedPage">
         <div class="glass panel nx-welcome">
@@ -894,5 +927,6 @@
     src="./email-verification.js?v=2"
   ></script>
 
+<script type="module" src="./randomizer-integrated.js?v=1"></script>
 </body>
 </html>
