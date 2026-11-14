@@ -2,573 +2,170 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080d19">
-<title>NEXORA · Owner Control Center</title>
-<link rel="icon" href="image/icon.png">
-<style>
-:root {
-  color-scheme:dark;
-  --bg:#080d19;
-  --panel:#152037dc;
-  --line:#ffffff19;
-  --text:#f0f5ff;
-  --muted:#94a7c8;
-  --accent:#8e8bff;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font:14px system-ui,sans-serif;
-  color:var(--text);
-  background:var(--bg);
-  min-height:100vh;
-}
-body::before{
-  content:"";
-  position:fixed;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse at 0% 0%,#264c893d,transparent 52%),
-    radial-gradient(ellipse at 100% 80%,#6546a42b,transparent 55%);
-}
-button,input,select{font:inherit}
-button{cursor:pointer}
-button:disabled{opacity:.5;cursor:wait}
-a{color:#b7c8ff;text-decoration:none}
-.hidden{display:none!important}
-header{
-  position:sticky;top:0;z-index:10;
-  background:#0b1425e8;
-  border-bottom:1px solid var(--line);
-  backdrop-filter:blur(18px);
-}
-.header-inner{
-  max-width:1160px;
-  margin:auto;
-  padding:15px 20px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-.brand{
-  display:flex;align-items:center;gap:12px;
-  font-size:18px;font-weight:850;
-}
-.brand img{width:35px;height:35px;object-fit:contain}
-.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:1px}
-main{position:relative;max-width:1160px;margin:26px auto;padding:0 16px 70px}
-.glass{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:20px;
-  box-shadow:0 15px 35px #0003;
-  backdrop-filter:blur(16px);
-}
-.hero{
-  padding:27px;
-  display:flex;align-items:center;justify-content:space-between;gap:15px;
-  margin-bottom:18px;
-}
-h1{margin:0 0 9px;font-size:clamp(23px,4vw,32px)}
-h2{margin:0;font-size:19px}
-p{line-height:1.6}
-.muted{color:var(--muted)}
-.small{font-size:12px}
-.kicker{
-  font-size:11px;letter-spacing:2px;
-  color:#aaaaff;font-weight:750;margin-bottom:10px;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:13px;margin-bottom:18px;
-}
-.metric{padding:20px}
-.metric b{display:block;font-size:30px;margin-top:8px}
-.metric span{color:var(--muted)}
-.panel{padding:22px;margin-bottom:18px}
-.between{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;flex-wrap:wrap;
-}
-input,select{
-  background:#0b1425;
-  border:1px solid #354968;
-  color:var(--text);
-  padding:12px;
-  border-radius:11px;
-  outline:none;
-  width:100%;
-}
-input:focus,select:focus{border-color:#858cff}
-button,.button{
-  padding:11px 15px;
-  border-radius:11px;
-  border:1px solid #445674;
-  background:#22334f;
-  color:white;
-  text-decoration:none;
-}
-.primary{
-  border:0;
-  background:linear-gradient(120deg,#487bed,#8d6df0);
-  font-weight:700;
-}
-.danger{background:#5b2537;border-color:#8c3b55}
-.search{margin:17px 0}
-.users{display:grid;gap:10px;margin-top:15px}
-.user{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:12px;
-  padding:13px;
-  border:1px solid var(--line);
-  border-radius:14px;
-  background:#101a2b;
-  align-items:center;
-}
-.identity{display:flex;align-items:center;gap:12px;min-width:0}
-.avatar{
-  width:46px;height:46px;flex-shrink:0;
-  display:grid;place-items:center;
-  border-radius:14px;
-  background:linear-gradient(135deg,#4776b8,#8555bd);
-  font-weight:800;
-  overflow:hidden;
-}
-.avatar img{width:100%;height:100%;object-fit:cover}
-.username{font-weight:750;overflow-wrap:anywhere}
-.uid{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
-.badge{width:26px;height:26px;vertical-align:middle;object-fit:contain}
-.pill{
-  display:inline-block;
-  padding:4px 8px;
-  background:#33456a;
-  border-radius:7px;
-  color:#c8d9ff;
-  font-size:11px;
-  margin-top:5px;
-}
-.editor{
-  padding:18px;
-  border:1px solid #5c689b;
-  border-radius:15px;
-  background:#101a2b;
-  margin-top:16px;
-}
-.fields{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:13px;margin:18px 0;
-}
-label{display:grid;gap:8px;color:#cad7ed}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-.notice{
-  padding:14px 17px;
-  background:#293b58;
-  border:1px solid #556a91;
-  border-radius:13px;
-  line-height:1.6;
-}
-#status{
-  padding:16px 20px;
-  margin-bottom:18px;
-  color:#d5e0ff;
-}
-#toast{
-  position:fixed;bottom:24px;left:50%;z-index:100;
-  transform:translateX(-50%);
-  padding:13px 19px;
-  border-radius:13px;
-  background:#2b4266;
-  border:1px solid #6b86bb;
-  box-shadow:0 15px 35px #0008;
-  max-width:90vw;
-  text-align:center;
-}
-@media(max-width:650px){
-  .hero{padding:19px;display:block}
-  .grid{grid-template-columns:1fr 1fr}
-  .metric{padding:15px}
-  .grid .metric:last-child{grid-column:1/-1}
-  .panel{padding:15px}
-  .user{grid-template-columns:1fr}
-  .fields{grid-template-columns:1fr}
-  .header-inner{padding:12px}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080d19">
+  <title>NEXORA · Социальная сеть</title>
+  <link rel="icon" href="image/icon.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="ambient"></div>
 
-<header>
-  <div class="header-inner">
-    <div class="brand">
-      <img src="image/icon.png" alt="">
-      <div>NEXORA <small>OWNER CONTROL CENTER</small></div>
-    </div>
-    <a class="button" href="./index.html">← На сайт</a>
+<header class="topbar">
+  <div class="brand">
+    <img src="image/icon.png" alt="" onerror="this.hidden=true">
+    <b>NEXORA</b>
+    <small>BETA 2.0</small>
+  </div>
+  <div id="topUser" class="topuser hidden">
+    <span id="topName"></span>
+    <button id="logout" class="quiet">Выйти</button>
   </div>
 </header>
 
-<main>
-  <div class="glass hero">
-    <div>
-      <div class="kicker">NEXORA · ADMINISTRATION</div>
-      <h1>Панель управления</h1>
-      <p class="muted">Пользователи, верификации и роли платформы.</p>
-    </div>
-    <div style="font-size:42px">✦</div>
+<section id="authPage" class="auth glass">
+  <div class="heroicon">
+    <img src="image/icon.png" alt="Nexora" onerror="this.hidden=true">
   </div>
+  <h1 id="authTitle">С возвращением</h1>
+  <p class="muted">Твоё пространство для общения</p>
+  <form id="authForm" class="stack">
+    <input id="username" class="hidden" placeholder="Имя пользователя (3–20 символов)" maxlength="20">
+    <input id="email" type="email" placeholder="Электронная почта" required>
+    <input id="password" type="password" placeholder="Пароль" minlength="6" required>
+    <button class="primary" id="authSubmit">Войти</button>
+  </form>
+  <button class="linkbutton" id="authSwitch">Создать аккаунт</button>
+</section>
 
-  <div id="status" class="glass">Проверяем права доступа...</div>
+<div id="app" class="layout hidden">
+  <aside class="sidebar glass">
+    <nav class="nav">
+      <button data-page="feed" class="active">⌂ <span>Главная</span></button>
+      <button data-page="search">⌕ <span>Поиск</span></button>
+      <a href="chats.html">✉ <span>Сообщения</span></a>
+      <button data-page="profile">♙ <span>Профиль</span></button>
+      <button data-page="settings">⚙ <span>Настройки</span></button>
+    </nav>
+  </aside>
 
-  <div id="dashboard" class="hidden">
-    <div class="grid">
-      <div class="glass metric">
-        <span>Загружено аккаунтов</span>
-        <b id="countUsers">0</b>
-      </div>
-      <div class="glass metric">
-        <span>С верификацией</span>
-        <b id="countVerified">0</b>
-      </div>
-      <div class="glass metric">
-        <span>Команда Nexora</span>
-        <b id="countStaff">0</b>
-      </div>
-    </div>
-
-    <section class="glass panel">
-      <div class="between">
-        <h2>Управление пользователями</h2>
-        <button id="reload">↻ Обновить</button>
-      </div>
-
-      <input
-        id="search"
-        class="search"
-        placeholder="Поиск по имени или UID"
-        autocomplete="off"
-      >
-
-      <p class="muted small">
-        Показаны первые 100 аккаунтов. Для больших баз
-        позже добавим постраничную загрузку.
-      </p>
-
-      <div id="users" class="users"></div>
-
-      <div id="editor" class="editor hidden">
-        <div class="between">
-          <h2>Редактирование аккаунта</h2>
-          <button id="closeEditor">✕</button>
+  <main>
+    <section id="feedPage">
+      <div class="glass panel">
+        <div class="sectionhead">
+          <h2>Лента</h2>
+          <span class="muted">Nexora</span>
         </div>
-
-        <p id="selectedName"></p>
-        <p id="selectedUid" class="uid"></p>
-
-        <div class="fields">
-          <label>
-            Верификация
-            <select id="verification">
-              <option value="0">Нет верификации</option>
-              <option value="1">1 · Подтверждённый пользователь</option>
-              <option value="2">2 · Официальный бренд</option>
-              <option value="3" disabled>3 · Создатель Nexora</option>
-              <option value="4">4 · Команда Nexora</option>
-              <option value="5">5 · Спонсор</option>
-            </select>
-          </label>
-
-          <label>
-            Роль
-            <select id="role">
-              <option value="user">User</option>
-              <option value="moderator">Moderator</option>
-              <option value="admin">Admin</option>
-              <option value="owner" disabled>Owner · только основатель</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="notice small">
-          Верификация и роль — разные вещи.
-          Значок модератора не выдаёт административные права
-          автоматически. Роль Owner нельзя передавать через эту панель.
-        </div>
-
-        <div class="actions" style="margin-top:17px">
-          <button id="save" class="primary">Сохранить изменения</button>
-          <button id="cancel">Отмена</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="glass panel">
-      <h2>Безопасность</h2>
-      <p class="muted">
-        Все изменения проверяются Firestore Security Rules.
-        Если правила не опубликованы или доступ запрещён,
-        панель не сможет изменить чужой аккаунт.
-      </p>
-      <p class="muted">
-        Панель не предоставляет доступ к личным перепискам пользователей.
-      </p>
-    </section>
-  </div>
-</main>
-
-<div id="toast" class="hidden" role="status"></div>
-
-<script type="module">
-import {initializeApp} from
-'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
-
-import {getAuth,onAuthStateChanged} from
-'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-
-import {
-  getFirestore,collection,doc,getDoc,getDocs,
-  query,limit,updateDoc,serverTimestamp
-} from
-'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
-
-const firebaseConfig={
-  apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
-  authDomain:'toolchat-bfac8.firebaseapp.com',
-  projectId:'toolchat-bfac8',
-  storageBucket:'toolchat-bfac8.firebasestorage.app',
-  messagingSenderId:'52396840735',
-  appId:'1:52396840735:web:a608b9c037c8481f2dc22a'
-};
-
-// Сверь с UID основателя в Firebase Authentication.
-const OWNER_UID='FXtmMsn8JYfx04zpxiSaXZ0iHWg2';
-
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-const $=id=>document.getElementById(id);
-
-let currentUser=null;
-let records=[];
-let selected=null;
-let toastTimer;
-
-function escapeHTML(s){
-  return String(s??'').replace(/[&<>"']/g,c=>({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  }[c]));
-}
-
-function toast(message){
-  clearTimeout(toastTimer);
-  $('toast').textContent=message;
-  $('toast').classList.remove('hidden');
-  toastTimer=setTimeout(
-    ()=>$('toast').classList.add('hidden'),4000
-  );
-}
-
-function status(message){
-  $('status').textContent=message;
-}
-
-function safeImage(url){
-  try{
-    const u=new URL(url);
-    return u.protocol==='https:'?u.href:'';
-  }catch{return ''}
-}
-
-function userAvatar(user){
-  const url=safeImage(user.avatarUrl);
-  return url
-    ? `<img src="${escapeHTML(url)}" alt="" referrerpolicy="no-referrer">`
-    : escapeHTML((user.name||'N').slice(0,2).toUpperCase());
-}
-
-function roleName(role){
-  return {
-    user:'Пользователь',
-    moderator:'Модератор',
-    admin:'Администратор',
-    owner:'Владелец'
-  }[role]||'Пользователь';
-}
-
-onAuthStateChanged(auth,async user=>{
-  currentUser=user;
-  $('dashboard').classList.add('hidden');
-
-  if(!user){
-    status('Сначала войди в свой аккаунт на главной странице Nexora.');
-    return;
-  }
-
-  if(user.uid!==OWNER_UID){
-    status('Доступ запрещён. Эта страница доступна только основателю Nexora.');
-    return;
-  }
-
-  try{
-    const snap=await getDoc(doc(db,'users',user.uid));
-    if(!snap.exists()||snap.data().role!=='owner'){
-      status('Роль Owner не подтверждена в Firestore.');
-      return;
-    }
-
-    status('Доступ подтверждён · Owner');
-    $('dashboard').classList.remove('hidden');
-    await loadUsers();
-  }catch(e){
-    status('Ошибка проверки доступа: '+e.message);
-  }
-});
-
-async function loadUsers(){
-  $('users').textContent='Загрузка...';
-  $('reload').disabled=true;
-
-  try{
-    const snap=await getDocs(query(
-      collection(db,'users'),
-      limit(100)
-    ));
-
-    records=snap.docs.map(d=>({
-      uid:d.id,
-      ...d.data()
-    }));
-
-    $('countUsers').textContent=records.length;
-    $('countVerified').textContent=records.filter(
-      u=>Number(u.verification||0)>0
-    ).length;
-    $('countStaff').textContent=records.filter(
-      u=>['owner','admin','moderator'].includes(u.role)
-    ).length;
-
-    renderUsers();
-  }catch(e){
-    $('users').textContent='Ошибка: '+e.message;
-  }finally{
-    $('reload').disabled=false;
-  }
-}
-
-function renderUsers(){
-  const term=$('search').value.toLowerCase().trim();
-
-  const filtered=records.filter(u=>
-    (u.name||'').toLowerCase().includes(term)||
-    u.uid.toLowerCase().includes(term)
-  );
-
-  $('users').innerHTML=filtered.map(u=>{
-    const v=Number(u.verification||0);
-    const badge=v>=1&&v<=5
-      ? `<img class="badge" src="image/Verified_${v}.png" alt="Верификация">`
-      : '';
-
-    return `
-      <div class="user">
-        <div class="identity">
-          <div class="avatar">${userAvatar(u)}</div>
-          <div style="min-width:0">
-            <div class="username">
-              ${escapeHTML(u.name||'Без имени')} ${badge}
-            </div>
-            <div class="uid">${escapeHTML(u.uid)}</div>
-            <span class="pill">${roleName(u.role)}</span>
+        <form id="postForm" class="stack">
+          <textarea id="postInput" maxlength="1000" required placeholder="Что нового?"></textarea>
+          <label class="fieldlabel" for="postImage">Изображение (необязательно, прямая HTTPS-ссылка)</label>
+          <input id="postImage" placeholder="https://example.com/photo.png" type="url">
+          <div class="between">
+            <small class="muted"><span id="postCount">0</span> / 1000</small>
+            <button class="primary">Опубликовать</button>
           </div>
+        </form>
+      </div>
+      <div id="feedList"></div>
+    </section>
+
+    <section id="searchPage" class="hidden">
+      <div class="glass panel">
+        <h2>Поиск людей</h2>
+        <input id="searchInput" placeholder="Найти пользователя">
+        <p class="muted">Поиск среди загруженных профилей</p>
+      </div>
+      <div id="searchResults"></div>
+    </section>
+
+    <section id="profilePage" class="hidden">
+      <div class="glass panel profile">
+        <div id="profileBanner" class="cover"></div>
+        <div class="profilebody">
+          <div id="profileAvatar" class="avatar large">N</div>
+          <div id="profileName" class="profilename"></div>
+          <div id="profileHandle" class="muted"></div>
+          <p id="profileBio"></p>
+          <div class="stats">
+            <span><b id="followersCount">0</b> подписчиков</span>
+            <span><b id="followingCount">0</b> подписок</span>
+          </div>
+          <div id="profileLinks"></div>
+          <div id="profileControls" class="buttons"></div>
         </div>
-        <button data-edit="${escapeHTML(u.uid)}">
-          Управлять
-        </button>
-      </div>`;
-  }).join('')||'<p class="muted">Пользователи не найдены</p>';
-}
+      </div>
+      <div id="profilePosts"></div>
+    </section>
 
-$('users').addEventListener('click',e=>{
-  const button=e.target.closest('[data-edit]');
-  if(!button)return;
+    <section id="settingsPage" class="hidden">
+      <div class="glass panel">
+        <h2>Настройки профиля</h2>
+        <p class="muted">Изображения хранятся на стороннем фотохостинге. Nexora сохраняет только ссылки.</p>
+        <form id="settingsForm" class="stack">
+          <label>Описание профиля
+            <textarea id="settingsBio" maxlength="160" placeholder="О себе"></textarea>
+          </label>
+          <label>Прямая ссылка на аватар
+            <input id="settingsAvatar" type="url" placeholder="https://example.com/avatar.png">
+          </label>
+          <label>Прямая ссылка на обложку
+            <input id="settingsBanner" type="url" placeholder="https://example.com/banner.png">
+          </label>
+          <label>Ссылка на ваш сайт (необязательно)
+            <input id="settingsWebsite" type="url" placeholder="https://example.com">
+          </label>
+          <button class="primary">Сохранить профиль</button>
+        </form>
 
-  const u=records.find(x=>x.uid===button.dataset.edit);
-  if(!u)return;
+        <details class="help">
+          <summary>Как получить прямую ссылку на изображение?</summary>
+          <p>1. Откройте <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" data-external>Postimages</a> и загрузите изображение.</p>
+          <p>2. Скопируйте именно «Прямую ссылку» на файл PNG, JPG или WebP.</p>
+          <p>3. Вставьте ссылку выше и сохраните профиль.</p>
+          <p class="muted">Не загружайте личные или конфиденциальные фотографии на публичный фотохостинг.</p>
+        </details>
+      </div>
 
-  selected=u.uid;
-  $('selectedName').textContent=u.name||'Без имени';
-  $('selectedUid').textContent='UID: '+u.uid;
-  $('verification').value=String(u.verification||0);
-  $('role').value=u.role||'user';
+      <div class="glass panel">
+        <h2>Мы в социальных сетях</h2>
+        <p class="muted">Официальные ресурсы Nexora</p>
+        <div class="socials">
+          <a id="tgChannel" href="#" class="social" target="_blank" rel="noopener noreferrer">✈ Telegram-канал ↗</a>
+          <a id="tgBot" href="#" class="social" target="_blank" rel="noopener noreferrer">✈ Telegram-бот ↗</a>
+        </div>
+        <p id="socialHint" class="muted"></p>
+      </div>
+    </section>
+  </main>
 
-  const mine=u.uid===OWNER_UID;
-  $('verification').disabled=mine;
-  $('role').disabled=mine;
-  $('save').disabled=mine;
+  <aside class="right">
+    <div class="glass panel">
+      <h3>✦ NEXORA</h3>
+      <p class="muted">Независимая социальная сеть. Публикации, профили и общение.</p>
+    </div>
+    <div class="glass panel">
+      <h3>Безопасность</h3>
+      <p class="muted">Переходы на сторонние сайты сопровождаются предупреждением.</p>
+    </div>
+  </aside>
+</div>
 
-  $('editor').classList.remove('hidden');
-  $('editor').scrollIntoView({behavior:'smooth',block:'nearest'});
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  if(mine)toast('Статус основателя защищён от изменений.');
-});
+<div id="linkDialog" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="linkTitle">
+  <div class="glass dialog">
+    <div class="warning">⚠</div>
+    <h2 id="linkTitle">Вы покидаете Nexora</h2>
+    <p>Эта ссылка не подтверждена администрацией. Проверьте адрес и не вводите пароли на подозрительных сайтах.</p>
+    <div id="linkTarget" class="urlbox"></div>
+    <div class="buttons">
+      <button id="cancelLink" class="quiet">Отмена</button>
+      <button id="confirmLink" class="primary">Продолжить</button>
+    </div>
+  </div>
+</div>
 
-$('search').oninput=renderUsers;
-$('reload').onclick=loadUsers;
-
-function closeEditor(){
-  selected=null;
-  $('editor').classList.add('hidden');
-}
-
-$('closeEditor').onclick=closeEditor;
-$('cancel').onclick=closeEditor;
-
-$('save').onclick=async()=>{
-  if(!selected||!currentUser)return;
-  if(currentUser.uid!==OWNER_UID||selected===OWNER_UID)return;
-
-  const user=records.find(u=>u.uid===selected);
-  if(!user)return;
-
-  const role=$('role').value;
-  const verification=Number($('verification').value);
-
-  if(!['user','moderator','admin'].includes(role)||
-    ![0,1,2,4,5].includes(verification)){
-    toast('Недопустимые значения роли или верификации.');
-    return;
-  }
-
-  if(!confirm(
-    `Изменить аккаунт ${user.name||selected}?\n`+
-    `Роль: ${role}\nВерификация: ${verification}`
-  ))return;
-
-  $('save').disabled=true;
-
-  try{
-    await updateDoc(doc(db,'users',selected),{
-      role,
-      verification
-    });
-
-    toast('Изменения успешно сохранены');
-    closeEditor();
-    await loadUsers();
-  }catch(e){
-    toast('Не удалось сохранить: '+e.message);
-  }finally{
-    $('save').disabled=false;
-  }
-};
-</script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
