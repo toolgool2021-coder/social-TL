@@ -737,7 +737,7 @@ $('draftList').onclick=async event=>{
 onAuthStateChanged(auth,async user=>{
  me=user;
 
- if(!user){
+ if(!user || !user.emailVerified){
   $('recommendedPosts').innerHTML=
    '<p class="muted">Войди в NEXORA для просмотра публикаций.</p>';
   $('draftList').innerHTML=
@@ -758,5 +758,6 @@ onAuthStateChanged(auth,async user=>{
  }
 });
 </script>
+<script type="module" src="./email-verification.js?v=2"></script>
 </body>
 </html>
