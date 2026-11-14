@@ -556,6 +556,8 @@ let typingTimer=null;
 let reading=false;
 let readPending=false;
 let sending=false;
+let lastMessageSent=0;
+const MESSAGE_COOLDOWN_MS=900;
 
 const EMOJIS=["❤️","👍","😂","😮","😢","🔥"];
 
@@ -1264,6 +1266,8 @@ async function sendMessage(payload){
   if(!me||!activeUid)return;
 
   const uid=activeUid;
+  const remaining=MESSAGE_COOLDOWN_MS-(Date.now()-lastMessageSent);
+  if(remaining>0)throw Error("Слишком быстро. Подожди немного.");
   const cid=await ensureChat(uid);
 
   if(activeUid!==uid){
@@ -1305,6 +1309,7 @@ async function sendMessage(payload){
   );
 
   await batch.commit();
+  lastMessageSent=Date.now();
 }
 
 $("form").onsubmit=async event=>{
