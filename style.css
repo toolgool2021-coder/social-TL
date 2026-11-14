@@ -343,3 +343,59 @@ input:focus, textarea:focus { border-color: var(--blue); }
   .topuser { font-size: 12px; }
   .toast { bottom: 78px; }
 }
+
+
+/* NEXORA — улучшенное отображение верификаций */
+
+.badgeicon {
+  width: 38px;
+  height: 38px;
+  padding: 2px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  transition: transform .2s ease, background .2s ease;
+}
+
+.badgeicon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+}
+
+.badgeicon:hover {
+  transform: scale(1.12);
+  background: rgba(255,255,255,.06);
+}
+
+.badgeicon:active {
+  transform: scale(.94);
+}
+
+.namegroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.profilename .badgeicon {
+  width: 44px;
+  height: 44px;
+}
+
+.profilename .badgeicon img {
+  width: 38px;
+  height: 38px;
+}
+
+@media (max-width: 650px) {
+  .badgeicon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .badgeicon img {
+    width: 29px;
+    height: 29px;
+  }
+}
