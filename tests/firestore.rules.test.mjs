@@ -87,3 +87,22 @@ test("client cannot fabricate notifications", async () => {
     text:"fake",read:false
   }));
 });
+
+test("new private chat can be created before listening to messages", async () => {
+  const cid=ALICE+"_"+MALLORY;
+  await assertSucceeds(setDoc(ref(ALICE,"chats",cid),{
+    participants:[ALICE,MALLORY],updatedAt:serverTimestamp(),lastText:""
+  }));
+  await assertSucceeds(getDocs(collection(db(ALICE),"chats",cid,"messages")));
+  await assertSucceeds(getDocs(collection(db(MALLORY),"chats",cid,"reactions")));
+  await assertFails(getDocs(collection(db(BOB),"chats",cid,"reactions")));
+});
+
+test("only the recipient may mark a message read", async () => {
+  const cid=ALICE+"_"+BOB;
+  const message=ref(BOB,"chats",cid,"messages","m1");
+  await assertFails(updateDoc(ref(ALICE,"chats",cid,"messages","m1"),{
+    readAt:serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(message,{readAt:serverTimestamp()}));
+});
