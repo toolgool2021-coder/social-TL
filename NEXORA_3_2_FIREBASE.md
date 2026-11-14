@@ -89,3 +89,10 @@ The test command starts a local Firestore emulator and runs `tests/firestore.rul
 - Deploying Cloud Functions requires a Firebase project with billing enabled (Blaze plan) and the appropriate IAM permissions. **Do not enable billing or deploy without the project owner's approval.**
 - When ready to deploy, install dependencies in `functions/` and use the Firebase CLI with the correct project selected. Run the Firestore emulator tests first. Existing deployed functions must be reviewed to avoid replacing or unintentionally removing them.
 - This does not yet include rate limiting, content moderation, Firebase Storage policies, or an end-to-end test. These features must not be represented as finished.
+
+## Client anti-flood controls (3.2)
+
+- `app.js`: 12-second cooldown between successful post submissions and 4-second cooldown between successful comment submissions.
+- `chats.html`: 900-millisecond cooldown between successful chat message submissions, including stickers.
+- `index.html`: cache-busting query parameters updated for `app.js` and `nexora21.js`.
+- **Security limitation:** all cooldowns above run in the browser. They are usability measures, not enforceable anti-spam controls. Attackers can bypass them with the Firestore SDK or REST API. Production abuse mitigation needs server-side throttling, App Check, monitoring, and moderation workflows; none is deployed yet.
