@@ -291,6 +291,35 @@ service cloud.firestore {
         txt(request.resource.data.name,3,40) &&
         txt(request.resource.data.tag,2,8) &&
         request.resource.data.tag.matches('^[A-Za-z0-9_]+
+        txt(request.resource.data.description,0,500) &&
+        txt(request.resource.data.category,2,40) &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.createdAt == request.time;
+      allow update,delete: if false;
+    }
+    match /groups/{groupId} {
+      allow get,list: if authd() && resource.data.status == 'active';
+      allow create,update,delete: if false;
+      match /members/{uid} {
+        allow get,list: if authd() &&
+          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+        allow create,update,delete: if false;
+      }
+      match /messages/{messageId} {
+        allow get,list: if authd() &&
+          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+        allow create: if authd() &&
+          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)) &&
+          request.resource.data.keys().hasOnly(['senderId','type','text','sticker','createdAt']) &&
+          request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.type in ['text','sticker'] &&
+          txt(request.resource.data.get('text',''),request.resource.data.type == 'text' ? 1 : 0,2000) &&
+          txt(request.resource.data.get('sticker',''),request.resource.data.type == 'sticker' ? 1 : 0,300) &&
+          request.resource.data.createdAt == request.time;
+        allow update,delete: if false;
+      }
+    }
+    match /{document=**} { allow read,write: if false; }
   }
 }
 ) &&
