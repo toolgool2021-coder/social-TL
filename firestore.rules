@@ -18,7 +18,7 @@ service cloud.firestore {
     function validMembers(p) {
       return authd() && p is list && p.size() == 2 &&
         p[0] is string && p[1] is string && p[0] != p[1] &&
-        request.auth.uid in p && existsUser(p[0]) && existsUser(p[1]);
+        request.auth.uid in p && p[0] < p[1] && existsUser(p[0]) && existsUser(p[1]);
     }
     match /users/{uid} {
       allow get,list: if authd();
@@ -77,6 +77,7 @@ service cloud.firestore {
       allow get,list: if authd();
       allow create: if authd() && request.resource.data.uid == request.auth.uid &&
         request.resource.data.keys().hasOnly(['uid','text','imageUrl','createdAt']) &&
+        request.resource.data.createdAt == request.time &&
         txt(request.resource.data.text,1,1000) &&
         (!('imageUrl' in request.resource.data) ||
           (txt(request.resource.data.imageUrl,1,2048) && request.resource.data.imageUrl.matches('^https://.*')));
@@ -88,6 +89,7 @@ service cloud.firestore {
         allow get,list: if authd();
         allow create: if authd() && request.resource.data.uid == request.auth.uid &&
           request.resource.data.keys().hasOnly(['uid','text','createdAt']) &&
+          request.resource.data.createdAt == request.time &&
           txt(request.resource.data.text,1,300);
         allow update: if authd() && resource.data.uid == request.auth.uid &&
           request.resource.data.uid == resource.data.uid &&
@@ -98,6 +100,8 @@ service cloud.firestore {
     match /chats/{chatId} {
       allow get,list: if authd() && request.auth.uid in resource.data.participants;
       allow create: if validMembers(request.resource.data.participants) &&
+        chatId == request.resource.data.participants[0] + '_' + request.resource.data.participants[1] &&
+        request.resource.data.updatedAt == request.time &&
         request.resource.data.keys().hasOnly(['participants','updatedAt','lastText']) &&
         txt(request.resource.data.get('lastText',''),0,100);
       allow update: if authd() && request.auth.uid in resource.data.participants &&
@@ -110,6 +114,7 @@ service cloud.firestore {
         allow get,list: if chatMember(chatId);
         allow create: if chatMember(chatId) && request.resource.data.senderId == request.auth.uid &&
           request.resource.data.keys().hasOnly(['senderId','type','text','sticker','createdAt','replyTo','replyText']) &&
+          request.resource.data.createdAt == request.time &&
           request.resource.data.type in ['text','sticker'] &&
           txt(request.resource.data.text,request.resource.data.type == 'text' ? 1 : 0,2000) &&
           txt(request.resource.data.get('sticker',''),0,500) &&
