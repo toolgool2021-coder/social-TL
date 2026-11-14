@@ -589,7 +589,7 @@ onAuthStateChanged(auth, applyAuthState);
 window.addEventListener("nexora:email-verified", event => {
   const user = auth.currentUser;
   if (user && user.emailVerified && event.detail?.uid === user.uid) {
-    void applyAuthState(user);
+    return applyAuthState(user);
   }
 });
 
