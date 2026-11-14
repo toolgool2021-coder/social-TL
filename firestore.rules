@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Verified Firebase Auth ID token is required for all social features.
     function signedIn() { return request.auth != null; }
-    function authd() { return signedIn() && request.auth.token.email_verified == true; }
+    function maintenanceOpen() { return !exists(/databases/$(database)/documents/system/maintenance) || get(/databases/$(database)/documents/system/maintenance).data.enabled != true; }
+    function authd() { return signedIn() && request.auth.token.email_verified == true && (maintenanceOpen() || request.auth.uid == ownerUid()); }
     function self(uid) { return authd() && request.auth.uid == uid; }
     function ownerUid() { return "FXtmMsn8JYfx04zpxiSaXZ0iHWg2"; }
     function profile(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
@@ -259,6 +260,12 @@ service cloud.firestore {
         txt(request.resource.data.targetId,1,200) &&
         request.resource.data.createdAt == request.time;
       allow update,delete: if false;
+    }
+    match /system/maintenance {
+      allow get: if true;
+      allow list: if false;
+      allow create,update: if owner() && request.resource.data.keys().hasOnly(['enabled','reason','until','updatedAt']) && request.resource.data.enabled is bool && txt(request.resource.data.reason,0,240) && txt(request.resource.data.until,0,100) && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
     }
     match /{document=**} { allow read,write: if false; }
   }
