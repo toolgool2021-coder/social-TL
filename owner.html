@@ -392,8 +392,8 @@ onAuthStateChanged(auth,async user=>{
   ownerVerified=false;
   $("dashboard").classList.add("hidden");
 
-  if(!user){
-    $("status").textContent="Войди в аккаунт NEXORA.";
+  if(!user || !user.emailVerified){
+    $("status").textContent="Войди и подтверди почту для доступа к NEXORA.";
     return;
   }
 
@@ -740,5 +740,6 @@ async function loadAudit(){
 
 $("reloadAudit").onclick=loadAudit;
 </script>
+<script type="module" src="./email-verification.js?v=2"></script>
 </body>
 </html>
