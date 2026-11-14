@@ -66,7 +66,8 @@ const BADGES = {
   2: "Официальный подтверждённый бренд",
   3: "Создатель платформы NEXORA",
   4: "Участник команды NEXORA",
-  5: "Спонсор NEXORA"
+  5: "Спонсор NEXORA",
+  6: "Автор контента NEXORA"
 };
 
 const LIMITS = {
@@ -353,7 +354,8 @@ function badgeHTML(uid) {
     users[uid]?.verification || 0
   );
 
-  if (verification < 1 || verification > 5) {
+  const expiry=users[uid]?.verificationExpiresAt;
+  if (verification < 1 || verification > 6 || (expiry?.toMillis?.() && expiry.toMillis()<=Date.now())) {
     return "";
   }
 
