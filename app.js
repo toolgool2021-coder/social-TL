@@ -97,6 +97,18 @@ let unsubFollowing = null;
 let toastTimer = null;
 let pendingURL = null;
 
+// Client-side friction only. Server-side abuse prevention is still required.
+const COOLDOWN = {post:12000, comment:4000};
+const lastSent = {post:0, comment:0};
+function waitForAction(kind) {
+  const remaining = COOLDOWN[kind] - (Date.now() - lastSent[kind]);
+  if (remaining > 0) {
+    toast("Подожди " + Math.ceil(remaining / 1000) + " сек. перед следующей отправкой.");
+    return false;
+  }
+  return true;
+}
+
 let posting = false;
 let authBusy = false;
 
@@ -709,6 +721,7 @@ $("postForm").addEventListener(
     event.preventDefault();
 
     if (!me || posting) return;
+    if (!waitForAction("post")) return;
 
     const text = $("postInput").value.trim();
 
@@ -750,6 +763,7 @@ $("postForm").addEventListener(
         data
       );
 
+      lastSent.post = Date.now();
       $("postInput").value = "";
       $("postImage").value = "";
       $("postCount").textContent = "0";
@@ -1253,6 +1267,8 @@ async function openComments(postId) {
           return;
         }
 
+        if (!waitForAction("comment")) return;
+
         const button = form.querySelector(
           "button"
         );
@@ -1274,6 +1290,7 @@ async function openComments(postId) {
             }
           );
 
+          lastSent.comment = Date.now();
           box.classList.add("hidden");
           await openComments(postId);
         } catch (error) {
