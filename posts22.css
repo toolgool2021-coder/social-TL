@@ -1,5 +1,5 @@
 
-/* NEXORA 2.2 | Posts Upgrade */
+/* NEXORA 3.1 — Dark glass posts */
 
 .nx22-actions {
   display: inline-flex;
@@ -14,16 +14,12 @@
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
-  transition: background .2s ease, transform .2s ease;
+  transition: background .2s, transform .2s;
 }
 
 .nx22-actions button:hover {
   background: #344c78;
   transform: translateY(-2px);
-}
-
-.nx22-actions button:active {
-  transform: scale(.96);
 }
 
 .nx22-actions button:disabled {
@@ -46,12 +42,6 @@
   padding: 5px 9px;
   font-size: 12px;
   text-decoration: none;
-  transition: .2s;
-}
-
-.nx22-tags a:hover {
-  background: #34568a;
-  transform: translateY(-2px);
 }
 
 .nx22-overlay {
@@ -118,8 +108,86 @@
 }
 
 .nx22-dialog-actions button[type="submit"] {
-  background: linear-gradient(120deg, #4779eb, #8b74ef);
+  background: linear-gradient(
+    120deg,
+    #4779eb,
+    #8b74ef
+  );
   border: 0;
+}
+
+.nx31-kind {
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #b6a8ff;
+  margin-bottom: 10px;
+}
+
+.nx31-repost,
+.nx31-quote {
+  border-left: 3px solid
+    rgba(146,125,250,.7) !important;
+}
+
+.nx31-original {
+  background: rgba(120,135,190,.065);
+  border: 1px solid rgba(165,170,230,.19);
+  border-radius: 16px;
+  padding: 15px;
+  margin: 10px 0 4px;
+  overflow-wrap: anywhere;
+}
+
+.nx31-source {
+  font-size: 12px;
+  font-weight: 650;
+  color: #a8b4d7;
+  margin-bottom: 9px;
+}
+
+.nx31-original-text {
+  white-space: pre-wrap;
+  color: #e4e9fa;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.nx31-quote-text {
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 550;
+  white-space: pre-wrap;
+  margin: 0 0 12px;
+}
+
+.nx31-original .postimage {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+  margin-top: 12px;
+  border-radius: 12px;
+}
+
+.nx31-counters {
+  color: #9aa7c4;
+  font-size: 12px;
+  padding: 8px 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nx31-count-retry {
+  border: 1px solid #53618b;
+  background: transparent;
+  color: #c9d6ff;
+  border-radius: 8px;
+  padding: 5px 9px;
+  cursor: pointer;
 }
 
 @keyframes nx22-enter {
@@ -145,5 +213,11 @@
 
   .nx22-dialog {
     padding: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx22-dialog {
+    animation: none;
   }
 }
