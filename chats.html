@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080d19">
-<title>Сообщения | NEXORA 2.1</title>
+<title>Сообщения | NEXORA 2.2</title>
 <style>
 :root{
  color-scheme:dark;
@@ -14,12 +14,12 @@
  --line:#ffffff20;
  --text:#edf3ff;
  --muted:#9baac5;
- --blue:#82a9ff
+ --blue:#82a9ff;
+ --accent:#7d8ff1
 }
 *{box-sizing:border-box}
 body{
- margin:0;
- min-height:100dvh;
+ margin:0;min-height:100dvh;
  font:14px system-ui,sans-serif;
  color:var(--text);
  background:
@@ -34,9 +34,7 @@ a{color:#b3c9ff;text-decoration:none}
 header{
  height:64px;
  padding:0 max(16px,calc((100vw - 1180px)/2));
- display:flex;
- align-items:center;
- justify-content:space-between;
+ display:flex;align-items:center;justify-content:space-between;
  background:#0c1424ee;
  border-bottom:1px solid var(--line)
 }
@@ -53,139 +51,96 @@ header{
  gap:12px
 }
 .glass{
- display:flex;
- flex-direction:column;
- min-width:0;
- min-height:0;
- overflow:hidden;
+ display:flex;flex-direction:column;
+ min-width:0;min-height:0;overflow:hidden;
  background:var(--panel);
  border:1px solid var(--line);
  border-radius:19px;
- backdrop-filter:blur(20px);
+ backdrop-filter:blur(16px);
  box-shadow:0 15px 40px #0003
 }
 .head{padding:17px;border-bottom:1px solid var(--line)}
 .head h2{margin:0 0 14px}
 input{
- width:100%;
- min-width:0;
- padding:12px 14px;
- color:white;
- background:#0b1424;
- border:1px solid #394861;
- border-radius:12px;
- outline:none
+ width:100%;min-width:0;padding:12px 14px;
+ color:white;background:#0b1424;
+ border:1px solid #394861;border-radius:12px;outline:none
 }
 input:focus{border-color:var(--blue)}
 .scroll{overflow:auto;flex:1;min-height:0}
 .person{
- width:100%;
- display:flex;
- gap:11px;
- align-items:center;
- padding:13px;
- color:var(--text);
- background:transparent;
- border:0;
- border-bottom:1px solid var(--line);
- text-align:left
+ width:100%;display:flex;gap:11px;align-items:center;
+ padding:13px;color:var(--text);background:transparent;
+ border:0;border-bottom:1px solid var(--line);
+ text-align:left;transition:background .15s
 }
 .person:hover,.person.active{background:#34466b80}
 .avatar{
- width:43px;
- height:43px;
- flex-shrink:0;
- display:grid;
- place-items:center;
- overflow:hidden;
+ width:43px;height:43px;flex-shrink:0;
+ display:grid;place-items:center;overflow:hidden;
  border-radius:14px;
  background:linear-gradient(135deg,#527cda,#a073d7);
  font-weight:800
 }
 .avatar img{width:100%;height:100%;object-fit:cover}
 .person-info{min-width:0;flex:1}
-.person-name{font-weight:750}
-.person-name img{width:18px;height:18px;vertical-align:middle}
+.person-name{
+ font-weight:750;
+ display:inline-flex;align-items:center;gap:5px;
+ flex-wrap:wrap
+}
+.person-name img,.verified-icon{
+ width:18px;height:18px;object-fit:contain;
+ vertical-align:middle;flex-shrink:0
+}
 .preview{
- margin-top:5px;
- color:var(--muted);
- font-size:12px;
- overflow:hidden;
- white-space:nowrap;
- text-overflow:ellipsis
+ margin-top:5px;color:var(--muted);font-size:12px;
+ overflow:hidden;white-space:nowrap;text-overflow:ellipsis
 }
 .muted{font-size:12px;color:var(--muted)}
 .empty{padding:28px;text-align:center;color:var(--muted);line-height:1.6}
 .chathead{
- display:flex;
- align-items:center;
- gap:12px;
- padding:14px;
- min-height:74px;
- border-bottom:1px solid var(--line)
+ display:flex;align-items:center;gap:12px;
+ padding:14px;min-height:74px;border-bottom:1px solid var(--line)
 }
 #peerInfo{min-width:0;flex:1}
-#peer{font-size:16px;font-weight:800}
+#peer{
+ font-size:16px;font-weight:800;
+ display:flex;align-items:center;gap:6px;flex-wrap:wrap
+}
 #peerStatus{margin-top:5px}
 .online{color:#78e6b0}
 .typing{color:#9db5ff}
 #messages{
- padding:12px 0;
- display:flex;
- flex-direction:column
+ padding:12px 0;display:flex;flex-direction:column;
+ scroll-behavior:smooth
 }
 .bubble{
- width:max-content;
- max-width:min(75%,470px);
- margin:5px 14px;
- padding:11px 14px;
+ width:max-content;max-width:min(75%,470px);
+ margin:5px 14px;padding:11px 14px;
  border:1px solid #ffffff12;
  border-radius:17px 17px 17px 5px;
- background:#293a59;
- overflow-wrap:anywhere;
- white-space:pre-wrap;
- animation:rise .2s ease
+ background:#293a59;overflow-wrap:anywhere;
+ white-space:pre-wrap;animation:rise .2s ease
 }
 .bubble.mine{
- margin-left:auto;
- border-radius:17px 17px 5px 17px;
+ margin-left:auto;border-radius:17px 17px 5px 17px;
  background:linear-gradient(135deg,#465fc0,#705cb6)
 }
 .bubble small{
- display:block;
- margin-top:7px;
- text-align:right;
- opacity:.75;
- font-size:10px
+ display:block;margin-top:7px;text-align:right;
+ opacity:.75;font-size:10px
 }
-.bubble.sticker{
- padding:5px;
- border:0;
- background:transparent
-}
+.bubble.sticker{padding:5px;border:0;background:transparent}
 .sticker img{
- width:150px;
- height:150px;
- max-width:100%;
- object-fit:contain
+ width:150px;height:150px;max-width:100%;object-fit:contain
 }
-.compose-wrap{
- position:relative;
- border-top:1px solid var(--line)
-}
-#form{
- display:flex;
- align-items:center;
- gap:8px;
- padding:12px
-}
+.compose-wrap{position:relative;border-top:1px solid var(--line)}
+#form{display:flex;align-items:center;gap:8px;padding:12px}
 #message{flex:1}
 .action,.primary{
- padding:11px 14px;
- border-radius:12px;
- color:#eaf1ff;
- border:1px solid #40506d;
- background:#20304c
+ padding:11px 14px;border-radius:12px;color:#eaf1ff;
+ border:1px solid #40506d;background:#20304c
 }
 .primary{
  border:0;
@@ -193,58 +148,47 @@ input:focus{border-color:var(--blue)}
  font-weight:750
 }
 #stickerPanel{
- position:absolute;
- bottom:calc(100% + 5px);
- left:10px;
- z-index:5;
- width:min(360px,calc(100vw - 40px));
- max-height:340px;
- display:flex;
- flex-direction:column;
- overflow:hidden;
- border:1px solid #526487;
- border-radius:15px;
- background:#17243c;
- box-shadow:0 15px 45px #0009
+ position:absolute;bottom:calc(100% + 5px);
+ left:10px;z-index:5;
+ width:min(360px,calc(100vw - 40px));max-height:340px;
+ display:flex;flex-direction:column;overflow:hidden;
+ border:1px solid #526487;border-radius:15px;
+ background:#17243c;box-shadow:0 15px 45px #0009
 }
 [hidden]{display:none!important}
 .sticker-head{
- display:flex;
- gap:8px;
- padding:12px;
+ display:flex;gap:8px;padding:12px;
  border-bottom:1px solid var(--line)
 }
 .sticker-head select{
- flex:1;
- min-width:0;
- color:white;
- background:#0b1424;
- border:1px solid #394861;
- border-radius:9px;
- padding:8px
+ flex:1;min-width:0;color:white;background:#0b1424;
+ border:1px solid #394861;border-radius:9px;padding:8px
 }
 #stickerGrid{
- overflow:auto;
- padding:10px;
- display:grid;
- grid-template-columns:repeat(4,1fr);
- gap:8px
+ overflow:auto;padding:10px;
+ display:grid;grid-template-columns:repeat(4,1fr);gap:8px
 }
 #stickerGrid button{
- padding:5px;
- background:#ffffff09;
- border:1px solid transparent;
- border-radius:10px
+ padding:5px;background:#ffffff09;
+ border:1px solid transparent;border-radius:10px
 }
 #stickerGrid button:hover{border-color:var(--blue)}
 #stickerGrid img{width:100%;aspect-ratio:1;object-fit:contain}
 #error{
- padding:12px;
- color:#ffb9c0;
- background:#7a273035;
- font-size:12px
+ padding:12px;color:#ffb9c0;
+ background:#7a273035;font-size:12px
 }
 #back{display:none}
+.loading{
+ display:flex;align-items:center;justify-content:center;
+ gap:10px;padding:24px;color:var(--muted);font-size:13px
+}
+.spinner{
+ width:17px;height:17px;border-radius:50%;
+ border:2px solid #ffffff25;border-top-color:#92b3ff;
+ animation:spin .7s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes rise{
  from{opacity:0;transform:translateY(6px)}
  to{opacity:1;transform:translateY(0)}
@@ -252,10 +196,8 @@ input:focus{border-color:var(--blue)}
 @media(max-width:650px){
  header{padding:0 14px}
  #layout{
-  display:block;
-  height:calc(100dvh - 78px);
-  margin:7px auto;
-  padding:0 7px
+  display:block;height:calc(100dvh - 78px);
+  margin:7px auto;padding:0 7px
  }
  .glass{height:100%}
  #layout:not(.open) #conversation,
@@ -265,13 +207,14 @@ input:focus{border-color:var(--blue)}
 }
 @media(prefers-reduced-motion:reduce){
  .bubble{animation:none}
+ #messages{scroll-behavior:auto}
 }
 </style>
 </head>
 <body>
 
 <header>
- <div class="brand">NEXORA <span>2.1</span></div>
+ <div class="brand">NEXORA <span>2.2</span></div>
  <a href="./index.html">← Главная</a>
 </header>
 
@@ -283,7 +226,11 @@ input:focus{border-color:var(--blue)}
   </div>
   <div id="people" class="scroll"></div>
   <div class="head"><b>Мои диалоги</b></div>
-  <div id="chats" class="scroll"></div>
+  <div id="chats" class="scroll">
+   <div class="loading">
+    <span class="spinner"></span> Загрузка диалогов...
+   </div>
+  </div>
  </section>
 
  <section id="conversation" class="glass">
@@ -364,6 +311,7 @@ let reading=false;
 let chatGeneration=0;
 let peerOnline=false;
 let peerTyping=false;
+let chatRecords=[];
 
 const escapeHTML=value=>String(value??'').replace(
  /[&<>"']/g,
@@ -380,28 +328,36 @@ function chatId(a,b){
 function safeImage(url){
  try{
   const parsed=new URL(url);
-  return parsed.protocol==='https:'?parsed.href:'';
+  return parsed.protocol==='https:' &&
+   !parsed.username && !parsed.password ? parsed.href:'';
  }catch{return ''}
 }
 
 function avatar(user){
  const url=safeImage(user?.avatarUrl);
  return url
-  ?`<img src="${escapeHTML(url)}" alt="">`
+  ?`<img src="${escapeHTML(url)}" alt=""
+      loading="lazy" referrerpolicy="no-referrer"
+      onerror="this.remove()">`
   :escapeHTML((user?.name||'N').slice(0,2).toUpperCase());
 }
 
 function badge(user){
  const v=Number(user?.verification||0);
  return v>=1&&v<=5
-  ?`<img src="./image/Verified_${v}.png" alt="✓">`
+  ?`<img class="verified-icon"
+     src="./image/Verified_${v}.png"
+     alt="Верификация"
+     title="Верифицированный аккаунт"
+     onerror="this.remove()">`
   :'';
 }
 
 function personRow(uid,preview=''){
  const user=users[uid]||{};
  return `
-  <button class="person" data-user="${escapeHTML(uid)}">
+  <button class="person ${uid===activeUid?'active':''}"
+    data-user="${escapeHTML(uid)}">
    <span class="avatar">${avatar(user)}</span>
    <span class="person-info">
     <span class="person-name">
@@ -487,6 +443,22 @@ function stopActive(){
  chatGeneration++;
 }
 
+function renderChatList(){
+ if(!me)return;
+
+ $('chats').innerHTML=chatRecords.map(item=>{
+  const data=item.data();
+  const other=data.participants?.find(
+   uid=>uid!==me.uid
+  );
+
+  return other
+   ?personRow(other,data.lastText||'Диалог')
+   :'';
+ }).join('')||
+ '<div class="empty">Диалогов пока нет</div>';
+}
+
 async function openChat(uid){
  if(!me||uid===me.uid)return;
 
@@ -495,6 +467,14 @@ async function openChat(uid){
  const generation=chatGeneration;
 
  clearError();
+
+ $('layout').classList.add('open');
+ $('messages').innerHTML=`
+  <div class="loading">
+   <span class="spinner"></span>
+   Загрузка сообщений...
+  </div>
+ `;
 
  if(!users[uid]){
   try{
@@ -505,20 +485,28 @@ async function openChat(uid){
 
    users[uid]=snapshot.data();
   }catch(error){
-   showError(error.message);
+   if(generation===chatGeneration)showError(error.message);
    return;
   }
  }
 
- $('layout').classList.add('open');
- $('peer').textContent=users[uid].name||'Пользователь';
- $('peerAvatar').innerHTML=avatar(users[uid]);
- $('messages').innerHTML=
-  '<div class="empty">Загрузка сообщений...</div>';
+ if(generation!==chatGeneration)return;
 
+ const peerUser=users[uid];
+
+ // Верификация теперь отображается и в заголовке диалога.
+ $('peer').innerHTML=`
+  <span>${escapeHTML(peerUser.name||'Пользователь')}</span>
+  ${badge(peerUser)}
+ `;
+
+ $('peerAvatar').innerHTML=avatar(peerUser);
  $('message').disabled=false;
  $('send').disabled=false;
  $('stickers').disabled=false;
+
+ renderChatList();
+ searchUsers();
 
  const id=chatId(me.uid,uid);
 
@@ -538,7 +526,6 @@ async function openChat(uid){
   ()=>{}
  );
 
- // Отсутствующий документ набора не считается ошибкой.
  stopTyping=onSnapshot(
   doc(db,'chats',id,'typing',uid),
   snapshot=>{
@@ -562,14 +549,13 @@ async function openChat(uid){
   query(
    collection(db,'chats',id,'messages'),
    orderBy('createdAt','asc'),
-   limit(200)
+   limit(100)
   ),
   snapshot=>{
    if(generation!==chatGeneration)return;
 
    currentMessages=snapshot.docs.map(item=>({
-    id:item.id,
-    ...item.data()
+    id:item.id,...item.data()
    }));
 
    renderMessages();
@@ -647,7 +633,6 @@ async function markRead(id,peerUid){
  reading=true;
 
  try{
-  // Не более 200 сообщений за один пакет.
   const batch=writeBatch(db);
 
   unread.forEach(message=>{
@@ -693,7 +678,7 @@ async function sendMessage(payload){
 
  const preview=payload.type==='sticker'
   ?'Стикер'
-  :payload.text.slice(0,100);
+  :(payload.text||'').slice(0,100);
 
  batch.set(
   doc(db,'chats',id),
@@ -781,8 +766,6 @@ $('back').onclick=()=>{
  $('stickerPanel').hidden=true;
 };
 
-// Список файлов должен совпадать с файлами в репозитории.
-// Пока реальных файлов нет, список оставлен пустым.
 const STICKER_PACKS=[
  {
   id:'kemomimiori',
@@ -876,20 +859,40 @@ onAuthStateChanged(auth,async user=>{
   return;
  }
 
+ // Загружаем диалоги сразу, не ожидая списка пользователей.
+ stopChats=onSnapshot(
+  query(
+   collection(db,'chats'),
+   where('participants','array-contains',user.uid),
+   limit(100)
+  ),
+  snapshot=>{
+   chatRecords=snapshot.docs.sort((a,b)=>
+    (b.data().updatedAt?.seconds||0)-
+    (a.data().updatedAt?.seconds||0)
+   );
+   renderChatList();
+  },
+  error=>showError(
+   'Ошибка списка диалогов: '+error.message
+  )
+ );
+
  try{
+  // Уменьшена начальная выборка со 200 до 100 профилей.
   const snapshot=await getDocs(query(
    collection(db,'users'),
-   limit(200)
+   limit(100)
   ));
 
   if(auth.currentUser?.uid!==user.uid)return;
 
   users={};
-
   snapshot.forEach(item=>{
    users[item.id]=item.data();
   });
 
+  renderChatList();
   searchUsers();
 
   const requested=new URLSearchParams(
@@ -899,41 +902,10 @@ onAuthStateChanged(auth,async user=>{
   if(requested&&requested!==user.uid){
    await openChat(requested);
   }
-
-  stopChats=onSnapshot(
-   query(
-    collection(db,'chats'),
-    where('participants','array-contains',user.uid),
-    limit(100)
-   ),
-   snapshot=>{
-    const records=snapshot.docs.sort((a,b)=>
-     (b.data().updatedAt?.seconds||0)-
-     (a.data().updatedAt?.seconds||0)
-    );
-
-    $('chats').innerHTML=records.map(item=>{
-     const data=item.data();
-
-     const other=data.participants?.find(
-      uid=>uid!==user.uid
-     );
-
-     return other
-      ?personRow(other,data.lastText||'Диалог')
-      :'';
-    }).join('')||
-    '<div class="empty">Диалогов пока нет</div>';
-   },
-   error=>showError(
-    'Ошибка списка диалогов: '+error.message
-   )
-  );
  }catch(error){
-  showError('Ошибка загрузки: '+error.message);
+  showError('Ошибка загрузки пользователей: '+error.message);
  }
 });
 </script>
 </body>
 </html>
-
