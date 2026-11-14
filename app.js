@@ -1213,15 +1213,23 @@ document.addEventListener(
 
             const snapshot = await getDoc(ref);
 
+            const shared = doc(db,"posts",id,"likes",me.uid);
+            const batch = writeBatch(db);
             if (snapshot.exists()) {
-              await deleteDoc(ref);
+              batch.delete(ref);
+              batch.delete(shared);
             } else {
-              await setDoc(ref, {
-                createdAt: serverTimestamp()
-              });
+              batch.set(ref,{createdAt:serverTimestamp()});
+              batch.set(shared,{createdAt:serverTimestamp()});
             }
+            await batch.commit();
+            window.dispatchEvent(new CustomEvent("nexora:post-counts-changed",{detail:{id}}));
           }
         );
+      }
+
+      if (action === "edit-post") {
+        openPostEditor(id);
       }
 
       if (action === "delete-post") {
@@ -1394,6 +1402,7 @@ async function openComments(postId, box) {
       });
       if (!active()) return;
       lastSent.comment = Date.now();
+      window.dispatchEvent(new CustomEvent("nexora:post-counts-changed",{detail:{id:postId}}));
       if (input.value === draft) input.value = "";
     } catch (error) {
       if (active()) toast(friendlyError(error));
