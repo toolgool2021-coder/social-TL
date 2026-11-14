@@ -949,6 +949,8 @@ function postHTML(post) {
         ${
           mine
             ? `
+              <button class="quiet" type="button"
+                data-action="edit-post" data-id="${esc(post.id)}">Редактировать</button>
               <button
                 class="quiet"
                 type="button"
@@ -963,24 +965,20 @@ function postHTML(post) {
 
       </div>
 
+      ${image && post.imagePosition === "top" ? `
+        <img class="postimage" src="${esc(image)}" alt="Изображение публикации"
+          loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">
+      ` : ""}
+
       <div class="posttext">
         ${linkify(post.text || "")}
+        ${post.editedAt ? '<small class="muted"> · изменено</small>' : ''}
       </div>
 
-      ${
-        image
-          ? `
-            <img
-              class="postimage"
-              src="${esc(image)}"
-              alt="Изображение публикации"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-              onerror="this.hidden=true"
-            >
-          `
-          : ""
-      }
+      ${image && post.imagePosition !== "top" ? `
+        <img class="postimage" src="${esc(image)}" alt="Изображение публикации"
+          loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">
+      ` : ""}
 
       <div class="actions">
 
@@ -1078,6 +1076,71 @@ function renderFeed() {
     warning.append(message, retry);
     container.prepend(warning);
   }
+}
+
+function openPostEditor(postId) {
+  const post = posts.find(item => item.id === postId);
+  if (!me || !post || post.uid !== me.uid)
+    throw Error("Редактировать можно только собственную публикацию.");
+  document.querySelector(".nx22-overlay[data-post-editor]")?.remove();
+  const overlay = document.createElement("div");
+  overlay.className = "nx22-overlay";
+  overlay.dataset.postEditor = "true";
+  overlay.innerHTML = `
+    <form class="nx22-dialog">
+      <h2>Редактировать публикацию</h2>
+      <label class="fieldlabel">Текст</label>
+      <textarea name="text" maxlength="1000" required></textarea>
+      <label class="fieldlabel">HTTPS-ссылка на изображение</label>
+      <input name="imageUrl" type="url" placeholder="https://example.com/photo.png">
+      <label class="fieldlabel">Или заменить изображение файлом</label>
+      <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp">
+      <label class="fieldlabel">Расположение</label>
+      <select name="imagePosition">
+        <option value="bottom">Под текстом</option>
+        <option value="top">Над текстом</option>
+      </select>
+      <label class="nx-edit-remove"><input name="removeImage" type="checkbox"> Удалить изображение</label>
+      <div class="nx22-dialog-actions">
+        <button type="button" data-close>Отмена</button>
+        <button type="submit">Сохранить</button>
+      </div>
+    </form>`;
+  document.body.append(overlay);
+  const form = overlay.querySelector("form");
+  form.elements.text.value = post.text || "";
+  form.elements.imageUrl.value = post.imageUrl || "";
+  form.elements.imagePosition.value = post.imagePosition === "top" ? "top" : "bottom";
+  const close = () => overlay.remove();
+  overlay.querySelector("[data-close]").addEventListener("click",close);
+  overlay.addEventListener("click",event=>{if(event.target===overlay)close();});
+  form.addEventListener("submit",async event=>{
+    event.preventDefault();
+    const text = form.elements.text.value.trim();
+    if (!text || text.length > LIMITS.post) return toast("Текст должен содержать от 1 до 1000 символов.");
+    const button = form.querySelector('[type="submit"]');
+    if (button.disabled) return;
+    button.disabled = true;
+    try {
+      const remove = form.elements.removeImage.checked;
+      const file = form.elements.imageFile.files?.[0];
+      const imageUrl = remove ? "" : file
+        ? await uploadPostImage(file) : imageURL(form.elements.imageUrl.value.trim());
+      const changes = {text,editedAt:serverTimestamp()};
+      if (imageUrl) {
+        changes.imageUrl = imageUrl;
+        changes.imagePosition = form.elements.imagePosition.value === "top" ? "top" : "bottom";
+      } else {
+        changes.imageUrl = deleteField();
+        changes.imagePosition = deleteField();
+      }
+      await updateDoc(doc(db,"posts",postId),changes);
+      close();
+      toast("Публикация обновлена.");
+    } catch(error) { toast(friendlyError(error)); }
+    finally { button.disabled = false; }
+  });
+  form.elements.text.focus();
 }
 
 /* =========================================
