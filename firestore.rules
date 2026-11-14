@@ -44,9 +44,9 @@ service cloud.firestore {
     }
     match /users/{uid} {
       // Registration may create/read ONLY its own limited profile before email verification.
-      allow get: if authd() || (signedIn() && request.auth.uid == uid);
+      allow get: if authd() || (maintenanceOpen() && signedIn() && request.auth.uid == uid);
       allow list: if authd();
-      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.keys().hasOnly([
+      allow create: if signedIn() && maintenanceOpen() && request.auth.uid == uid && request.resource.data.keys().hasOnly([
         'name','username','bio','avatarUrl','bannerUrl','websiteUrl','status','privacy','createdAt'
       ]) && txt(request.resource.data.name,3,20) && profileFields(request.resource.data) &&
         request.resource.data.createdAt == request.time;
