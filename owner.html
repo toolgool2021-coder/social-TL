@@ -1,1 +1,624 @@
 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d19">
+<title>NEXORA | Owner Control Center</title>
+<link rel="icon" href="./image/icon.png">
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #080d19;
+  --glass: rgba(20,29,49,.78);
+  --border: rgba(180,205,255,.13);
+  --text: #edf3ff;
+  --muted: #95a5c0;
+  --accent: #769cff;
+  --radius: 20px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 10% 0%,
+      rgba(74,111,241,.18),transparent 48%),
+    radial-gradient(ellipse at 90% 80%,
+      rgba(110,72,204,.13),transparent 48%);
+}
+button, input, select, a.button {
+  font: inherit;
+}
+button, a.button {
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: .2s;
+}
+button:hover, a.button:hover {
+  background: rgba(255,255,255,.12);
+}
+button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+button.primary {
+  background: linear-gradient(120deg,#557fff,#9174f6);
+  border: none;
+  font-weight: 700;
+}
+input, select {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: #101a2c;
+  border: 1px solid var(--border);
+  color: white;
+  outline: none;
+}
+input:focus, select:focus {
+  border-color: var(--accent);
+}
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(20px);
+  background: rgba(8,13,25,.8);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1150px;
+  margin: auto;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+.brand strong {
+  display: block;
+  letter-spacing: 1.5px;
+}
+.brand small {
+  color: var(--muted);
+  font-size: 11px;
+}
+main {
+  max-width: 1150px;
+  margin: auto;
+  padding: 30px 20px 80px;
+  position: relative;
+}
+h1 {
+  font-size: clamp(26px,4vw,38px);
+  margin: 0 0 8px;
+}
+h2 { margin: 0 0 18px; font-size: 19px; }
+p { line-height: 1.6; }
+.muted { color: var(--muted); }
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.panel {
+  padding: 23px;
+  margin-top: 20px;
+}
+.hidden { display: none !important; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 15px;
+  margin-top: 25px;
+}
+.stat {
+  padding: 22px;
+}
+.stat b {
+  display: block;
+  font-size: 32px;
+  margin-bottom: 7px;
+}
+.stat span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.toolbar input { flex: 1; }
+.user {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+.avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  flex-shrink: 0;
+  background: #273957;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-weight: 700;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.username {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.badge {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+.uid {
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  margin: 5px 0;
+}
+.pill {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: #a9bfff;
+  background: rgba(110,145,255,.13);
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 15px;
+}
+label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+label select {
+  margin-top: 8px;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#toast {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: #253858;
+  border: 1px solid var(--border);
+  z-index: 100;
+  box-shadow: 0 10px 40px #0008;
+  max-width: 90vw;
+}
+@media(max-width:650px) {
+  .stats { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .user { align-items: flex-start; }
+  .user button { padding: 9px; font-size: 12px; }
+  .toolbar { flex-direction: column; }
+  .panel { padding: 17px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <img src="./image/icon.png" alt="NEXORA">
+      <div>
+        <strong>NEXORA</strong>
+        <small>OWNER CONTROL CENTER</small>
+      </div>
+    </div>
+    <a class="button" href="./index.html">← На сайт</a>
+  </div>
+</header>
+
+<main>
+  <h1>Панель владельца</h1>
+  <p class="muted">
+    Управление аккаунтами, ролями и верификациями NEXORA.
+  </p>
+
+  <section class="glass panel">
+    <p id="status">Проверяем права доступа...</p>
+  </section>
+
+  <div id="dashboard" class="hidden">
+
+    <div class="stats">
+      <div class="glass stat">
+        <b id="countUsers">0</b>
+        <span>Пользователей загружено</span>
+      </div>
+      <div class="glass stat">
+        <b id="countVerified">0</b>
+        <span>Верифицированных</span>
+      </div>
+      <div class="glass stat">
+        <b id="countStaff">0</b>
+        <span>Участников команды</span>
+      </div>
+    </div>
+
+    <section class="glass panel">
+      <h2>Пользователи</h2>
+
+      <div class="toolbar">
+        <input id="search"
+          placeholder="Поиск по имени или UID">
+        <button id="reload">Обновить</button>
+      </div>
+
+      <div id="users">Загрузка...</div>
+    </section>
+
+    <section id="editor" class="glass panel hidden">
+      <div class="actions"
+        style="justify-content:space-between;align-items:center">
+        <h2>Управление аккаунтом</h2>
+        <button id="closeEditor">✕</button>
+      </div>
+
+      <h3 id="selectedName"></h3>
+      <p id="selectedUid" class="muted"></p>
+
+      <div class="form-grid">
+        <label>
+          Тип верификации
+          <select id="verification">
+            <option value="0">Нет верификации</option>
+            <option value="1">1 · Обычная</option>
+            <option value="2">2 · Официальный бренд</option>
+            <option value="3">3 · Основатель</option>
+            <option value="4">4 · Модерация</option>
+            <option value="5">5 · Спонсор</option>
+          </select>
+        </label>
+
+        <label>
+          Роль аккаунта
+          <select id="role">
+            <option value="user">Пользователь</option>
+            <option value="moderator">Модератор</option>
+            <option value="admin">Администратор</option>
+            <option value="owner">Владелец</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="muted">
+        Верификация и роль — разные вещи.
+        Значок модератора не выдаёт административные права
+        автоматически. Роль Owner нельзя передавать через эту панель.
+      </p>
+
+      <div class="actions" style="margin-top:17px">
+        <button id="save" class="primary">Сохранить изменения</button>
+        <button id="cancel">Отмена</button>
+      </div>
+    </section>
+
+    <section class="glass panel">
+      <h2>Безопасность</h2>
+      <p class="muted">
+        Все изменения проверяются Firestore Security Rules.
+        Если правила не опубликованы или доступ запрещён,
+        панель не сможет изменить чужой аккаунт.
+      </p>
+      <p class="muted">
+        Панель не предоставляет доступ к личным перепискам пользователей.
+      </p>
+    </section>
+  </div>
+</main>
+
+<div id="toast" class="hidden" role="status"></div>
+
+<script type="module">
+import {initializeApp} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+
+import {getAuth,onAuthStateChanged} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+
+import {
+  getFirestore,collection,doc,getDoc,getDocs,
+  query,limit,updateDoc
+} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+
+const firebaseConfig={
+  apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
+  authDomain:'toolchat-bfac8.firebaseapp.com',
+  projectId:'toolchat-bfac8',
+  storageBucket:'toolchat-bfac8.firebasestorage.app',
+  messagingSenderId:'52396840735',
+  appId:'1:52396840735:web:a608b9c037c8481f2dc22a'
+};
+
+const OWNER_UID='FXtmMsn8JYfx04zpxiSaXZ0iHWg2';
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+
+let currentUser=null;
+let records=[];
+let selected=null;
+let toastTimer;
+
+function escapeHTML(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c]));
+}
+
+function toast(message){
+  clearTimeout(toastTimer);
+  $('toast').textContent=message;
+  $('toast').classList.remove('hidden');
+  toastTimer=setTimeout(
+    ()=>$('toast').classList.add('hidden'),4000
+  );
+}
+
+function status(message){
+  $('status').textContent=message;
+}
+
+function safeImage(url){
+  try{
+    const u=new URL(url);
+    return u.protocol==='https:'?u.href:'';
+  }catch{return ''}
+}
+
+function userAvatar(user){
+  const url=safeImage(user.avatarUrl);
+  return url
+    ? `<img src="${escapeHTML(url)}" alt="" referrerpolicy="no-referrer">`
+    : escapeHTML((user.name||'N').slice(0,2).toUpperCase());
+}
+
+function roleName(role){
+  return {
+    user:'Пользователь',
+    moderator:'Модератор',
+    admin:'Администратор',
+    owner:'Владелец'
+  }[role]||'Пользователь';
+}
+
+onAuthStateChanged(auth,async user=>{
+  currentUser=user;
+  $('dashboard').classList.add('hidden');
+
+  if(!user){
+    status('Сначала войди в свой аккаунт на главной странице Nexora.');
+    return;
+  }
+
+  if(user.uid!==OWNER_UID){
+    status('Доступ запрещён. Эта страница доступна только основателю Nexora.');
+    return;
+  }
+
+  try{
+    const snap=await getDoc(doc(db,'users',user.uid));
+    if(!snap.exists()||snap.data().role!=='owner'){
+      status('Роль Owner не подтверждена в Firestore.');
+      return;
+    }
+
+    status('Доступ подтверждён · Owner');
+    $('dashboard').classList.remove('hidden');
+    await loadUsers();
+  }catch(e){
+    status('Ошибка проверки доступа: '+e.message);
+  }
+});
+
+async function loadUsers(){
+  $('users').textContent='Загрузка...';
+  $('reload').disabled=true;
+
+  try{
+    const snap=await getDocs(query(
+      collection(db,'users'),
+      limit(100)
+    ));
+
+    records=snap.docs.map(d=>({
+      uid:d.id,
+      ...d.data()
+    }));
+
+    $('countUsers').textContent=records.length;
+    $('countVerified').textContent=records.filter(
+      u=>Number(u.verification||0)>0
+    ).length;
+    $('countStaff').textContent=records.filter(
+      u=>['owner','admin','moderator'].includes(u.role)
+    ).length;
+
+    renderUsers();
+  }catch(e){
+    $('users').textContent='Ошибка: '+e.message;
+  }finally{
+    $('reload').disabled=false;
+  }
+}
+
+function renderUsers(){
+  const term=$('search').value.toLowerCase().trim();
+
+  const filtered=records.filter(u=>
+    (u.name||'').toLowerCase().includes(term)||
+    u.uid.toLowerCase().includes(term)
+  );
+
+  $('users').innerHTML=filtered.map(u=>{
+    const v=Number(u.verification||0);
+    const badge=v>=1&&v<=5
+      ? `<img class="badge" src="image/Verified_${v}.png" alt="Верификация">`
+      : '';
+
+    return `
+      <div class="user">
+        <div class="identity">
+          <div class="avatar">${userAvatar(u)}</div>
+          <div style="min-width:0">
+            <div class="username">
+              ${escapeHTML(u.name||'Без имени')} ${badge}
+            </div>
+            <div class="uid">${escapeHTML(u.uid)}</div>
+            <span class="pill">${roleName(u.role)}</span>
+          </div>
+        </div>
+        <button data-edit="${escapeHTML(u.uid)}">
+          Управлять
+        </button>
+      </div>`;
+  }).join('')||'<p class="muted">Пользователи не найдены</p>';
+}
+
+$('users').addEventListener('click',e=>{
+  const button=e.target.closest('[data-edit]');
+  if(!button)return;
+
+  const u=records.find(x=>x.uid===button.dataset.edit);
+  if(!u)return;
+
+  selected=u.uid;
+  $('selectedName').textContent=u.name||'Без имени';
+  $('selectedUid').textContent='UID: '+u.uid;
+  $('verification').value=String(u.verification||0);
+  $('role').value=u.role||'user';
+
+  const mine=u.uid===OWNER_UID;
+  $('verification').disabled=mine;
+  $('role').disabled=mine;
+  $('save').disabled=mine;
+
+  $('editor').classList.remove('hidden');
+  $('editor').scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  if(mine)toast('Статус основателя защищён от изменений.');
+});
+
+$('search').oninput=renderUsers;
+$('reload').onclick=loadUsers;
+
+function closeEditor(){
+  selected=null;
+  $('editor').classList.add('hidden');
+}
+
+$('closeEditor').onclick=closeEditor;
+$('cancel').onclick=closeEditor;
+
+$('save').onclick=async()=>{
+  if(!selected||!currentUser)return;
+  if(currentUser.uid!==OWNER_UID||selected===OWNER_UID)return;
+
+  const user=records.find(u=>u.uid===selected);
+  if(!user)return;
+
+  const role=$('role').value;
+  const verification=Number($('verification').value);
+
+  if(!['user','moderator','admin'].includes(role)||
+    ![0,1,2,4,5].includes(verification)){
+    toast('Недопустимые значения роли или верификации.');
+    return;
+  }
+
+  if(!confirm(
+    `Изменить аккаунт ${user.name||selected}?\n`+
+    `Роль: ${role}\nВерификация: ${verification}`
+  ))return;
+
+  $('save').disabled=true;
+
+  try{
+    await updateDoc(doc(db,'users',selected),{
+      role,
+      verification
+    });
+
+    toast('Изменения успешно сохранены');
+    closeEditor();
+    await loadUsers();
+  }catch(e){
+    toast('Не удалось сохранить: '+e.message);
+  }finally{
+    $('save').disabled=false;
+  }
+};
+</script>
+</body>
+</html>
+
