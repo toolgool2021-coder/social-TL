@@ -545,17 +545,24 @@ let stopPresence=null;
 let stopTyping=null;
 let stopPin=null;
 let generation=0;
+let authGeneration=0;
+let presenceTimer=null;
 let replyTo=null;
 let editingId=null;
 let contextId=null;
 let pinnedId=null;
 let peerOnline=false;
 let peerTyping=false;
+let peerLastSeen=0;
+let peerLastTyped=0;
+let statusTimer=null;
 let typingActive=false;
+let lastTypingSent=0;
 let typingTimer=null;
-let reading=false;
-let readPending=false;
+let readState={reading:false,pending:false};
 let sending=false;
+let chatReady=false;
+const drafts=new Map();
 let lastMessageSent=0;
 const MESSAGE_COOLDOWN_MS=900;
 
@@ -688,6 +695,8 @@ function renderChats(){
 function updateStatus(){
   const element=$("status");
   element.className="";
+  peerOnline=peerLastSeen>0&&Date.now()-peerLastSeen<120000;
+  peerTyping=peerLastTyped>0&&Date.now()-peerLastTyped<10000;
 
   if(peerTyping){
     element.textContent="Печатает...";
@@ -711,6 +720,15 @@ function hideMenus(){
 }
 
 function stopActive(){
+  const previousChat=activeChat();
+  if(previousChat){
+    drafts.set(previousChat,$("message").value);
+    if(typingActive){
+      setDoc(doc(db,"chats",previousChat,"typing",me.uid),{
+        uid:me.uid,typing:false,updatedAt:serverTimestamp()
+      }).catch(err=>console.warn("Typing:",err.message));
+    }
+  }
   stopMessages?.();
   stopReactions?.();
   stopPresence?.();
@@ -725,26 +743,52 @@ function stopActive(){
   stopPin=null;
 
   clearTimeout(typingTimer);
+  clearInterval(statusTimer);
+  statusTimer=null;
   generation++;
+  readState={reading:false,pending:false};
+  chatReady=false;
   currentMessages=[];
   clearReply();
   editingId=null;
+  contextId=null;
   pinnedId=null;
   peerOnline=false;
   peerTyping=false;
+  peerLastSeen=0;
+  peerLastTyped=0;
   typingActive=false;
+  lastTypingSent=0;
+  activeUid=null;
 
   hideMenus();
+  $("editOverlay").hidden=true;
+  $("stickerPanel").hidden=true;
+  $("message").value="";
+  syncComposer();
   $("pinned").hidden=true;
   $("chatSearchWrap").hidden=true;
   $("chatSearch").value="";
 }
 
+function syncComposer(){
+  const ready=Boolean(me&&activeUid&&chatReady);
+  $("message").disabled=!ready;
+  $("send").disabled=!ready||sending;
+  $("stickers").disabled=!ready||sending;
+}
+
 async function openChat(uid){
   if(!me||uid===me.uid)return;
+  if(uid===activeUid&&chatReady){
+    $("app").classList.add("open");
+    return;
+  }
 
   stopActive();
   activeUid=uid;
+  $("message").value=drafts.get(activeChat())||"";
+  resizeComposer();
   const g=generation;
   clearError();
 
@@ -771,10 +815,6 @@ async function openChat(uid){
       esc(user.name||"Пользователь")+badge(user);
     $("peerAvatar").innerHTML=avatar(user);
 
-    $("message").disabled=false;
-    $("send").disabled=false;
-    $("stickers").disabled=false;
-
     renderChats();
     searchUsers();
 
@@ -782,13 +822,17 @@ async function openChat(uid){
     // Create the empty conversation before attaching those listeners.
     const cid=await ensureChat(uid);
     if(g!==generation)return;
+    chatReady=true;
+    syncComposer();
+    updateStatus();
+    statusTimer=setInterval(updateStatus,1000);
 
     stopPresence=onSnapshot(
       doc(db,"presence",uid),
       snap=>{
         if(g!==generation)return;
         const last=snap.data()?.lastSeen?.toMillis?.()||0;
-        peerOnline=last>0&&Date.now()-last<120000;
+        peerLastSeen=last;
         updateStatus();
       },
       ()=>{}
@@ -800,9 +844,7 @@ async function openChat(uid){
         if(g!==generation)return;
         const data=snap.data();
         const last=data?.updatedAt?.toMillis?.()||0;
-        peerTyping=Boolean(
-          data?.typing&&last&&Date.now()-last<10000
-        );
+        peerLastTyped=data?.typing?last:0;
         updateStatus();
       },
       ()=>{}
@@ -835,7 +877,7 @@ async function openChat(uid){
         chatReactions=next;
         renderMessages();
       },
-      err=>showError("Реакции: "+err.message)
+      err=>{if(g===generation)showError("Реакции: "+err.message);}
     );
 
     stopMessages=onSnapshot(
@@ -853,9 +895,9 @@ async function openChat(uid){
         })).reverse();
 
         renderMessages(first);
-        markRead(cid,uid);
+        markRead(cid,uid,g);
       },
-      err=>showError("Сообщения: "+err.message)
+      err=>{if(g===generation)showError("Сообщения: "+err.message);}
     );
   }catch(err){
     if(g===generation)showError(err.message);
@@ -1100,20 +1142,23 @@ async function toggleReaction(id,emoji){
   if(!me||!activeChat()||!EMOJIS.includes(emoji)||!id)return;
   const cid=activeChat();
   const uid=me.uid;
+  const g=generation;
   const ref=doc(db,"chats",cid,"reactions",id+"_"+uid);
   try{
-    const message=await getDoc(doc(db,"chats",cid,"messages",id));
-    if(!message.exists())throw Error("Сообщение удалено");
-    const current=await getDoc(ref);
-    if(current.exists()&&current.data().emoji===emoji){
-      await deleteDoc(ref);
-    }else{
-      await setDoc(ref,{
-        uid,messageId:id,emoji,createdAt:serverTimestamp()
-      });
-    }
+    await runTransaction(db,async transaction=>{
+      const message=await transaction.get(doc(db,"chats",cid,"messages",id));
+      const current=await transaction.get(ref);
+      if(!message.exists())throw Error("Сообщение удалено");
+      if(current.exists()&&current.data().emoji===emoji){
+        transaction.delete(ref);
+      }else{
+        transaction.set(ref,{
+          uid,messageId:id,emoji,createdAt:serverTimestamp()
+        });
+      }
+    });
   }catch(err){
-    showError("Реакция: "+err.message);
+    if(g===generation)showError("Реакция: "+err.message);
   }
 }
 
@@ -1122,20 +1167,22 @@ async function removeMessage(m){
   if(!confirm("Удалить сообщение?"))return;
 
   const cid=activeChat();
+  const g=generation;
+  const wasPinned=pinnedId===m.id;
 
   try{
     await deleteDoc(
       doc(db,"chats",cid,"messages",m.id)
     );
 
-    if(pinnedId===m.id){
+    if(wasPinned){
       await updateDoc(doc(db,"chats",cid),{
         pinnedMessageId:null,
         pinnedText:""
       });
     }
   }catch(err){
-    showError("Удаление: "+err.message);
+    if(g===generation)showError("Удаление: "+err.message);
   }
 }
 
@@ -1192,6 +1239,7 @@ $("editSave").onclick=async()=>{
   if(!text||text.length>2000)return;
 
   const cid=activeChat();
+  const g=generation;
   $("editSave").disabled=true;
 
   try{
@@ -1200,10 +1248,12 @@ $("editSave").onclick=async()=>{
       {text,editedAt:serverTimestamp()}
     );
 
-    editingId=null;
-    $("editOverlay").hidden=true;
+    if(g===generation&&editingId===id){
+      editingId=null;
+      $("editOverlay").hidden=true;
+    }
   }catch(err){
-    showError("Редактирование: "+err.message);
+    if(g===generation)showError("Редактирование: "+err.message);
   }finally{
     $("editSave").disabled=false;
   }
@@ -1211,20 +1261,21 @@ $("editSave").onclick=async()=>{
 
 $("cancelReply").onclick=clearReply;
 
-async function markRead(cid,peer){
-  if(reading){
-    readPending=true;
+async function markRead(cid,peer,g=generation){
+  if(!me||g!==generation||activeUid!==peer||cid!==activeChat()||
+     document.visibilityState==="hidden")return;
+  const state=readState;
+  if(state.reading){
+    state.pending=true;
     return;
   }
-
-  if(!me||activeUid!==peer)return;
 
   const unread=currentMessages.filter(m=>
     m.senderId===peer&&!m.readAt
   );
 
   if(!unread.length)return;
-  reading=true;
+  state.reading=true;
 
   try{
     const batch=writeBatch(db);
@@ -1240,18 +1291,19 @@ async function markRead(cid,peer){
   }catch(err){
     console.warn("Read receipts:",err.message);
   }finally{
-    reading=false;
+    state.reading=false;
 
-    if(readPending){
-      readPending=false;
-      if(activeUid===peer)markRead(cid,peer);
+    if(state.pending){
+      state.pending=false;
+      if(g===generation)markRead(cid,peer,g);
     }
   }
 }
 
 async function ensureChat(uid){
   if(!me||!uid||uid===me.uid)throw Error("Недопустимый собеседник");
-  const cid=chatId(me.uid,uid);
+  const senderUid=me.uid;
+  const cid=chatId(senderUid,uid);
   const ref=doc(db,"chats",cid);
 
   // Atomic create-if-absent: two clients opening the same conversation
@@ -1262,14 +1314,14 @@ async function ensureChat(uid){
       const participants=existing.data().participants;
       if(!Array.isArray(participants)||
          participants.length!==2||
-         !participants.includes(me.uid)||
+         !participants.includes(senderUid)||
          !participants.includes(uid)){
         throw Error("Некорректные участники диалога");
       }
       return;
     }
     transaction.set(ref,{
-      participants:[me.uid,uid].sort(),
+      participants:[senderUid,uid].sort(),
       updatedAt:serverTimestamp(),
       lastText:""
     });
@@ -1279,65 +1331,76 @@ async function ensureChat(uid){
 }
 
 async function sendMessage(payload){
-  if(!me||!activeUid)return;
+  if(!me||!activeUid||!chatReady)throw Error("Диалог ещё загружается");
+  if(sending)throw Error("Сообщение ещё отправляется");
 
   const uid=activeUid;
-  const remaining=MESSAGE_COOLDOWN_MS-(Date.now()-lastMessageSent);
-  if(remaining>0)throw Error("Слишком быстро. Подожди немного.");
-  const cid=await ensureChat(uid);
+  const senderUid=me.uid;
+  const g=generation;
+  sending=true;
+  syncComposer();
+  try{
+    const remaining=MESSAGE_COOLDOWN_MS-(Date.now()-lastMessageSent);
+    if(remaining>0)throw Error("Слишком быстро. Подожди немного.");
+    const cid=await ensureChat(uid);
 
-  if(activeUid!==uid){
-    throw Error("Диалог изменился");
+    if(g!==generation||me?.uid!==senderUid){
+      throw Error("Диалог изменился");
+    }
+
+    const batch=writeBatch(db);
+
+    const preview=payload.type==="sticker"
+      ?"Стикер"
+      :(payload.text||"").slice(0,100);
+
+    batch.set(
+      doc(db,"chats",cid),
+      {
+        participants:[senderUid,uid].sort(),
+        updatedAt:serverTimestamp(),
+        lastText:preview
+      },
+      {merge:true}
+    );
+
+    const data={
+      senderId:senderUid,
+      type:payload.type||"text",
+      text:payload.text||"",
+      sticker:payload.sticker||"",
+      createdAt:serverTimestamp()
+    };
+
+    if(payload.replyTo){
+      data.replyTo=payload.replyTo;
+      data.replyText=payload.replyText||"";
+    }
+
+    batch.set(
+      doc(collection(db,"chats",cid,"messages")),
+      data
+    );
+
+    await batch.commit();
+    lastMessageSent=Date.now();
+  }finally{
+    sending=false;
+    syncComposer();
   }
-
-  const batch=writeBatch(db);
-
-  const preview=payload.type==="sticker"
-    ?"Стикер"
-    :(payload.text||"").slice(0,100);
-
-  batch.set(
-    doc(db,"chats",cid),
-    {
-      participants:[me.uid,uid].sort(),
-      updatedAt:serverTimestamp(),
-      lastText:preview
-    },
-    {merge:true}
-  );
-
-  const data={
-    senderId:me.uid,
-    type:payload.type||"text",
-    text:payload.text||"",
-    sticker:payload.sticker||"",
-    createdAt:serverTimestamp()
-  };
-
-  if(payload.replyTo){
-    data.replyTo=payload.replyTo;
-    data.replyText=payload.replyText||"";
-  }
-
-  batch.set(
-    doc(collection(db,"chats",cid,"messages")),
-    data
-  );
-
-  await batch.commit();
-  lastMessageSent=Date.now();
 }
 
 $("form").onsubmit=async event=>{
   event.preventDefault();
   if(sending)return;
 
-  const text=$("message").value.trim();
+  const draft=$("message").value;
+  const text=draft.trim();
   if(!text||text.length>2000)return;
 
-  sending=true;
-  $("send").disabled=true;
-  const uid=activeUid;
+  const cid=activeChat();
+  const g=generation;
+  const originalReply=replyTo;
 
   try{
     const payload={type:"text",text};
@@ -1351,17 +1414,17 @@ $("form").onsubmit=async event=>{
 
     await sendMessage(payload);
 
-    if(uid===activeUid){
-      $("message").value="";
-      resizeComposer();
-      clearReply();
-      setTyping(false);
+    if(drafts.get(cid)===draft)drafts.delete(cid);
+    if(g===generation){
+      if($("message").value===draft){
+        $("message").value="";
+        resizeComposer();
+        setTyping(false);
+      }
+      if(replyTo===originalReply)clearReply();
     }
   }catch(err){
-    showError("Отправка: "+err.message);
-  }finally{
-    sending=false;
-    $("send").disabled=!activeUid;
+    if(g===generation)showError("Отправка: "+err.message);
   }
 };
 
@@ -1385,40 +1448,64 @@ $("message").addEventListener("input",()=>{
 });
 
 $("message").addEventListener("keydown",event=>{
-  if(event.key==="Enter"&&!event.shiftKey){
+  if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing){
     event.preventDefault();
     $("form").requestSubmit();
   }
 });
 
 async function setTyping(value){
-  if(!me||!activeUid||typingActive===value)return;
+  if(!me||!activeUid||!chatReady)return;
+  if(typingActive===value&&(!value||Date.now()-lastTypingSent<3000))return;
 
-  const uid=activeUid;
+  const cid=activeChat();
+  const senderUid=me.uid;
+  const g=generation;
   typingActive=value;
+  lastTypingSent=Date.now();
 
   try{
-    const cid=await ensureChat(uid);
-    if(activeUid!==uid)return;
-
     await setDoc(
-      doc(db,"chats",cid,"typing",me.uid),
+      doc(db,"chats",cid,"typing",senderUid),
       {
-        uid:me.uid,
+        uid:senderUid,
         typing:value,
         updatedAt:serverTimestamp()
       }
     );
   }catch(err){
-    typingActive=false;
+    if(g===generation)typingActive=false;
     console.warn("Typing:",err.message);
   }
 }
 
 $("back").onclick=()=>{
+  stopActive();
   $("app").classList.remove("open");
-  $("stickerPanel").hidden=true;
+  renderChats();
+  searchUsers();
 };
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden"){
+    setTyping(false);
+  }else if(activeChat()){
+    markRead(activeChat(),activeUid);
+  }
+  if(document.visibilityState!=="hidden")heartbeat();
+});
+
+window.addEventListener("pagehide",()=>setTyping(false));
+
+async function heartbeat(){
+  if(!me||document.visibilityState==="hidden")return;
+  const uid=me.uid;
+  try{
+    await setDoc(doc(db,"presence",uid),{
+      uid,lastSeen:serverTimestamp()
+    });
+  }catch(err){console.warn("Presence:",err.message);}
+}
 
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"){
@@ -1466,6 +1553,7 @@ $("stickerGrid").onclick=async event=>{
   if(!button)return;
 
   button.disabled=true;
+  const g=generation;
 
   try{
     await sendMessage({
@@ -1473,9 +1561,9 @@ $("stickerGrid").onclick=async event=>{
       sticker:button.dataset.sticker
     });
 
-    $("stickerPanel").hidden=true;
+    if(g===generation)$("stickerPanel").hidden=true;
   }catch(err){
-    showError(err.message);
+    if(g===generation)showError(err.message);
   }finally{
     button.disabled=false;
   }
@@ -1484,12 +1572,25 @@ $("stickerGrid").onclick=async event=>{
 renderStickerPacks();
 
 onAuthStateChanged(auth,async user=>{
+  const session=++authGeneration;
   stopChats?.();
   stopChats=null;
   stopActive();
+  clearInterval(presenceTimer);
+  presenceTimer=null;
 
   activeUid=null;
   me=user;
+  users={};
+  chatRecords=[];
+  drafts.clear();
+  $("people").innerHTML="";
+  $("peer").textContent="Выбери диалог";
+  $("peerAvatar").textContent="N";
+  $("status").textContent="Личные сообщения";
+  $("status").className="";
+  $("messages").innerHTML='<div class="empty">Выбери пользователя, чтобы начать общение.</div>';
+  clearError();
 
   if(!user){
     $("chats").innerHTML=`
@@ -1499,6 +1600,9 @@ onAuthStateChanged(auth,async user=>{
       </div>`;
     return;
   }
+  $("chats").innerHTML='<div class="empty">Загрузка...</div>';
+  heartbeat();
+  presenceTimer=setInterval(heartbeat,60000);
 
   stopChats=onSnapshot(
     query(
@@ -1507,6 +1611,7 @@ onAuthStateChanged(auth,async user=>{
       limit(100)
     ),
     snap=>{
+      if(session!==authGeneration)return;
       chatRecords=snap.docs.sort((a,b)=>
         (b.data().updatedAt?.seconds||0)-
         (a.data().updatedAt?.seconds||0)
@@ -1514,7 +1619,7 @@ onAuthStateChanged(auth,async user=>{
 
       renderChats();
     },
-    err=>showError("Диалоги: "+err.message)
+    err=>{if(session===authGeneration)showError("Диалоги: "+err.message);}
   );
 
   try{
@@ -1522,9 +1627,8 @@ onAuthStateChanged(auth,async user=>{
       query(collection(db,"users"),limit(100))
     );
 
-    if(auth.currentUser?.uid!==user.uid)return;
+    if(session!==authGeneration)return;
 
-    users={};
     snap.forEach(d=>{
       users[d.id]=d.data();
     });
@@ -1540,6 +1644,7 @@ onAuthStateChanged(auth,async user=>{
       openChat(requested);
     }
   }catch(err){
+    if(session!==authGeneration)return;
     console.error("[NEXORA] Users in messages:",err);
     showError("Не удалось загрузить каталог пользователей: "+err.message);
     // Диалоги остаются доступны через независимый слушатель chats.

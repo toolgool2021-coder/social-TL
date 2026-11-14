@@ -6,7 +6,7 @@
  * supplied recipient IDs or notification text as authoritative.
  */
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
-const {logger} = require("firebase-functions");
+const {createHash} = require("node:crypto");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
@@ -15,11 +15,25 @@ const db = getFirestore();
 const REGION = "us-central1";
 
 function safeSnippet(input, max=120) {
-  return String(input || "").replace(/[\r\n\t]+/g, " ").trim().slice(0,max);
+  return typeof input === "string" ? input.replace(/[\r\n\t]+/g, " ").trim().slice(0,max) : "";
+}
+
+function documentId(value) {
+  return typeof value === "string" && value.length > 0 &&
+    !value.includes("/") && value !== "." && value !== ".." &&
+    !/^__.*__$/.test(value) && Buffer.byteLength(value,"utf8") <= 1500;
+}
+
+function notificationId(kind,event) {
+  // CloudEvent IDs remain the same on retry, but change on a real re-follow or
+  // re-like. Hashing also avoids delimiter collisions and oversized document IDs.
+  const identity = [event.source || "",event.id || "",event.params];
+  return `${kind}_${createHash("sha256").update(JSON.stringify(identity)).digest("hex")}`;
 }
 
 async function notify(recipient, sender, id, text, kind, targetId) {
-  if (!recipient || !sender || recipient === sender) return;
+  // The Admin SDK bypasses Rules. Validate legacy data before building paths.
+  if (!documentId(recipient) || !documentId(sender) || recipient === sender) return;
   const user = await db.doc(`users/${recipient}`).get();
   if (!user.exists) return;
   await db.doc(`users/${recipient}/notifications/${id}`).create({
@@ -44,7 +58,7 @@ exports.onNewComment = onDocumentCreated({
   const actor = comment.uid;
   if (!author || !actor || author === actor) return;
   const snippet = safeSnippet(comment.text);
-  await notify(author,actor,`comment_${event.params.postId}_${event.params.commentId}`,
+  await notify(author,actor,notificationId("comment",event),
     `Новый комментарий: ${snippet || "Открыть публикацию"}`,
     "comment",event.params.postId);
 });
@@ -60,10 +74,11 @@ exports.onNewMessage = onDocumentCreated({
   const participants=chat.data()?.participants;
   const sender=message.senderId;
   if (!Array.isArray(participants) || participants.length!==2 ||
-      !participants.includes(sender)) return;
+      !participants.every(documentId) || participants[0]===participants[1] ||
+      !participants.includes(sender) || !["text","sticker"].includes(message.type)) return;
   const recipient=participants.find(uid=>uid!==sender);
   const preview=message.type==="sticker"?"Стикер":safeSnippet(message.text);
-  await notify(recipient,sender,`message_${event.params.chatId}_${event.params.messageId}`,
+  await notify(recipient,sender,notificationId("message",event),
     `Новое сообщение: ${preview || "Открыть диалог"}`,
     "message",event.params.chatId);
 });
@@ -73,7 +88,7 @@ exports.onNewFollower = onDocumentCreated({
   retry:true
 },async event=>{
   await notify(event.params.uid,event.params.followerId,
-    `follow_${event.params.followerId}`,
+    notificationId("follow",event),
     "На вас подписался новый пользователь","follow",event.params.followerId);
 });
 
@@ -87,7 +102,7 @@ exports.onNewLike = onDocumentCreated({
   if (!post.exists) return;
   const author=post.data()?.uid;
   if (!author || !actor || author===actor) return;
-  await notify(author,actor,`like_${postId}_${actor}`,
+  await notify(author,actor,notificationId("like",event),
     "Вашу публикацию отметили как понравившуюся","like",postId);
 });
 
@@ -103,7 +118,7 @@ exports.onNewReport = onDocumentCreated({
   if(!report || report.status!=="pending")return;
   if(typeof report.reporterId!=="string" || !report.reporterId)return;
   await notify(OWNER_UID,report.reporterId,
-    `report_${event.params.reportId}`,
+    notificationId("report",event),
     "Поступила новая жалоба. Откройте панель модерации.",
     "report",event.params.reportId);
 });
@@ -114,7 +129,7 @@ exports.onNewVerificationRequest = onDocumentCreated({
   const request=event.data?.data();
   if(!request || request.status!=="pending" || request.uid!==event.params.uid)return;
   await notify(OWNER_UID,event.params.uid,
-    `verification_${event.params.uid}`,
+    notificationId("verification",event),
     "Поступила новая заявка на верификацию.",
     "verification",event.params.uid);
 });
