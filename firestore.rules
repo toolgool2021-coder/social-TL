@@ -424,12 +424,14 @@ service cloud.firestore {
       allow list: if false;
       allow create,update: if authd() && request.auth.uid == ownerUid() &&
         drawId == 'current' &&
-        request.resource.data.keys().hasOnly(['status','mode','participants','winners','startedAt','updatedAt','durationMs']) &&
+        request.resource.data.keys().hasOnly(['status','mode','participants','winners','startedAt','updatedAt','durationMs','reels']) &&
         request.resource.data.status in ['running','finished'] &&
         request.resource.data.mode in ['all','selected'] &&
         request.resource.data.participants is list &&
         request.resource.data.participants.size() >= 1 &&
         request.resource.data.participants.size() <= 2000 &&
+        request.resource.data.reels is list &&
+        request.resource.data.reels.size() == request.resource.data.winners.size() &&
         request.resource.data.winners is list &&
         request.resource.data.winners.size() >= 1 &&
         request.resource.data.winners.size() <= 10 &&
