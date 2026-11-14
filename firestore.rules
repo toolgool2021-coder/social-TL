@@ -34,7 +34,7 @@ service cloud.firestore {
         (!fieldChanged('updatedAt') || request.resource.data.updatedAt == request.time);
     }
     function username(v) { return v is string && v.matches('^[a-z0-9_]{3,20}$'); }
-    function badge(v) { return v is int && v >= 0 && v <= 5; }
+    function badge(v) { return v is int && v >= 0 && v <= 6; }
     function chatPath(id) { return /databases/$(database)/documents/chats/$(id); }
     function chatMember(id) { return authd() && exists(chatPath(id)) && request.auth.uid in get(chatPath(id)).data.participants; }
     function validMembers(p) {
@@ -55,7 +55,8 @@ service cloud.firestore {
         profileChanges()
       ) || (
         owner() && uid != ownerUid() && resource.data.get('role','user') != 'owner' &&
-        changed(['role','verification']) &&
+        changed(['role','verification','verificationExpiresAt']) &&
+        (!('verificationExpiresAt' in request.resource.data) || request.resource.data.verificationExpiresAt == null || (request.resource.data.verificationExpiresAt is timestamp && request.resource.data.verificationExpiresAt > request.time)) &&
         request.resource.data.get('role','user') in ['user','moderator','admin'] &&
         badge(request.resource.data.get('verification',0))
       );
@@ -236,7 +237,7 @@ service cloud.firestore {
         'uid','type','reason','status','createdAt'
       ]) && request.resource.data.uid == uid && request.resource.data.status == 'pending' &&
         request.resource.data.type is int && request.resource.data.type >= 1 &&
-        request.resource.data.type <= 5 && txt(request.resource.data.reason,10,500) &&
+        request.resource.data.type <= 6 && txt(request.resource.data.reason,10,500) &&
         request.resource.data.createdAt == request.time;
       allow update: if owner() && resource.data.status == 'pending' &&
         changed(['status','reviewedBy','reviewedAt']) &&
