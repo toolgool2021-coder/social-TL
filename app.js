@@ -1,642 +1,1689 @@
 
-import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {
-  getAuth,onAuthStateChanged,createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,signOut
-} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+  initializeApp,
+  getApps
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+
 import {
-  getFirestore,collection,doc,setDoc,getDoc,getDocs,
-  addDoc,deleteDoc,query,orderBy,limit,onSnapshot,
-  serverTimestamp,runTransaction
-} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
-import {SOCIAL,TRUSTED_HOSTS} from './config.js';
+  getAuth,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  limit,
+  onSnapshot,
+  serverTimestamp,
+  runTransaction
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+import {
+  SOCIAL,
+  TRUSTED_HOSTS
+} from "./config.js";
+
+/* =========================================
+   NEXORA 3.0
+   CORE APPLICATION
+========================================= */
 
 const firebaseConfig = {
-  apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
-  authDomain:'toolchat-bfac8.firebaseapp.com',
-  projectId:'toolchat-bfac8',
-  storageBucket:'toolchat-bfac8.firebasestorage.app',
-  messagingSenderId:'52396840735',
-  appId:'1:52396840735:web:a608b9c037c8481f2dc22a',
-  measurementId:'G-WSR0SZ40M7'
+  apiKey: "AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",
+  authDomain: "toolchat-bfac8.firebaseapp.com",
+  projectId: "toolchat-bfac8",
+  storageBucket: "toolchat-bfac8.firebasestorage.app",
+  messagingSenderId: "52396840735",
+  appId: "1:52396840735:web:a608b9c037c8481f2dc22a",
+  measurementId: "G-WSR0SZ40M7"
 };
 
-const OWNER_UID='FXtmMsn8JYfx04zpxiSaXZ0iHWg2';
+const OWNER_UID = "FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-const $=id=>document.getElementById(id);
+const app = getApps()[0] || initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-let me=null,myProfile=null,viewUid=null;
-let users={},posts=[],likes={};
-let currentPage='feed',authMode='login',profileToken=0;
-let unsubPosts=null,unsubLikes=null;
-let unsubFollowers=null,unsubFollowing=null;
-let toastTimer=null,pendingURL=null;
+const $ = id => document.getElementById(id);
 
-const badges={
-  1:'Этот пользователь прошёл стандартную верификацию Nexora.',
-  2:'Это официальный подтверждённый бренд в Nexora.',
-  3:'Это создатель и главный разработчик Nexora.',
-  4:'Этот пользователь входит в команду Nexora.',
-  5:'Этот пользователь поддержал развитие Nexora. Спасибо за вклад в проект!'
+const BADGES = {
+  1: "Подтверждённый пользователь NEXORA",
+  2: "Официальный подтверждённый бренд",
+  3: "Создатель платформы NEXORA",
+  4: "Участник команды NEXORA",
+  5: "Спонсор NEXORA"
 };
 
-function toast(message){
+const LIMITS = {
+  post: 1000,
+  comment: 300,
+  bio: 160,
+  name: 20,
+  users: 100,
+  posts: 60,
+  comments: 30
+};
+
+let me = null;
+let myProfile = null;
+let viewUid = null;
+
+let users = {};
+let posts = [];
+let likes = {};
+
+let currentPage = "feed";
+let authMode = "login";
+
+let profileToken = 0;
+let authToken = 0;
+
+let unsubPosts = null;
+let unsubLikes = null;
+let unsubFollowers = null;
+let unsubFollowing = null;
+
+let toastTimer = null;
+let pendingURL = null;
+
+let posting = false;
+let authBusy = false;
+
+const pendingActions = new Set();
+
+/* =========================================
+   UTILITIES
+========================================= */
+
+function esc(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]
+  );
+}
+
+function toast(message) {
+  const element = $("toast");
+  if (!element) return;
+
   clearTimeout(toastTimer);
-  $('toast').textContent=message;
-  $('toast').classList.remove('hidden');
-  toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),3800);
+
+  element.textContent = String(message || "");
+  element.classList.remove("hidden");
+
+  toastTimer = setTimeout(() => {
+    element.classList.add("hidden");
+  }, 4000);
 }
 
-function esc(s){
-  return String(s??'').replace(/[&<>"']/g,c=>({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  }[c]));
+function friendlyError(error) {
+  const code = error?.code || "";
+
+  const messages = {
+    "auth/invalid-email":
+      "Неверный адрес электронной почты.",
+    "auth/email-already-in-use":
+      "Этот email уже зарегистрирован.",
+    "auth/weak-password":
+      "Пароль слишком простой.",
+    "auth/invalid-credential":
+      "Неверная почта или пароль.",
+    "auth/too-many-requests":
+      "Слишком много попыток. Попробуй позже.",
+    "auth/network-request-failed":
+      "Ошибка сети. Проверь подключение.",
+    "permission-denied":
+      "Недостаточно прав. Проверь правила Firebase.",
+    "unavailable":
+      "Сервис временно недоступен."
+  };
+
+  return messages[code] ||
+    error?.message ||
+    "Произошла неизвестная ошибка.";
 }
 
-function validURL(s){
-  try{
-    const u=new URL(s);
-    return u.protocol==='https:' &&
-      !!u.hostname && u.username==='' && u.password==='';
-  }catch{
+function validURL(raw) {
+  try {
+    const url = new URL(raw);
+
+    return (
+      url.protocol === "https:" &&
+      Boolean(url.hostname) &&
+      !url.username &&
+      !url.password
+    );
+  } catch {
     return false;
   }
 }
 
-function imageURL(s){
-  if(!s)return '';
-  if(!validURL(s))throw Error('Изображение должно иметь прямую HTTPS-ссылку');
-  const u=new URL(s);
-  if(!/\.(png|jpe?g|webp)$/i.test(u.pathname))
-    throw Error('Разрешены только прямые ссылки на PNG, JPG и WebP');
-  return u.href;
+function imageURL(raw) {
+  if (!raw) return "";
+
+  if (!validURL(raw)) {
+    throw Error(
+      "Изображение должно иметь HTTPS-ссылку."
+    );
+  }
+
+  const url = new URL(raw);
+
+  if (!/\.(png|jpe?g|webp)$/i.test(url.pathname)) {
+    throw Error(
+      "Поддерживаются прямые ссылки PNG, JPG и WebP."
+    );
+  }
+
+  return url.href;
 }
 
-function avatar(uid,big=false){
-  const u=users[uid]||{};
-  const name=u.name||'N';
-  const url=u.avatarUrl;
-  return `<div class="avatar ${big?'large':''}">${
-    url
-      ? `<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`
-      : esc(name.slice(0,2).toUpperCase())
-  }</div>`;
+function safeStoredImage(raw) {
+  if (!raw || !validURL(raw)) return "";
+
+  const url = new URL(raw);
+
+  return /\.(png|jpe?g|webp)$/i.test(url.pathname)
+    ? url.href
+    : "";
 }
 
-function displayName(uid){
-  return users[uid]?.name||'Пользователь';
+function safeUsername(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^@/, "")
+    .toLowerCase();
 }
 
-function badgeHTML(uid){
-  const v=Number(users[uid]?.verification||0);
-  return v>=1&&v<=5
-    ? `<button type="button" class="badgeicon" data-badge="${v}" aria-label="Информация о верификации"><img src="image/Verified_${v}.png" alt="Верификация" onerror="this.parentElement.remove()"></button>`
-    : '';
+function validUsername(value) {
+  return /^[a-z0-9_]{3,20}$/.test(value);
 }
 
-function nameHTML(uid){
-  return `<span class="namegroup"><span class="name">${esc(displayName(uid))}</span>${badgeHTML(uid)}</span>`;
+function formatDate(timestamp) {
+  if (!timestamp?.toDate) {
+    return "Только что";
+  }
+
+  return timestamp.toDate().toLocaleString(
+    "ru-RU",
+    {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  );
 }
 
-function formatDate(t){
-  return t?.toDate
-    ? t.toDate().toLocaleString('ru-RU',{
-        day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'
-      })
-    : 'Только что';
-}
+function isTrusted(raw) {
+  try {
+    const url = new URL(raw);
 
-function isTrusted(raw){
-  try{
-    const u=new URL(raw);
-    return u.protocol==='https:' &&
-      TRUSTED_HOSTS.some(host=>
-        u.hostname===host || u.hostname.endsWith('.'+host)
-      );
-  }catch{
+    return (
+      url.protocol === "https:" &&
+      TRUSTED_HOSTS.some(host =>
+        url.hostname === host ||
+        url.hostname.endsWith("." + host)
+      )
+    );
+  } catch {
     return false;
   }
 }
 
-function externalLink(raw,label){
-  if(!validURL(raw))return '';
-  return `<a href="${esc(raw)}" target="_blank" rel="noopener noreferrer" data-external>${esc(label)}</a>`;
+function externalLink(raw, label) {
+  if (!validURL(raw)) return "";
+
+  return `
+    <a
+      href="${esc(raw)}"
+      target="_blank"
+      rel="noopener noreferrer"
+      data-external
+    >${esc(label)}</a>
+  `;
 }
 
-function linkify(text){
-  const rx=/https?:\/\/[^\s<>"']+/g;
-  let out='',start=0;
-  for(const m of text.matchAll(rx)){
-    out+=esc(text.slice(start,m.index));
-    const raw=m[0].replace(/[.,!?;:)]+$/,'');
-    out+=validURL(raw)?externalLink(raw,raw):esc(raw);
-    out+=esc(m[0].slice(raw.length));
-    start=m.index+m[0].length;
+function linkify(value) {
+  const text = String(value || "");
+  const regex = /https?:\/\/[^\s<>"']+/g;
+
+  let html = "";
+  let start = 0;
+
+  for (const match of text.matchAll(regex)) {
+    html += esc(text.slice(start, match.index));
+
+    const original = match[0];
+    const clean = original.replace(/[.,!?;:)]+$/, "");
+
+    html += validURL(clean)
+      ? externalLink(clean, clean)
+      : esc(clean);
+
+    html += esc(original.slice(clean.length));
+
+    start = match.index + original.length;
   }
-  return out+esc(text.slice(start));
+
+  html += esc(text.slice(start));
+
+  return html;
 }
 
-function updateOwnerButton(user,profile){
-  const button=$('ownerButton');
-  if(!button)return;
-  const allowed=Boolean(
+function runOnce(key, operation) {
+  if (pendingActions.has(key)) {
+    return Promise.resolve();
+  }
+
+  pendingActions.add(key);
+
+  return Promise.resolve()
+    .then(operation)
+    .finally(() => pendingActions.delete(key));
+}
+
+/* =========================================
+   USER DISPLAY
+========================================= */
+
+function displayName(uid) {
+  return users[uid]?.name || "Пользователь";
+}
+
+function avatar(uid, big = false) {
+  const user = users[uid] || {};
+  const name = user.name || "N";
+  const url = safeStoredImage(user.avatarUrl);
+
+  return `
+    <div class="avatar ${big ? "large" : ""}">
+      ${
+        url
+          ? `<img
+               src="${esc(url)}"
+               alt=""
+               loading="lazy"
+               referrerpolicy="no-referrer"
+               onerror="this.remove()"
+             >`
+          : esc(name.slice(0, 2).toUpperCase())
+      }
+    </div>
+  `;
+}
+
+function badgeHTML(uid) {
+  const verification = Number(
+    users[uid]?.verification || 0
+  );
+
+  if (verification < 1 || verification > 5) {
+    return "";
+  }
+
+  return `
+    <button
+      type="button"
+      class="badgeicon"
+      data-badge="${verification}"
+      aria-label="${esc(BADGES[verification])}"
+      title="${esc(BADGES[verification])}"
+    >
+      <img
+        src="./image/Verified_${verification}.png"
+        alt="Верификация"
+        onerror="this.parentElement.remove()"
+      >
+    </button>
+  `;
+}
+
+function nameHTML(uid) {
+  return `
+    <span class="namegroup">
+      <span class="name">
+        ${esc(displayName(uid))}
+      </span>
+      ${badgeHTML(uid)}
+    </span>
+  `;
+}
+
+function handleHTML(uid) {
+  const username = users[uid]?.username;
+
+  return username && validUsername(username)
+    ? "@" + username
+    : "Участник NEXORA";
+}
+
+/* =========================================
+   ADMIN ACCESS
+========================================= */
+
+function updateOwnerButton(user, profile) {
+  const button = $("ownerButton");
+  if (!button) return;
+
+  const allowed = Boolean(
     user &&
     profile &&
-    user.uid===OWNER_UID &&
-    profile.role==='owner'
+    user.uid === OWNER_UID &&
+    profile.role === "owner"
   );
-  button.classList.toggle('hidden',!allowed);
+
+  button.classList.toggle("hidden", !allowed);
 }
 
-function showPage(page){
-  if(!me)return;
-  currentPage=page;
-  ['feed','search','profile','settings'].forEach(p=>
-    $(p+'Page').classList.toggle('hidden',p!==page)
-  );
-  document.querySelectorAll('[data-page]').forEach(b=>
-    b.classList.toggle('active',b.dataset.page===page)
-  );
-  if(page==='search')renderSearch();
-  if(page==='profile')openProfile(me.uid);
-  if(page==='settings')fillSettings();
-}
+/* =========================================
+   NAVIGATION
+========================================= */
 
-document.querySelectorAll('[data-page]').forEach(b=>
-  b.onclick=()=>showPage(b.dataset.page)
-);
-
-$('authSwitch').onclick=()=>{
-  authMode=authMode==='login'?'register':'login';
-  const reg=authMode==='register';
-  $('username').classList.toggle('hidden',!reg);
-  $('username').required=reg;
-  $('authTitle').textContent=reg?'Создать аккаунт':'С возвращением';
-  $('authSubmit').textContent=reg?'Зарегистрироваться':'Войти';
-  $('authSwitch').textContent=reg
-    ?'Уже есть аккаунт? Войти':'Создать аккаунт';
-};
-
-$('authForm').onsubmit=async e=>{
-  e.preventDefault();
-  const btn=$('authSubmit');
-  btn.disabled=true;
-  try{
-    const email=$('email').value.trim();
-    const password=$('password').value;
-    if(authMode==='register'){
-      const name=$('username').value.trim();
-      if(name.length<3||name.length>20)
-        throw Error('Имя должно содержать 3–20 символов');
-      const result=await createUserWithEmailAndPassword(auth,email,password);
-      await setDoc(doc(db,'users',result.user.uid),{
-        name,
-        bio:'Привет! Я в Nexora.',
-        createdAt:serverTimestamp()
-      });
-    }else{
-      await signInWithEmailAndPassword(auth,email,password);
-    }
-  }catch(err){
-    toast(err.message||'Ошибка входа');
-  }finally{
-    btn.disabled=false;
-  }
-};
-
-$('logout').onclick=()=>signOut(auth);
-
-function stopProfile(){
+function stopProfile() {
   profileToken++;
+
   unsubFollowers?.();
   unsubFollowing?.();
-  unsubFollowers=unsubFollowing=null;
+
+  unsubFollowers = null;
+  unsubFollowing = null;
 }
 
-onAuthStateChanged(auth,async user=>{
+function setPageVisibility(page) {
+  for (const name of [
+    "feed",
+    "search",
+    "profile",
+    "settings"
+  ]) {
+    $(name + "Page")?.classList.toggle(
+      "hidden",
+      name !== page
+    );
+  }
+
+  // Дополнительная панель управляется
+  // существующим модулем nexora21.js.
+  document.querySelectorAll("[data-page]").forEach(
+    button => {
+      button.classList.toggle(
+        "active",
+        button.dataset.page === page
+      );
+    }
+  );
+}
+
+function showPage(page) {
+  if (!me) return;
+
+  currentPage = page;
+
+  setPageVisibility(page);
+
+  if (page === "search") {
+    renderSearch();
+  }
+
+  if (page === "profile") {
+    openProfile(me.uid);
+  }
+
+  if (page === "settings") {
+    fillSettings();
+  }
+}
+
+document.querySelectorAll("[data-page]").forEach(
+  button => {
+    button.addEventListener("click", () => {
+      showPage(button.dataset.page);
+    });
+  }
+);
+
+/* =========================================
+   AUTHENTICATION
+========================================= */
+
+function setAuthMode(mode) {
+  authMode = mode;
+
+  const register = mode === "register";
+
+  $("username").classList.toggle(
+    "hidden",
+    !register
+  );
+
+  $("username").required = register;
+
+  $("authTitle").textContent = register
+    ? "Создать аккаунт"
+    : "С возвращением";
+
+  $("authSubmit").textContent = register
+    ? "Зарегистрироваться"
+    : "Войти";
+
+  $("authSwitch").textContent = register
+    ? "Уже есть аккаунт? Войти"
+    : "Создать аккаунт";
+
+  $("password").autocomplete = register
+    ? "new-password"
+    : "current-password";
+}
+
+$("authSwitch").addEventListener("click", () => {
+  setAuthMode(
+    authMode === "login" ? "register" : "login"
+  );
+});
+
+$("authForm").addEventListener(
+  "submit",
+  async event => {
+    event.preventDefault();
+
+    if (authBusy) return;
+
+    authBusy = true;
+
+    const button = $("authSubmit");
+    button.disabled = true;
+
+    try {
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      if (authMode === "register") {
+        const name = $("username").value.trim();
+
+        if (
+          name.length < 3 ||
+          name.length > LIMITS.name
+        ) {
+          throw Error(
+            "Имя должно содержать от 3 до 20 символов."
+          );
+        }
+
+        const result =
+          await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+        await setDoc(
+          doc(db, "users", result.user.uid),
+          {
+            name,
+            bio: "Привет! Я в NEXORA.",
+            createdAt: serverTimestamp()
+          }
+        );
+
+        toast("Аккаунт создан!");
+      } else {
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+      }
+    } catch (error) {
+      toast(friendlyError(error));
+    } finally {
+      authBusy = false;
+      button.disabled = false;
+    }
+  }
+);
+
+$("logout").addEventListener("click", async () => {
+  try {
+    await signOut(auth);
+  } catch (error) {
+    toast(friendlyError(error));
+  }
+});
+
+/* =========================================
+   AUTH STATE
+========================================= */
+
+onAuthStateChanged(auth, async user => {
+  const token = ++authToken;
+
   unsubPosts?.();
   unsubLikes?.();
   stopProfile();
-  me=user;
-  myProfile=null;
-  updateOwnerButton(null,null);
 
-  $('authPage').classList.toggle('hidden',!!user);
-  $('app').classList.toggle('hidden',!user);
-  $('topUser').classList.toggle('hidden',!user);
+  unsubPosts = null;
+  unsubLikes = null;
 
-  if(!user)return;
+  me = user;
+  myProfile = null;
 
-  try{
-    const snap=await getDoc(doc(db,'users',user.uid));
-    if(auth.currentUser?.uid!==user.uid)return;
-    if(!snap.exists()){
-      toast('Профиль не найден. Проверьте регистрацию.');
+  users = {};
+  posts = [];
+  likes = {};
+
+  updateOwnerButton(null, null);
+
+  $("authPage").classList.toggle(
+    "hidden",
+    Boolean(user)
+  );
+
+  $("app").classList.toggle(
+    "hidden",
+    !user
+  );
+
+  $("topUser").classList.toggle(
+    "hidden",
+    !user
+  );
+
+  if (!user) return;
+
+  try {
+    const snapshot = await getDoc(
+      doc(db, "users", user.uid)
+    );
+
+    if (token !== authToken) return;
+
+    if (!snapshot.exists()) {
+      toast(
+        "Профиль не найден. Проверь регистрацию."
+      );
       return;
     }
 
-    myProfile=snap.data();
-    $('topName').textContent=myProfile.name;
-    updateOwnerButton(user,myProfile);
+    myProfile = snapshot.data();
+
+    $("topName").textContent =
+      myProfile.name || "Пользователь";
+
+    updateOwnerButton(user, myProfile);
 
     await loadUsers();
-    if(auth.currentUser?.uid!==user.uid)return;
-    listenFeed();
-    showPage('feed');
-  }catch(err){
-    toast('Ошибка загрузки: '+err.message);
-  }
-});
 
-async function loadUsers(){
-  const snap=await getDocs(query(collection(db,'users'),limit(100)));
-  users={};
-  snap.forEach(d=>users[d.id]=d.data());
-  if(me&&myProfile)users[me.uid]=myProfile;
+    if (token !== authToken) return;
+
+    listenFeed();
+    showPage("feed");
+  } catch (error) {
+    if (token === authToken) {
+      toast(
+        "Ошибка загрузки: " + friendlyError(error)
+      );
+    }
+  }
+);
+
+/* =========================================
+   USERS
+========================================= */
+
+async function loadUsers() {
+  const snapshot = await getDocs(
+    query(
+      collection(db, "users"),
+      limit(LIMITS.users)
+    )
+  );
+
+  const result = {};
+
+  snapshot.forEach(documentSnapshot => {
+    result[documentSnapshot.id] =
+      documentSnapshot.data();
+  });
+
+  if (me && myProfile) {
+    result[me.uid] = myProfile;
+  }
+
+  users = result;
 }
 
-$('postInput').oninput=()=>
-  $('postCount').textContent=$('postInput').value.length;
-
-$('postForm').onsubmit=async e=>{
-  e.preventDefault();
-  if(!me)return;
-  const text=$('postInput').value.trim();
-  if(!text||text.length>1000)return;
-  const btn=e.target.querySelector('button');
-  btn.disabled=true;
-
-  try{
-    const imageUrl=imageURL($('postImage').value.trim());
-    const data={
-      uid:me.uid,
-      text,
-      createdAt:serverTimestamp()
-    };
-    if(imageUrl)data.imageUrl=imageUrl;
-    await addDoc(collection(db,'posts'),data);
-    $('postInput').value='';
-    $('postImage').value='';
-    $('postCount').textContent='0';
-    toast('Публикация создана');
-  }catch(err){
-    toast(err.message);
-  }finally{
-    btn.disabled=false;
+async function ensureUser(uid) {
+  if (users[uid]) {
+    return users[uid];
   }
-};
 
-function listenFeed(){
+  const snapshot = await getDoc(
+    doc(db, "users", uid)
+  );
+
+  if (!snapshot.exists()) {
+    throw Error("Пользователь не найден.");
+  }
+
+  users[uid] = snapshot.data();
+
+  return users[uid];
+}
+
+/* =========================================
+   POST CREATION
+========================================= */
+
+$("postInput").addEventListener("input", () => {
+  $("postCount").textContent =
+    $("postInput").value.length;
+});
+
+$("postForm").addEventListener(
+  "submit",
+  async event => {
+    event.preventDefault();
+
+    if (!me || posting) return;
+
+    const text = $("postInput").value.trim();
+
+    if (!text) {
+      toast("Напиши текст публикации.");
+      return;
+    }
+
+    if (text.length > LIMITS.post) {
+      toast("Максимум 1000 символов.");
+      return;
+    }
+
+    posting = true;
+
+    const button = event.currentTarget.querySelector(
+      'button[type="submit"]'
+    );
+
+    button.disabled = true;
+
+    try {
+      const imageUrl = imageURL(
+        $("postImage").value.trim()
+      );
+
+      const data = {
+        uid: me.uid,
+        text,
+        createdAt: serverTimestamp()
+      };
+
+      if (imageUrl) {
+        data.imageUrl = imageUrl;
+      }
+
+      await addDoc(
+        collection(db, "posts"),
+        data
+      );
+
+      $("postInput").value = "";
+      $("postImage").value = "";
+      $("postCount").textContent = "0";
+
+      toast("Публикация создана.");
+    } catch (error) {
+      toast(friendlyError(error));
+    } finally {
+      posting = false;
+      button.disabled = false;
+    }
+  }
+);
+
+/* =========================================
+   FEED LISTENERS
+========================================= */
+
+function listenFeed() {
   unsubPosts?.();
   unsubLikes?.();
 
-  unsubPosts=onSnapshot(
-    query(collection(db,'posts'),orderBy('createdAt','desc'),limit(50)),
-    s=>{
-      posts=s.docs.map(d=>({id:d.id,...d.data()}));
-      renderFeed();
-      if(currentPage==='profile')renderProfilePosts();
-    },
-    e=>toast('Ошибка ленты: '+e.message)
-  );
+  const uid = me.uid;
 
-  unsubLikes=onSnapshot(
-    collection(db,'users',me.uid,'likes'),
-    s=>{
-      likes={};
-      s.forEach(d=>likes[d.id]=true);
-      renderFeed();
-      if(currentPage==='profile')renderProfilePosts();
-    },
-    e=>toast('Ошибка лайков: '+e.message)
-  );
-}
-
-function postHTML(p){
-  const mine=p.uid===me?.uid;
-  const liked=!!likes[p.id];
-
-  return `<article class="glass panel" data-post="${esc(p.id)}">
-    <div class="userrow">
-      ${avatar(p.uid)}
-      <div style="flex:1;min-width:0">
-        ${nameHTML(p.uid)}
-        <div class="muted">${esc(formatDate(p.createdAt))}</div>
-      </div>
-      ${mine
-        ? `<button class="quiet" data-action="delete-post" data-id="${esc(p.id)}">Удалить</button>`
-        : ''}
-    </div>
-    <div class="posttext">${linkify(p.text||'')}</div>
-    ${p.imageUrl
-      ? `<img class="postimage" src="${esc(p.imageUrl)}" alt="Изображение публикации" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">`
-      : ''}
-    <div class="actions">
-      <button class="${liked?'liked':''}" data-action="like" data-id="${esc(p.id)}">${liked?'♥':'♡'} Нравится</button>
-      <button data-action="comments" data-id="${esc(p.id)}">☏ Комментарии</button>
-      <button data-action="author" data-id="${esc(p.uid)}">Профиль</button>
-    </div>
-    <div id="comments-${esc(p.id)}" class="hidden" style="margin-top:15px"></div>
-  </article>`;
-}
-
-function renderFeed(){
-  $('feedList').innerHTML=posts.length
-    ?posts.map(postHTML).join('')
-    :'<div class="glass panel empty">Пока нет публикаций</div>';
-}
-
-document.addEventListener('click',async e=>{
-  const badge=e.target.closest('[data-badge]');
-  if(badge){
-    e.preventDefault();
-    e.stopPropagation();
-    toast(badges[Number(badge.dataset.badge)]||'Верифицированный аккаунт');
-    return;
-  }
-
-  const link=e.target.closest('a[data-external]');
-  if(link&&!isTrusted(link.href)){
-    e.preventDefault();
-    pendingURL=link.href;
-    $('linkTarget').textContent=new URL(link.href).hostname;
-    $('linkDialog').classList.remove('hidden');
-    return;
-  }
-
-  const b=e.target.closest('[data-action]');
-  if(!b||!me)return;
-  const id=b.dataset.id;
-
-  try{
-    if(b.dataset.action==='like'){
-      const ref=doc(db,'users',me.uid,'likes',id);
-      if(likes[id])await deleteDoc(ref);
-      else await setDoc(ref,{createdAt:serverTimestamp()});
-    }
-    if(b.dataset.action==='delete-post'){
-      if(confirm('Удалить публикацию?'))
-        await deleteDoc(doc(db,'posts',id));
-    }
-    if(b.dataset.action==='comments')await openComments(id);
-    if(b.dataset.action==='author')await openProfile(id);
-    if(b.dataset.action==='follow')await toggleFollow(id);
-  }catch(err){
-    toast(err.message);
-  }
-});
-
-$('cancelLink').onclick=()=>{
-  $('linkDialog').classList.add('hidden');
-  pendingURL=null;
-};
-
-$('confirmLink').onclick=()=>{
-  if(pendingURL&&validURL(pendingURL))
-    window.open(pendingURL,'_blank','noopener,noreferrer');
-  $('linkDialog').classList.add('hidden');
-  pendingURL=null;
-};
-
-$('linkDialog').onclick=e=>{
-  if(e.target===$('linkDialog'))$('cancelLink').click();
-};
-
-async function openComments(postId){
-  const box=$('comments-'+postId);
-  if(!box)return;
-
-  if(!box.classList.contains('hidden')){
-    box.classList.add('hidden');
-    return;
-  }
-
-  box.classList.remove('hidden');
-  box.textContent='Загрузка...';
-
-  try{
-    const snap=await getDocs(query(
-      collection(db,'posts',postId,'comments'),
-      orderBy('createdAt','desc'),
-      limit(30)
-    ));
-
-    box.innerHTML=snap.docs.map(d=>{
-      const c=d.data();
-      return `<div class="comment">
-        ${nameHTML(c.uid)}
-        <p>${linkify(c.text||'')}</p>
-      </div>`;
-    }).join('')||'<p class="muted">Комментариев пока нет</p>';
-
-    const form=document.createElement('form');
-    form.className='stack';
-    form.innerHTML='<input maxlength="300" required placeholder="Написать комментарий"><button class="primary">Отправить</button>';
-
-    form.onsubmit=async e=>{
-      e.preventDefault();
-      const text=form.querySelector('input').value.trim();
-      if(!text)return;
-      const btn=form.querySelector('button');
-      btn.disabled=true;
-      try{
-        await addDoc(collection(db,'posts',postId,'comments'),{
-          uid:me.uid,
-          text,
-          createdAt:serverTimestamp()
-        });
-        box.classList.add('hidden');
-        await openComments(postId);
-      }catch(err){
-        toast(err.message);
-      }finally{
-        btn.disabled=false;
+  unsubPosts = onSnapshot(
+    query(
+      collection(db, "posts"),
+      orderBy("createdAt", "desc"),
+      limit(LIMITS.posts)
+    ),
+    snapshot => {
+      if (auth.currentUser?.uid !== uid) {
+        return;
       }
-    };
 
-    box.append(form);
-  }catch(err){
-    box.textContent='Ошибка: '+err.message;
-  }
+      posts = snapshot.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }));
+
+      renderFeed();
+
+      if (currentPage === "profile") {
+        renderProfilePosts();
+      }
+    },
+    error => {
+      toast(
+        "Ошибка ленты: " + friendlyError(error)
+      );
+    }
+  );
+
+  unsubLikes = onSnapshot(
+    collection(db, "users", uid, "likes"),
+    snapshot => {
+      if (auth.currentUser?.uid !== uid) {
+        return;
+      }
+
+      likes = {};
+
+      snapshot.forEach(item => {
+        likes[item.id] = true;
+      });
+
+      renderFeed();
+
+      if (currentPage === "profile") {
+        renderProfilePosts();
+      }
+    },
+    error => {
+      toast(
+        "Ошибка лайков: " + friendlyError(error)
+      );
+    }
+  );
 }
 
-$('searchInput').oninput=renderSearch;
+/* =========================================
+   POST RENDERING
+========================================= */
 
-function renderSearch(){
-  const q=$('searchInput').value.toLowerCase().trim();
-  const results=Object.entries(users)
-    .filter(([,u])=>!q||u.name?.toLowerCase().includes(q))
-    .slice(0,30);
+function postHTML(post) {
+  const mine = post.uid === me?.uid;
+  const liked = Boolean(likes[post.id]);
 
-  $('searchResults').innerHTML=results.map(([uid,u])=>
-    `<div class="glass panel userrow">
-      ${avatar(uid)}
-      <div style="flex:1">
-        ${nameHTML(uid)}
-        <div class="muted">${esc(u.bio||'')}</div>
+  const image = safeStoredImage(
+    post.imageUrl
+  );
+
+  return `
+    <article
+      class="glass panel"
+      data-post="${esc(post.id)}"
+    >
+
+      <div class="userrow">
+
+        ${avatar(post.uid)}
+
+        <div style="flex:1;min-width:0">
+
+          ${nameHTML(post.uid)}
+
+          <div class="muted">
+            ${esc(formatDate(post.createdAt))}
+          </div>
+
+        </div>
+
+        ${
+          mine
+            ? `
+              <button
+                class="quiet"
+                type="button"
+                data-action="delete-post"
+                data-id="${esc(post.id)}"
+              >
+                Удалить
+              </button>
+            `
+            : ""
+        }
+
       </div>
-      <button class="quiet" data-action="author" data-id="${esc(uid)}">Открыть</button>
-    </div>`
-  ).join('')||'<div class="empty">Никого не найдено</div>';
+
+      <div class="posttext">
+        ${linkify(post.text || "")}
+      </div>
+
+      ${
+        image
+          ? `
+            <img
+              class="postimage"
+              src="${esc(image)}"
+              alt="Изображение публикации"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              onerror="this.hidden=true"
+            >
+          `
+          : ""
+      }
+
+      <div class="actions">
+
+        <button
+          type="button"
+          class="${liked ? "liked" : ""}"
+          data-action="like"
+          data-id="${esc(post.id)}"
+        >
+          ${liked ? "♥" : "♡"} Нравится
+        </button>
+
+        <button
+          type="button"
+          data-action="comments"
+          data-id="${esc(post.id)}"
+        >
+          ☏ Комментарии
+        </button>
+
+        <button
+          type="button"
+          data-action="author"
+          data-id="${esc(post.uid)}"
+        >
+          Профиль
+        </button>
+
+      </div>
+
+      <div
+        id="comments-${esc(post.id)}"
+        class="hidden"
+        style="margin-top:15px"
+      ></div>
+
+    </article>
+  `;
 }
 
-async function openProfile(uid){
-  stopProfile();
-  const token=profileToken;
-  viewUid=uid;
-  currentPage='profile';
+function renderFeed() {
+  const container = $("feedList");
+  if (!container) return;
 
-  ['feed','search','profile','settings'].forEach(p=>
-    $(p+'Page').classList.toggle('hidden',p!=='profile')
-  );
-  document.querySelectorAll('[data-page]').forEach(b=>
-    b.classList.toggle('active',b.dataset.page==='profile')
-  );
+  container.innerHTML = posts.length
+    ? posts.map(postHTML).join("")
+    : `
+      <div class="glass panel empty">
+        Пока нет публикаций.
+      </div>
+    `;
+}
 
-  $('profileName').textContent='Загрузка...';
-  $('profileControls').innerHTML='';
-  $('profilePosts').innerHTML='';
+/* =========================================
+   POST ACTIONS
+========================================= */
 
-  try{
-    const snap=await getDoc(doc(db,'users',uid));
-    if(token!==profileToken)return;
-    if(!snap.exists())throw Error('Пользователь не найден');
+document.addEventListener(
+  "click",
+  async event => {
+    const badge = event.target.closest(
+      "[data-badge]"
+    );
 
-    const u=snap.data();
-    users[uid]=u;
+    if (badge) {
+      event.preventDefault();
+      event.stopPropagation();
 
-    $('profileName').innerHTML=nameHTML(uid);
-    $('profileHandle').textContent='Участник Nexora';
-    $('profileAvatar').innerHTML=avatar(uid,true)
-      .replace(/^<div[^>]*>|<\/div>$/g,'');
-    $('profileBanner').style.backgroundImage=u.bannerUrl
-      ? `url("${encodeURI(u.bannerUrl).replace(/"/g,'%22')}")`
-      : '';
-    $('profileBio').textContent=u.bio||'Без описания';
-    $('profileLinks').innerHTML=u.websiteUrl
-      ? externalLink(u.websiteUrl,'🌐 Сайт пользователя')
-      : '';
+      const type = Number(
+        badge.dataset.badge
+      );
 
-    $('profileControls').innerHTML=uid===me.uid
-      ? '<button class="quiet" id="editProfile">Редактировать профиль</button>'
-      : `<button class="primary" id="followButton">Подписаться</button>
-         <a class="quiet" href="chats.html?user=${encodeURIComponent(uid)}">✉ Написать</a>`;
+      toast(
+        BADGES[type] ||
+        "Подтверждённый аккаунт"
+      );
 
-    if(uid===me.uid)
-      $('editProfile').onclick=()=>showPage('settings');
-    else
-      $('followButton').onclick=()=>toggleFollow(uid);
+      return;
+    }
 
-    unsubFollowers=onSnapshot(
-      collection(db,'users',uid,'followers'),
-      s=>{
-        if(token!==profileToken)return;
-        $('followersCount').textContent=s.size;
-        const b=$('followButton');
-        if(b)b.textContent=s.docs.some(d=>d.id===me.uid)
-          ?'Отписаться':'Подписаться';
+    const link = event.target.closest(
+      "a[data-external]"
+    );
+
+    if (link && !isTrusted(link.href)) {
+      event.preventDefault();
+
+      pendingURL = link.href;
+
+      $("linkTarget").textContent =
+        new URL(link.href).hostname;
+
+      $("linkDialog").classList.remove(
+        "hidden"
+      );
+
+      return;
+    }
+
+    const button = event.target.closest(
+      "[data-action]"
+    );
+
+    if (!button || !me) return;
+
+    const action = button.dataset.action;
+    const id = button.dataset.id;
+
+    try {
+      if (action === "like") {
+        await runOnce(
+          "like:" + id,
+          async () => {
+            const ref = doc(
+              db,
+              "users",
+              me.uid,
+              "likes",
+              id
+            );
+
+            const snapshot = await getDoc(ref);
+
+            if (snapshot.exists()) {
+              await deleteDoc(ref);
+            } else {
+              await setDoc(ref, {
+                createdAt: serverTimestamp()
+              });
+            }
+          }
+        );
+      }
+
+      if (action === "delete-post") {
+        await runOnce(
+          "delete:" + id,
+          async () => {
+            const post = posts.find(
+              item => item.id === id
+            );
+
+            if (!post || post.uid !== me.uid) {
+              throw Error(
+                "Можно удалить только свою публикацию."
+              );
+            }
+
+            if (!confirm("Удалить публикацию?")) {
+              return;
+            }
+
+            await deleteDoc(
+              doc(db, "posts", id)
+            );
+
+            toast("Публикация удалена.");
+          }
+        );
+      }
+
+      if (action === "comments") {
+        await openComments(id);
+      }
+
+      if (action === "author") {
+        await openProfile(id);
+      }
+
+      if (action === "follow") {
+        await toggleFollow(id);
+      }
+    } catch (error) {
+      toast(friendlyError(error));
+    }
+  }
+);
+
+/* =========================================
+   EXTERNAL LINKS
+========================================= */
+
+$("cancelLink").addEventListener(
+  "click",
+  () => {
+    $("linkDialog").classList.add(
+      "hidden"
+    );
+
+    pendingURL = null;
+  }
+);
+
+$("confirmLink").addEventListener(
+  "click",
+  () => {
+    if (
+      pendingURL &&
+      validURL(pendingURL)
+    ) {
+      window.open(
+        pendingURL,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+
+    $("linkDialog").classList.add(
+      "hidden"
+    );
+
+    pendingURL = null;
+  }
+);
+
+$("linkDialog").addEventListener(
+  "click",
+  event => {
+    if (event.target === $("linkDialog")) {
+      $("cancelLink").click();
+    }
+  }
+);
+
+/* =========================================
+   COMMENTS
+========================================= */
+
+async function openComments(postId) {
+  const box = $("comments-" + postId);
+  if (!box) return;
+
+  if (!box.classList.contains("hidden")) {
+    box.classList.add("hidden");
+    return;
+  }
+
+  box.classList.remove("hidden");
+  box.textContent = "Загрузка комментариев...";
+
+  try {
+    const snapshot = await getDocs(
+      query(
+        collection(
+          db,
+          "posts",
+          postId,
+          "comments"
+        ),
+        orderBy("createdAt", "desc"),
+        limit(LIMITS.comments)
+      )
+    );
+
+    box.innerHTML = snapshot.docs.map(item => {
+      const comment = item.data();
+
+      return `
+        <div class="comment">
+          ${nameHTML(comment.uid)}
+          <p>${linkify(comment.text || "")}</p>
+        </div>
+      `;
+    }).join("") || `
+      <p class="muted">
+        Комментариев пока нет.
+      </p>
+    `;
+
+    const form = document.createElement(
+      "form"
+    );
+
+    form.className = "stack";
+
+    form.innerHTML = `
+      <input
+        maxlength="${LIMITS.comment}"
+        required
+        placeholder="Написать комментарий..."
+        aria-label="Текст комментария"
+      >
+
+      <button
+        type="submit"
+        class="primary"
+      >
+        Отправить
+      </button>
+    `;
+
+    form.addEventListener(
+      "submit",
+      async event => {
+        event.preventDefault();
+
+        const input = form.querySelector(
+          "input"
+        );
+
+        const text = input.value.trim();
+
+        if (
+          !text ||
+          text.length > LIMITS.comment
+        ) {
+          return;
+        }
+
+        const button = form.querySelector(
+          "button"
+        );
+
+        button.disabled = true;
+
+        try {
+          await addDoc(
+            collection(
+              db,
+              "posts",
+              postId,
+              "comments"
+            ),
+            {
+              uid: me.uid,
+              text,
+              createdAt: serverTimestamp()
+            }
+          );
+
+          box.classList.add("hidden");
+          await openComments(postId);
+        } catch (error) {
+          toast(friendlyError(error));
+        } finally {
+          button.disabled = false;
+        }
       }
     );
 
-    unsubFollowing=onSnapshot(
-      collection(db,'users',uid,'following'),
-      s=>{
-        if(token===profileToken)
-          $('followingCount').textContent=s.size;
+    box.append(form);
+  } catch (error) {
+    box.textContent =
+      "Ошибка: " + friendlyError(error);
+  }
+}
+
+/* =========================================
+   SEARCH
+========================================= */
+
+$("searchInput").addEventListener(
+  "input",
+  renderSearch
+);
+
+function renderSearch() {
+  const search = $("searchInput")
+    .value
+    .toLowerCase()
+    .trim()
+    .replace(/^@/, "");
+
+  const results = Object.entries(users)
+    .filter(([uid, user]) => {
+      if (!search) return true;
+
+      const name = String(
+        user.name || ""
+      ).toLowerCase();
+
+      const username = String(
+        user.username || ""
+      ).toLowerCase();
+
+      return (
+        name.includes(search) ||
+        username.includes(search)
+      );
+    })
+    .slice(0, 30);
+
+  $("searchResults").innerHTML =
+    results.map(([uid, user]) => `
+      <div class="glass panel userrow">
+
+        ${avatar(uid)}
+
+        <div style="flex:1;min-width:0">
+
+          ${nameHTML(uid)}
+
+          <div class="muted">
+            ${esc(handleHTML(uid))}
+          </div>
+
+          <div class="muted">
+            ${esc(user.bio || "")}
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="quiet"
+          data-action="author"
+          data-id="${esc(uid)}"
+        >
+          Открыть
+        </button>
+
+      </div>
+    `).join("") || `
+      <div class="glass panel empty">
+        Пользователи не найдены.
+      </div>
+    `;
+}
+
+/* =========================================
+   PROFILE
+========================================= */
+
+async function openProfile(uid) {
+  if (!me || !uid) return;
+
+  stopProfile();
+
+  const token = profileToken;
+
+  viewUid = uid;
+  currentPage = "profile";
+
+  setPageVisibility("profile");
+
+  $("profileName").textContent = "Загрузка...";
+  $("profileControls").innerHTML = "";
+  $("profilePosts").innerHTML = "";
+
+  try {
+    const user = await ensureUser(uid);
+
+    if (token !== profileToken) return;
+
+    $("profileName").innerHTML = nameHTML(uid);
+
+    $("profileHandle").textContent =
+      handleHTML(uid);
+
+    // В index.html #profileAvatar уже
+    // является контейнером .avatar.
+    const avatarElement = $("profileAvatar");
+
+    const image = safeStoredImage(
+      user.avatarUrl
+    );
+
+    avatarElement.innerHTML = image
+      ? `
+        <img
+          src="${esc(image)}"
+          alt=""
+          referrerpolicy="no-referrer"
+          onerror="this.remove()"
+        >
+      `
+      : esc(
+          (user.name || "N")
+            .slice(0, 2)
+            .toUpperCase()
+        );
+
+    const banner = safeStoredImage(
+      user.bannerUrl
+    );
+
+    $("profileBanner").style.backgroundImage =
+      banner
+        ? `url("${banner.replace(/"/g, "%22")}")`
+        : "";
+
+    $("profileBio").textContent =
+      user.bio || "Без описания";
+
+    $("profileLinks").innerHTML =
+      user.websiteUrl
+        ? externalLink(
+            user.websiteUrl,
+            "🌐 Сайт пользователя"
+          )
+        : "";
+
+    if (uid === me.uid) {
+      $("profileControls").innerHTML = `
+        <button
+          type="button"
+          class="quiet"
+          id="editProfile"
+        >
+          Редактировать профиль
+        </button>
+      `;
+
+      $("editProfile").onclick = () => {
+        showPage("settings");
+      };
+    } else {
+      $("profileControls").innerHTML = `
+        <button
+          type="button"
+          class="primary"
+          id="followButton"
+        >
+          Подписаться
+        </button>
+
+        <a
+          class="quiet"
+          href="./chats.html?user=${encodeURIComponent(uid)}"
+        >
+          ✉ Написать
+        </a>
+      `;
+
+      $("followButton").onclick = () => {
+        toggleFollow(uid).catch(error => {
+          toast(friendlyError(error));
+        });
+      };
+    }
+
+    unsubFollowers = onSnapshot(
+      collection(
+        db,
+        "users",
+        uid,
+        "followers"
+      ),
+      snapshot => {
+        if (token !== profileToken) return;
+
+        $("followersCount").textContent =
+          snapshot.size;
+
+        const button = $("followButton");
+
+        if (button) {
+          const following = snapshot.docs.some(
+            item => item.id === me.uid
+          );
+
+          button.textContent = following
+            ? "Отписаться"
+            : "Подписаться";
+        }
+      },
+      error => {
+        console.warn(
+          "Followers:",
+          friendlyError(error)
+        );
+      }
+    );
+
+    unsubFollowing = onSnapshot(
+      collection(
+        db,
+        "users",
+        uid,
+        "following"
+      ),
+      snapshot => {
+        if (token !== profileToken) return;
+
+        $("followingCount").textContent =
+          snapshot.size;
+      },
+      error => {
+        console.warn(
+          "Following:",
+          friendlyError(error)
+        );
       }
     );
 
     renderProfilePosts();
-  }catch(err){
-    toast(err.message);
-  }
-}
-
-function renderProfilePosts(){
-  $('profilePosts').innerHTML=posts
-    .filter(p=>p.uid===viewUid)
-    .map(postHTML)
-    .join('')
-    ||'<div class="glass panel empty">Публикаций в загруженной ленте нет</div>';
-}
-
-async function toggleFollow(uid){
-  if(uid===me.uid)return;
-
-  const a=doc(db,'users',me.uid,'following',uid);
-  const b=doc(db,'users',uid,'followers',me.uid);
-
-  await runTransaction(db,async tx=>{
-    const snap=await tx.get(a);
-    if(snap.exists()){
-      tx.delete(a);
-      tx.delete(b);
-    }else{
-      tx.set(a,{createdAt:serverTimestamp()});
-      tx.set(b,{createdAt:serverTimestamp()});
+  } catch (error) {
+    if (token === profileToken) {
+      toast(friendlyError(error));
     }
-  });
-  toast('Подписки обновлены');
-}
-
-function fillSettings(){
-  if(!myProfile)return;
-  $('settingsBio').value=myProfile.bio||'';
-  $('settingsAvatar').value=myProfile.avatarUrl||'';
-  $('settingsBanner').value=myProfile.bannerUrl||'';
-  $('settingsWebsite').value=myProfile.websiteUrl||'';
-}
-
-$('settingsForm').onsubmit=async e=>{
-  e.preventDefault();
-  if(!me)return;
-  const btn=e.target.querySelector('button');
-  btn.disabled=true;
-
-  try{
-    const bio=$('settingsBio').value.trim();
-    const avatarUrl=imageURL($('settingsAvatar').value.trim());
-    const bannerUrl=imageURL($('settingsBanner').value.trim());
-    const websiteUrl=$('settingsWebsite').value.trim();
-
-    if(bio.length>160)
-      throw Error('Описание не длиннее 160 символов');
-    if(websiteUrl&&!validURL(websiteUrl))
-      throw Error('Ссылка на сайт должна начинаться с https://');
-
-    const changes={bio,avatarUrl,bannerUrl,websiteUrl};
-    await setDoc(doc(db,'users',me.uid),changes,{merge:true});
-    myProfile={...myProfile,...changes};
-    users[me.uid]=myProfile;
-    toast('Профиль сохранён');
-  }catch(err){
-    toast(err.message);
-  }finally{
-    btn.disabled=false;
-  }
-};
-
-for(const [id,url] of [
-  ['tgChannel',SOCIAL.telegramChannel],
-  ['tgBot',SOCIAL.telegramBot]
-]){
-  const a=$(id);
-  if(validURL(url)){
-    a.href=url;
-    a.dataset.external='';
-  }else{
-    a.classList.add('hidden');
   }
 }
 
-if(!validURL(SOCIAL.telegramChannel)&&!validURL(SOCIAL.telegramBot)){
-  $('socialHint').textContent=
-    'Адреса Telegram-канала и бота можно указать в config.js.';
+function renderProfilePosts() {
+  $("profilePosts").innerHTML =
+    posts
+      .filter(post => post.uid === viewUid)
+      .map(postHTML)
+      .join("") || `
+        <div class="glass panel empty">
+          Публикаций в загруженной ленте нет.
+        </div>
+      `;
 }
+
+/* =========================================
+   FOLLOW SYSTEM
+========================================= */
+
+async function toggleFollow(uid) {
+  if (!me || uid === me.uid) return;
+
+  return runOnce(
+    "follow:" + uid,
+    async () => {
+      const followingRef = doc(
+        db,
+        "users",
+        me.uid,
+        "following",
+        uid
+      );
+
+      const followerRef = doc(
+        db,
+        "users",
+        uid,
+        "followers",
+        me.uid
+      );
+
+      await runTransaction(
+        db,
+        async transaction => {
+          const snapshot = await transaction.get(
+            followingRef
+          );
+
+          if (snapshot.exists()) {
+            transaction.delete(followingRef);
+            transaction.delete(followerRef);
+          } else {
+            transaction.set(followingRef, {
+              createdAt: serverTimestamp()
+            });
+
+            transaction.set(followerRef, {
+              createdAt: serverTimestamp()
+            });
+          }
+        }
+      );
+
+      toast("Подписки обновлены.");
+    }
+  );
+}
+
+/* =========================================
+   SETTINGS
+========================================= */
+
+function fillSettings() {
+  if (!myProfile) return;
+
+  $("settingsBio").value =
+    myProfile.bio || "";
+
+  $("settingsAvatar").value =
+    myProfile.avatarUrl || "";
+
+  $("settingsBanner").value =
+    myProfile.bannerUrl || "";
+
+  $("settingsWebsite").value =
+    myProfile.websiteUrl || "";
+}
+
+$("settingsForm").addEventListener(
+  "submit",
+  async event => {
+    event.preventDefault();
+
+    if (!me) return;
+
+    const button = event.currentTarget.querySelector(
+      'button[type="submit"]'
+    );
+
+    button.disabled = true;
+
+    try {
+      const bio = $("settingsBio").value.trim();
+
+      if (bio.length > LIMITS.bio) {
+        throw Error(
+          "Биография не длиннее 160 символов."
+        );
+      }
+
+      const avatarUrl = imageURL(
+        $("settingsAvatar").value.trim()
+      );
+
+      const bannerUrl = imageURL(
+        $("settingsBanner").value.trim()
+      );
+
+      const websiteUrl = $("settingsWebsite")
+        .value
+        .trim();
+
+      if (
+        websiteUrl &&
+        !validURL(websiteUrl)
+      ) {
+        throw Error(
+          "Сайт должен иметь HTTPS-ссылку."
+        );
+      }
+
+      const changes = {
+        bio,
+        avatarUrl,
+        bannerUrl,
+        websiteUrl
+      };
+
+      await setDoc(
+        doc(db, "users", me.uid),
+        changes,
+        { merge: true }
+      );
+
+      myProfile = {
+        ...myProfile,
+        ...changes
+      };
+
+      users[me.uid] = myProfile;
+
+      toast("Профиль сохранён.");
+    } catch (error) {
+      toast(friendlyError(error));
+    } finally {
+      button.disabled = false;
+    }
+  }
+);
+
+/* =========================================
+   OFFICIAL LINKS
+========================================= */
+
+for (const [id, url] of [
+  ["tgChannel", SOCIAL.telegramChannel],
+  ["tgBot", SOCIAL.telegramBot]
+]) {
+  const element = $(id);
+
+  if (!element) continue;
+
+  if (validURL(url)) {
+    element.href = url;
+    element.dataset.external = "";
+  } else {
+    element.classList.add("hidden");
+  }
+}
+
+if (
+  !validURL(SOCIAL.telegramChannel) &&
+  !validURL(SOCIAL.telegramBot)
+) {
+  $("socialHint").textContent =
+    "Адреса официальных ресурсов " +
+    "можно указать в config.js.";
+}
+
+/* =========================================
+   GLOBAL ERROR HANDLING
+========================================= */
+
+window.addEventListener(
+  "unhandledrejection",
+  event => {
+    console.error(
+      "[NEXORA] Unhandled rejection:",
+      event.reason
+    );
+  }
+);
+
+console.info(
+  "[NEXORA] Core 3.0 initialized"
+);
