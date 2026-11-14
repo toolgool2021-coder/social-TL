@@ -9,6 +9,7 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendEmailVerification,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
@@ -552,8 +553,13 @@ $("authForm").addEventListener(
           );
 
         await getOrCreateProfile(result.user, name);
-
-        toast("Аккаунт создан!");
+        try {
+          await sendEmailVerification(result.user, {url: location.origin + "/"});
+          toast("Аккаунт создан! Проверь почту для подтверждения.");
+        } catch (mailError) {
+          // Account exists: do not retry registration. The gate can resend.
+          toast("Аккаунт создан. Отправь письмо на экране подтверждения: " + friendlyError(mailError));
+        }
       } else {
         await signInWithEmailAndPassword(
           auth,
@@ -577,6 +583,14 @@ $("logout").addEventListener("click", async () => {
   } catch (error) {
     toast(friendlyError(error));
   }
+}
+
+onAuthStateChanged(auth, applyAuthState);
+window.addEventListener("nexora:email-verified", event => {
+  const user = auth.currentUser;
+  if (user && user.emailVerified && event.detail?.uid === user.uid) {
+    void applyAuthState(user);
+  }
 });
 
 /* =========================================
@@ -599,7 +613,7 @@ async function getOrCreateProfile(user, preferredName = "Пользовател�
   });
 }
 
-onAuthStateChanged(auth, async user => {
+async function applyAuthState(user) {
   const token = ++authToken;
   closeAllComments();
 
@@ -610,7 +624,8 @@ onAuthStateChanged(auth, async user => {
   unsubPosts = null;
   unsubLikes = null;
 
-  me = user;
+  const verified = Boolean(user?.emailVerified);
+  me = verified ? user : null;
   myProfile = null;
 
   users = {};
@@ -626,15 +641,17 @@ onAuthStateChanged(auth, async user => {
 
   $("app").classList.toggle(
     "hidden",
-    !user
+    !verified
   );
 
   $("topUser").classList.toggle(
     "hidden",
-    !user
+    !verified
   );
 
-  if (!user) return;
+  // Unverified accounts may only complete registration and verify email.
+  // Never start feed, notifications, or user queries for them.
+  if (!user || !verified) return;
 
   try {
     const requestedName = registrationProfile &&
