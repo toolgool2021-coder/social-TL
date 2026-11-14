@@ -201,3 +201,28 @@ test("opening an existing conversation does not overwrite its preview", async ()
   const snapshot=await getDoc(chat);
   assert.equal(snapshot.data().lastText,"Existing message preview");
 });
+
+test("legacy profile without optional name remains editable", async () => {
+  const legacy="legacy_profile_test";
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),"users",legacy),{
+      role:"user",createdAt:new Date()
+    });
+  });
+  await assertSucceeds(updateDoc(ref(legacy,"users",legacy),{
+    bio:"Обновлённая биография"
+  }));
+  await assertFails(updateDoc(ref(legacy,"users",legacy),{
+    role:"admin"
+  }));
+});
+
+test("saved posts support harmless repeated saves but not forged timestamps", async () => {
+  const item=ref(BOB,"users",BOB,"saved","p1");
+  await assertSucceeds(setDoc(item,{createdAt:serverTimestamp()}));
+  await assertSucceeds(setDoc(item,{createdAt:serverTimestamp()}));
+  await assertFails(setDoc(item,{createdAt:new Date("2001-01-01T00:00:00Z")}));
+  await assertFails(setDoc(ref(BOB,"users",ALICE,"saved","p1"),{
+    createdAt:serverTimestamp()
+  }));
+});
