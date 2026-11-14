@@ -9,19 +9,14 @@
 <style>
 :root{
  color-scheme:dark;
- --bg:#080d19;
- --panel:#141d31ed;
- --line:#ffffff20;
- --text:#edf3ff;
- --muted:#9baac5;
- --blue:#82a9ff;
- --accent:#7d8ff1
+ --bg:#080d19;--panel:#141d31ed;
+ --line:#ffffff20;--text:#edf3ff;
+ --muted:#9baac5;--blue:#82a9ff
 }
 *{box-sizing:border-box}
 body{
  margin:0;min-height:100dvh;
- font:14px system-ui,sans-serif;
- color:var(--text);
+ font:14px system-ui,sans-serif;color:var(--text);
  background:
  radial-gradient(ellipse at 15% 5%,#315b9b40,transparent 55%),
  radial-gradient(ellipse at 90% 90%,#6743ac30,transparent 55%),
@@ -32,39 +27,29 @@ button{cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
 a{color:#b3c9ff;text-decoration:none}
 header{
- height:64px;
- padding:0 max(16px,calc((100vw - 1180px)/2));
+ height:64px;padding:0 max(16px,calc((100vw - 1180px)/2));
  display:flex;align-items:center;justify-content:space-between;
- background:#0c1424ee;
- border-bottom:1px solid var(--line)
+ background:#0c1424ee;border-bottom:1px solid var(--line)
 }
 .brand{font-size:19px;font-weight:900;letter-spacing:.4px}
 .brand span{font-size:10px;color:var(--blue)}
 #layout{
- max-width:1180px;
- height:calc(100dvh - 88px);
- min-height:380px;
- margin:12px auto;
- padding:0 12px;
- display:grid;
- grid-template-columns:310px minmax(0,1fr);
- gap:12px
+ max-width:1180px;height:calc(100dvh - 88px);
+ min-height:380px;margin:12px auto;padding:0 12px;
+ display:grid;grid-template-columns:310px minmax(0,1fr);gap:12px
 }
 .glass{
- display:flex;flex-direction:column;
- min-width:0;min-height:0;overflow:hidden;
- background:var(--panel);
- border:1px solid var(--line);
- border-radius:19px;
- backdrop-filter:blur(16px);
- box-shadow:0 15px 40px #0003
+ display:flex;flex-direction:column;min-width:0;min-height:0;
+ overflow:hidden;background:var(--panel);
+ border:1px solid var(--line);border-radius:19px;
+ backdrop-filter:blur(16px);box-shadow:0 15px 40px #0003
 }
 .head{padding:17px;border-bottom:1px solid var(--line)}
 .head h2{margin:0 0 14px}
 input{
- width:100%;min-width:0;padding:12px 14px;
- color:white;background:#0b1424;
- border:1px solid #394861;border-radius:12px;outline:none
+ width:100%;min-width:0;padding:12px 14px;color:white;
+ background:#0b1424;border:1px solid #394861;
+ border-radius:12px;outline:none
 }
 input:focus{border-color:var(--blue)}
 .scroll{overflow:auto;flex:1;min-height:0}
@@ -76,20 +61,18 @@ input:focus{border-color:var(--blue)}
 }
 .person:hover,.person.active{background:#34466b80}
 .avatar{
- width:43px;height:43px;flex-shrink:0;
- display:grid;place-items:center;overflow:hidden;
- border-radius:14px;
+ width:43px;height:43px;flex-shrink:0;display:grid;
+ place-items:center;overflow:hidden;border-radius:14px;
  background:linear-gradient(135deg,#527cda,#a073d7);
  font-weight:800
 }
 .avatar img{width:100%;height:100%;object-fit:cover}
 .person-info{min-width:0;flex:1}
 .person-name{
- font-weight:750;
- display:inline-flex;align-items:center;gap:5px;
- flex-wrap:wrap
+ font-weight:750;display:inline-flex;
+ align-items:center;gap:5px;flex-wrap:wrap
 }
-.person-name img,.verified-icon{
+.verified-icon{
  width:18px;height:18px;object-fit:contain;
  vertical-align:middle;flex-shrink:0
 }
@@ -98,19 +81,26 @@ input:focus{border-color:var(--blue)}
  overflow:hidden;white-space:nowrap;text-overflow:ellipsis
 }
 .muted{font-size:12px;color:var(--muted)}
-.empty{padding:28px;text-align:center;color:var(--muted);line-height:1.6}
+.empty{
+ padding:28px;text-align:center;
+ color:var(--muted);line-height:1.6
+}
 .chathead{
- display:flex;align-items:center;gap:12px;
- padding:14px;min-height:74px;border-bottom:1px solid var(--line)
+ display:flex;align-items:center;gap:12px;padding:14px;
+ min-height:74px;border-bottom:1px solid var(--line)
 }
 #peerInfo{min-width:0;flex:1}
 #peer{
- font-size:16px;font-weight:800;
- display:flex;align-items:center;gap:6px;flex-wrap:wrap
+ font-size:16px;font-weight:800;display:flex;
+ align-items:center;gap:6px;flex-wrap:wrap
 }
 #peerStatus{margin-top:5px}
 .online{color:#78e6b0}
 .typing{color:#9db5ff}
+.chattools{
+ padding:9px 12px;border-bottom:1px solid var(--line)
+}
+.chattools input{padding:9px 11px}
 #messages{
  padding:12px 0;display:flex;flex-direction:column;
  scroll-behavior:smooth
@@ -135,8 +125,32 @@ input:focus{border-color:var(--blue)}
 .sticker img{
  width:150px;height:150px;max-width:100%;object-fit:contain
 }
-.compose-wrap{position:relative;border-top:1px solid var(--line)}
-#form{display:flex;align-items:center;gap:8px;padding:12px}
+.replybtn{
+ display:block;margin-top:8px;padding:5px 9px;
+ border:0;border-radius:8px;background:#ffffff18;
+ color:#e6edff;font-size:11px
+}
+.replybtn:hover{background:#ffffff30}
+.replybar{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:10px;padding:10px 14px;background:#223450;
+ border-bottom:1px solid var(--line);
+ color:#c9d9ff;font-size:12px
+}
+#replyText{
+ min-width:0;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap
+}
+.replybar button{
+ border:0;background:transparent;
+ color:white;font-size:20px
+}
+.compose-wrap{
+ position:relative;border-top:1px solid var(--line)
+}
+#form{
+ display:flex;align-items:center;gap:8px;padding:12px
+}
 #message{flex:1}
 .action,.primary{
  padding:11px 14px;border-radius:12px;color:#eaf1ff;
@@ -148,12 +162,12 @@ input:focus{border-color:var(--blue)}
  font-weight:750
 }
 #stickerPanel{
- position:absolute;bottom:calc(100% + 5px);
- left:10px;z-index:5;
- width:min(360px,calc(100vw - 40px));max-height:340px;
- display:flex;flex-direction:column;overflow:hidden;
- border:1px solid #526487;border-radius:15px;
- background:#17243c;box-shadow:0 15px 45px #0009
+ position:absolute;bottom:calc(100% + 5px);left:10px;
+ z-index:5;width:min(360px,calc(100vw - 40px));
+ max-height:340px;display:flex;flex-direction:column;
+ overflow:hidden;border:1px solid #526487;
+ border-radius:15px;background:#17243c;
+ box-shadow:0 15px 45px #0009
 }
 [hidden]{display:none!important}
 .sticker-head{
@@ -165,15 +179,17 @@ input:focus{border-color:var(--blue)}
  border:1px solid #394861;border-radius:9px;padding:8px
 }
 #stickerGrid{
- overflow:auto;padding:10px;
- display:grid;grid-template-columns:repeat(4,1fr);gap:8px
+ overflow:auto;padding:10px;display:grid;
+ grid-template-columns:repeat(4,1fr);gap:8px
 }
 #stickerGrid button{
  padding:5px;background:#ffffff09;
  border:1px solid transparent;border-radius:10px
 }
 #stickerGrid button:hover{border-color:var(--blue)}
-#stickerGrid img{width:100%;aspect-ratio:1;object-fit:contain}
+#stickerGrid img{
+ width:100%;aspect-ratio:1;object-fit:contain
+}
 #error{
  padding:12px;color:#ffb9c0;
  background:#7a273035;font-size:12px
@@ -247,11 +263,23 @@ input:focus{border-color:var(--blue)}
 
   <div id="error" hidden></div>
 
+  <div class="chattools">
+   <input id="chatSearch" type="search"
+    placeholder="Поиск в переписке"
+    aria-label="Поиск в переписке">
+  </div>
+
   <div id="messages" class="scroll">
    <div class="empty">Выбери диалог для общения</div>
   </div>
 
   <div class="compose-wrap">
+   <div id="replyBar" class="replybar" hidden>
+    <span id="replyText"></span>
+    <button id="cancelReply" type="button"
+     aria-label="Отменить ответ">×</button>
+   </div>
+
    <div id="stickerPanel" hidden>
     <div class="sticker-head">
      <select id="stickerPack"></select>
@@ -262,9 +290,9 @@ input:focus{border-color:var(--blue)}
 
    <form id="form">
     <button type="button" id="stickers"
-      class="action" disabled>☺</button>
+     class="action" disabled>☺</button>
     <input id="message" maxlength="2000"
-      placeholder="Сообщение..." disabled>
+     placeholder="Сообщение..." disabled>
     <button id="send" class="primary" disabled>➤</button>
    </form>
   </div>
@@ -274,8 +302,10 @@ input:focus{border-color:var(--blue)}
 <script type="module">
 import {initializeApp} from
 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+
 import {getAuth,onAuthStateChanged} from
 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+
 import {
  getFirestore,collection,doc,getDoc,getDocs,
  query,where,limit,orderBy,onSnapshot,
@@ -312,6 +342,7 @@ let chatGeneration=0;
 let peerOnline=false;
 let peerTyping=false;
 let chatRecords=[];
+let replyTo=null;
 
 const escapeHTML=value=>String(value??'').replace(
  /[&<>"']/g,
@@ -399,7 +430,8 @@ function searchUsers(){
 
  $('people').innerHTML=matches.map(
   uid=>personRow(uid,'Начать диалог')
- ).join('')||'<div class="empty">Ничего не найдено</div>';
+ ).join('')||
+ '<div class="empty">Ничего не найдено</div>';
 }
 
 $('search').oninput=searchUsers;
@@ -440,6 +472,11 @@ function stopActive(){
  peerOnline=false;
  peerTyping=false;
  currentMessages=[];
+ replyTo=null;
+
+ $('replyBar').hidden=true;
+ $('chatSearch').value='';
+
  chatGeneration++;
 }
 
@@ -480,12 +517,17 @@ async function openChat(uid){
   try{
    const snapshot=await getDoc(doc(db,'users',uid));
 
-   if(!snapshot.exists())throw Error('Пользователь не найден');
+   if(!snapshot.exists()){
+    throw Error('Пользователь не найден');
+   }
+
    if(generation!==chatGeneration)return;
 
    users[uid]=snapshot.data();
   }catch(error){
-   if(generation===chatGeneration)showError(error.message);
+   if(generation===chatGeneration){
+    showError(error.message);
+   }
    return;
   }
  }
@@ -494,7 +536,6 @@ async function openChat(uid){
 
  const peerUser=users[uid];
 
- // Верификация теперь отображается и в заголовке диалога.
  $('peer').innerHTML=`
   <span>${escapeHTML(peerUser.name||'Пользователь')}</span>
   ${badge(peerUser)}
@@ -573,7 +614,9 @@ function stickerSource(key){
  const parts=key.split('/');
  if(parts.length!==2)return '';
 
- const pack=STICKER_PACKS.find(p=>p.id===parts[0]);
+ const pack=STICKER_PACKS.find(
+  p=>p.id===parts[0]
+ );
 
  if(!pack||!pack.files.includes(parts[1])){
   return '';
@@ -584,8 +627,15 @@ function stickerSource(key){
 
 function renderMessages(){
  const box=$('messages');
+ const term=$('chatSearch').value.trim().toLowerCase();
 
- box.innerHTML=currentMessages.map(message=>{
+ const visible=term
+  ?currentMessages.filter(message=>
+    String(message.text||'').toLowerCase().includes(term)
+   )
+  :currentMessages;
+
+ box.innerHTML=visible.map(message=>{
   const mine=message.senderId===me.uid;
 
   const time=message.createdAt?.toDate?.()
@@ -613,13 +663,47 @@ function renderMessages(){
     ${isSticker?'sticker':''}">
     ${content}
     <small>${escapeHTML(time+status)}</small>
+    ${!isSticker?`
+     <button type="button" class="replybtn"
+      data-reply="${escapeHTML(message.id)}">
+      ↩ Ответить
+     </button>
+    `:''}
    </div>
   `;
  }).join('')||
- '<div class="empty">Сообщений пока нет</div>';
+ '<div class="empty">Сообщения не найдены</div>';
 
- box.scrollTop=box.scrollHeight;
+ if(!term)box.scrollTop=box.scrollHeight;
 }
+
+$('chatSearch').addEventListener(
+ 'input',renderMessages
+);
+
+$('messages').addEventListener('click',event=>{
+ const button=event.target.closest('[data-reply]');
+ if(!button)return;
+
+ const message=currentMessages.find(
+  m=>m.id===button.dataset.reply
+ );
+
+ if(!message)return;
+
+ replyTo=message;
+
+ $('replyText').textContent=
+  'Ответ на: '+String(message.text||'').slice(0,110);
+
+ $('replyBar').hidden=false;
+ $('message').focus();
+});
+
+$('cancelReply').onclick=()=>{
+ replyTo=null;
+ $('replyBar').hidden=true;
+};
 
 async function markRead(id,peerUid){
  if(reading||!me||activeUid!==peerUid)return;
@@ -707,14 +791,32 @@ async function sendMessage(payload){
 $('form').onsubmit=async event=>{
  event.preventDefault();
 
- const text=$('message').value.trim();
- if(!text||text.length>2000)return;
+ const inputText=$('message').value.trim();
+
+ const quote=replyTo
+  ?'↩ '+String(replyTo.text||'')
+    .replace(/\s+/g,' ')
+    .slice(0,100)+'\n'
+  :'';
+
+ const text=quote+inputText;
+
+ if(!inputText)return;
+
+ if(text.length>2000){
+  showError('Ответ превышает 2000 символов');
+  return;
+ }
 
  $('send').disabled=true;
 
  try{
   await sendMessage({type:'text',text});
+
   $('message').value='';
+  replyTo=null;
+  $('replyBar').hidden=true;
+
   await setTyping(false);
  }catch(error){
   showError('Ошибка отправки: '+error.message);
@@ -800,7 +902,8 @@ function renderStickers(){
   const src=stickerSource(key);
 
   return `
-   <button type="button" data-sticker="${escapeHTML(key)}">
+   <button type="button"
+    data-sticker="${escapeHTML(key)}">
     <img src="${escapeHTML(src)}"
      alt="Стикер" loading="lazy">
    </button>
@@ -818,25 +921,28 @@ $('closeStickers').onclick=()=>{
  $('stickerPanel').hidden=true;
 };
 
-$('stickerGrid').addEventListener('click',async event=>{
- const button=event.target.closest('[data-sticker]');
- if(!button||!activeUid)return;
+$('stickerGrid').addEventListener(
+ 'click',async event=>{
+  const button=event.target.closest('[data-sticker]');
 
- button.disabled=true;
+  if(!button||!activeUid)return;
 
- try{
-  await sendMessage({
-   type:'sticker',
-   sticker:button.dataset.sticker
-  });
+  button.disabled=true;
 
-  $('stickerPanel').hidden=true;
- }catch(error){
-  showError('Ошибка стикера: '+error.message);
- }finally{
-  button.disabled=false;
+  try{
+   await sendMessage({
+    type:'sticker',
+    sticker:button.dataset.sticker
+   });
+
+   $('stickerPanel').hidden=true;
+  }catch(error){
+   showError('Ошибка стикера: '+error.message);
+  }finally{
+   button.disabled=false;
+  }
  }
-});
+);
 
 renderStickerPacks();
 
@@ -859,7 +965,6 @@ onAuthStateChanged(auth,async user=>{
   return;
  }
 
- // Загружаем диалоги сразу, не ожидая списка пользователей.
  stopChats=onSnapshot(
   query(
    collection(db,'chats'),
@@ -871,6 +976,7 @@ onAuthStateChanged(auth,async user=>{
     (b.data().updatedAt?.seconds||0)-
     (a.data().updatedAt?.seconds||0)
    );
+
    renderChatList();
   },
   error=>showError(
@@ -879,7 +985,6 @@ onAuthStateChanged(auth,async user=>{
  );
 
  try{
-  // Уменьшена начальная выборка со 200 до 100 профилей.
   const snapshot=await getDocs(query(
    collection(db,'users'),
    limit(100)
@@ -888,6 +993,7 @@ onAuthStateChanged(auth,async user=>{
   if(auth.currentUser?.uid!==user.uid)return;
 
   users={};
+
   snapshot.forEach(item=>{
    users[item.id]=item.data();
   });
@@ -903,7 +1009,9 @@ onAuthStateChanged(auth,async user=>{
    await openChat(requested);
   }
  }catch(error){
-  showError('Ошибка загрузки пользователей: '+error.message);
+  showError(
+   'Ошибка загрузки пользователей: '+error.message
+  );
  }
 });
 </script>
