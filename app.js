@@ -397,16 +397,25 @@ function handleHTML(uid) {
 function updateOwnerButton(user, profile) {
   const button = $("ownerButton");
   if (!button) return;
-
-  const allowed = Boolean(
-    user &&
-    profile &&
-    user.uid === OWNER_UID &&
-    profile.role === "owner"
-  );
-
+  const allowed = Boolean(user?.emailVerified && user.uid === OWNER_UID && profile?.role === "owner");
   button.classList.toggle("hidden", !allowed);
+  button.hidden = !allowed;
+  button.style.display = allowed ? "flex" : "none";
 }
+
+// Independently refresh owner navigation from the authoritative Firestore profile.
+// The owner page still performs its own authorization check.
+onAuthStateChanged(auth, async user => {
+  updateOwnerButton(null, null);
+  if (!user?.emailVerified || user.uid !== OWNER_UID) return;
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (auth.currentUser?.uid !== user.uid) return;
+    updateOwnerButton(user, snap.exists() ? snap.data() : null);
+  } catch (error) {
+    console.warn("[NEXORA] Owner navigation:", error);
+  }
+});
 
 /* =========================================
    NAVIGATION
