@@ -132,3 +132,13 @@ The test command starts a local Firestore emulator and runs `tests/firestore.rul
 - The emulator test project is explicitly set to `nexora-rules-test`, avoiding accidental use of a live Firebase project.
 - `.github/workflows/firestore-rules.yml` runs security rules tests on relevant pushes and pull requests with Node.js 22 and Java 21. GitHub Actions must be enabled and dependencies downloadable for the workflow to run.
 - **A workflow file being committed does not mean the tests passed.** Check the GitHub Actions job results and resolve failures before deploying.
+
+## Comparison with supplied live NEXORA 3.0 rules (2026-11-14)
+
+A copy of the current production rules was supplied by the project owner for comparison.
+- **Unchanged security model:** users cannot grant themselves staff roles or verification; only the fixed owner can change privileged profile fields or review verification requests; private chats are available only to participants; audit logs are owner-managed.
+- **New in 3.2:** message reactions are per-user documents under `chats/{chatId}/reactions` rather than client-modifiable arrays; canonical sorted chat IDs; trusted server timestamps on new content, follows, likes, saves, typing, presence, and reports; missing-chat checks for new-conversation initialization.
+- **Backward-compatibility fixes:** profile updates preserve the 3.0 behavior of allowing pre-existing profiles without optional `name`/`bio` fields; saved posts can be saved again with a valid server timestamp. Both cases have emulator tests.
+- **Migration caveats:** existing reactions stored in legacy message maps are not automatically transferred to the new collection, and deleted posts cannot be saved again. Existing chat documents with noncanonical IDs are still readable by their members, but new chat creation requires the canonical ID.
+- **Deployment gate:** run the updated security test suite and exercise registration, feed, comments, following, saved posts, and a two-account chat in a staging Firebase project. Back up the live 3.0 rules before replacing them. A green test suite cannot prove compatibility with every existing record.
+- **Important:** Cloud Functions are not deployed by applying Firestore Rules. Deploy and validate them separately after confirming billing and permissions.
