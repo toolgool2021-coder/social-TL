@@ -129,6 +129,25 @@ service cloud.firestore {
         // could forge another user's reactions. Migrate to per-user documents or backend.
         allow delete: if chatMember(chatId) && self(resource.data.senderId);
       }
+      match /reactions/{reactionId} {
+        allow get,list: if chatMember(chatId);
+        allow create: if chatMember(chatId) &&
+          request.resource.data.keys().hasOnly(['uid','messageId','emoji','createdAt']) &&
+          request.resource.data.uid == request.auth.uid &&
+          reactionId == request.resource.data.messageId + '_' + request.auth.uid &&
+          txt(request.resource.data.messageId,1,200) &&
+          request.resource.data.emoji in ['❤️','👍','😂','😮','😢','🔥'] &&
+          exists(/databases/$(database)/documents/chats/$(chatId)/messages/$(request.resource.data.messageId)) &&
+          request.resource.data.createdAt == request.time;
+        allow update: if chatMember(chatId) &&
+          resource.data.uid == request.auth.uid &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.messageId == resource.data.messageId &&
+          changed(['emoji','createdAt']) &&
+          request.resource.data.emoji in ['❤️','👍','😂','😮','😢','🔥'] &&
+          request.resource.data.createdAt == request.time;
+        allow delete: if chatMember(chatId) && resource.data.uid == request.auth.uid;
+      }
       match /typing/{uid} {
         allow get,list: if chatMember(chatId);
         allow create,update: if chatMember(chatId) && self(uid) &&
