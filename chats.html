@@ -1592,7 +1592,7 @@ onAuthStateChanged(auth,async user=>{
   $("messages").innerHTML='<div class="empty">Выбери пользователя, чтобы начать общение.</div>';
   clearError();
 
-  if(!user){
+  if(!user || !user.emailVerified){
     $("chats").innerHTML=`
       <div class="empty">
         Войди в аккаунт, чтобы открыть сообщения.
@@ -1658,5 +1658,6 @@ onAuthStateChanged(auth,async user=>{
   }
 });
 </script>
+<script type="module" src="./email-verification.js?v=2"></script>
 </body>
 </html>
