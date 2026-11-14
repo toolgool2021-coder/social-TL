@@ -104,14 +104,16 @@ service cloud.firestore {
     match /posts/{postId} {
       allow get,list: if authd();
       allow create: if authd() && request.resource.data.uid == request.auth.uid &&
-        request.resource.data.keys().hasOnly(['uid','text','imageUrl','createdAt']) &&
+        request.resource.data.keys().hasOnly(['uid','text','imageUrl','imagePosition','createdAt']) &&
         request.resource.data.createdAt == request.time &&
         txt(request.resource.data.text,1,1000) &&
+        (!('imagePosition' in request.resource.data) || request.resource.data.imagePosition in ['top','bottom']) &&
         (!('imageUrl' in request.resource.data) ||
           (txt(request.resource.data.imageUrl,1,2048) && request.resource.data.imageUrl.matches('^https://.*')));
       allow update: if authd() && resource.data.uid == request.auth.uid &&
         request.resource.data.uid == resource.data.uid &&
-        changed(['text','imageUrl','editedAt']) && txt(request.resource.data.text,1,1000) &&
+        changed(['text','imageUrl','imagePosition','editedAt']) && txt(request.resource.data.text,1,1000) &&
+        (!('imagePosition' in request.resource.data) || request.resource.data.imagePosition in ['top','bottom']) &&
         (!fieldChanged('imageUrl') || !('imageUrl' in request.resource.data) ||
           (txt(request.resource.data.imageUrl,1,2048) && request.resource.data.imageUrl.matches('^https://.*'))) &&
         (!fieldChanged('editedAt') || request.resource.data.editedAt == request.time);
@@ -129,6 +131,15 @@ service cloud.firestore {
           (!fieldChanged('editedAt') || request.resource.data.editedAt == request.time);
         allow delete: if owner() || (authd() && resource.data.uid == request.auth.uid);
       }
+    }
+    // Canonical per-post like records support accurate global counts.
+    match /posts/{postId}/likes/{uid} {
+      allow get,list: if authd();
+      allow create: if self(uid) && exists(/databases/$(database)/documents/posts/$(postId)) &&
+        request.resource.data.keys().hasOnly(['createdAt']) &&
+        request.resource.data.createdAt == request.time;
+      allow delete: if self(uid);
+      allow update: if false;
     }
     match /chats/{chatId} {
       // Allow an authenticated participant to probe a missing canonical chat.
