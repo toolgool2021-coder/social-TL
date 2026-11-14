@@ -80,6 +80,8 @@ function harness(initialProfiles = {}) {
   const profiles = new Map(Object.entries(initialProfiles));
   const listeners = [];
   const authTasks = [];
+  const windowEvents = new Map();
+  const sentEmails = [];
   const auth = {currentUser:null};
   let authListener;
   let transactionQueue = Promise.resolve();
@@ -88,7 +90,7 @@ function harness(initialProfiles = {}) {
   const context = vm.createContext({
     console: {info(){}, warn(){}, error(){}},
     setTimeout:() => 1, clearTimeout(){}, URL, Date,
-    SOCIAL:{}, TRUSTED_HOSTS:[],
+    SOCIAL:{}, TRUSTED_HOSTS:[], location:{origin:'https://tlnexora.duckdns.org'},
     document: {
       activeElement:null,
       getElementById(id) {
@@ -103,7 +105,7 @@ function harness(initialProfiles = {}) {
       addEventListener(){},
       createElement:tag => new Element(tag)
     },
-    window:{addEventListener(){}},
+    window:{addEventListener(name,callback){windowEvents.set(name,callback);}},
     getApps:() => [{}], initializeApp:() => ({}),
     getAuth:() => auth, getFirestore:() => ({}),
     doc, collection:doc, query:(path, ...constraints) => ({path, constraints}),
@@ -111,13 +113,14 @@ function harness(initialProfiles = {}) {
     serverTimestamp:() => 'SERVER_TIMESTAMP',
     onAuthStateChanged(_auth, callback) { authListener = callback; },
     createUserWithEmailAndPassword:async (_auth, email) => {
-      const user = {uid:'new-user', email};
+      const user = {uid:'new-user', email, emailVerified:false};
       auth.currentUser = user;
       // Emit BEFORE the registration promise resolves: the original race.
       authTasks.push(authListener(user));
       return {user};
     },
     signInWithEmailAndPassword(){}, signOut(){},
+    sendEmailVerification:async (user,settings)=>{sentEmails.push({uid:user.uid,settings});},
     getDoc:async path => snapshot(profiles.get(path)),
     getDocs:async () => ({forEach(){}}),
     runTransaction(_db, callback) {
@@ -143,8 +146,18 @@ function harness(initialProfiles = {}) {
   vm.runInContext(source, context, {filename:'app.js'});
   const evaluate = code => vm.runInContext(code, context);
   return {
-    context, evaluate, elements, writes, profiles, listeners, authTasks,
-    async authenticate(user) { auth.currentUser = user; await authListener(user); },
+    context, evaluate, elements, writes, profiles, listeners, authTasks, sentEmails,
+    async authenticate(user) {
+      const signedIn = {emailVerified:true,...user};
+      auth.currentUser = signedIn;
+      await authListener(signedIn);
+    },
+    async verifyEmail(){
+      auth.currentUser.emailVerified = true;
+      await windowEvents.get('nexora:email-verified')({detail:{uid:auth.currentUser.uid}});
+      await Promise.resolve();
+      await transactionQueue;
+    },
     async signup(name = 'Алиса') {
       evaluate('setAuthMode("register")');
       elements.get('username').value = name;
@@ -158,11 +171,15 @@ function harness(initialProfiles = {}) {
 
 const plain = value => JSON.parse(JSON.stringify(value));
 
-test('registration auth event arriving before profile write keeps requested name and starts feed', async () => {
+test('registration creates profile and sends email, but does not start feed before verification', async () => {
   const app = harness();
   await app.signup('Алиса');
   assert.equal(app.profiles.get('users/new-user').name, 'Алиса');
   assert.equal(app.writes.length, 1);
+  assert.equal(app.listeners.filter(item => item.target.path === 'posts').length, 0);
+  assert.equal(app.sentEmails.length, 1);
+  assert.equal(app.sentEmails[0].settings.url, 'https://tlnexora.duckdns.org/');
+  await app.verifyEmail();
   assert.equal(app.listeners.filter(item => item.target.path === 'posts').length, 1);
   assert.equal(app.elements.get('topName').textContent, 'Алиса');
 });
