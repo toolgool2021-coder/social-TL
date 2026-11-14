@@ -281,92 +281,123 @@ service cloud.firestore {
     // NEXORA groups: creation/approval is trusted-server only.
     // One request document per user and type; clients cannot reset approvals.
     // Group requests have deterministic IDs: UID_kind. Owner alone reviews.
+    function groupDoc(id) { return get(/databases/$(database)/documents/groups/$(id)); }
+    function memberPath(id,uid) { return /databases/$(database)/documents/groups/$(id)/members/$(uid); }
+    function isGroupMember(id) { return authd() && exists(memberPath(id,request.auth.uid)); }
+    function isGroupLeader(id) { return isGroupMember(id) && get(memberPath(id,request.auth.uid)).data.role == 'leader'; }
+    function validGroupTag(kind,tag) {
+      return kind == 'clan' ? (tag is string && tag.matches('^[A-Za-z0-9_]{3}$')) : tag == '';
+    }
+    function validAppeal(data) {
+      return data.keys().hasOnly(['ownerId','kind','name','tag','description','category','reason','status','createdAt']) &&
+        data.kind in ['clan','community'] &&
+        txt(data.name,3,40) &&
+        validGroupTag(data.kind,data.tag) &&
+        txt(data.description,0,500) &&
+        txt(data.category,2,40) &&
+        txt(data.reason,10,500) &&
+        data.status == 'pending' &&
+        data.createdAt == request.time;
+    }
     match /groupRequests/{requestId} {
       allow get: if owner() || (authd() && resource.data.ownerId == request.auth.uid);
       allow list: if owner();
       allow create: if authd() &&
-        request.resource.data.keys().hasOnly(['ownerId','kind','name','tag','description','category','reason','status','createdAt']) &&
-        request.resource.data.ownerId == request.auth.uid &&
-        request.resource.data.kind in ['clan','community'] &&
         requestId == request.auth.uid + '_' + request.resource.data.kind &&
-        txt(request.resource.data.name,3,40) &&
-        txt(request.resource.data.tag,2,8) &&
-        request.resource.data.tag.matches('^[A-Za-z0-9_]{2,8}$') &&
-        txt(request.resource.data.description,0,500) &&
-        txt(request.resource.data.category,2,40) &&
-        txt(request.resource.data.reason,10,500) &&
-        request.resource.data.status == 'pending' &&
-        request.resource.data.createdAt == request.time;
-      allow update: if
-        (
-          authd() &&
-          resource.data.ownerId == request.auth.uid &&
-          resource.data.status == 'rejected' &&
-          !exists(/databases/$(database)/documents/groups/$(requestId)) &&
-          request.resource.data.keys().hasOnly(['ownerId','kind','name','tag','description','category','reason','status','createdAt']) &&
-          request.resource.data.ownerId == resource.data.ownerId &&
-          request.resource.data.kind == resource.data.kind &&
-          request.resource.data.status == 'pending' &&
-          txt(request.resource.data.name,3,40) &&
-          txt(request.resource.data.tag,2,8) &&
-          request.resource.data.tag.matches('^[A-Za-z0-9_]{2,8}$') &&
-          txt(request.resource.data.description,0,500) &&
-          txt(request.resource.data.category,2,40) &&
-          txt(request.resource.data.reason,10,500) &&
-          request.resource.data.createdAt == request.time
-        ) ||
-        (
-          owner() &&
-          resource.data.status == 'pending' &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt','reviewedBy','reviewNote']) &&
-          request.resource.data.status in ['approved','rejected'] &&
-          request.resource.data.reviewedBy == request.auth.uid &&
-          txt(request.resource.data.reviewNote,0,500) &&
-          request.resource.data.reviewedAt == request.time &&
-          (request.resource.data.status == 'rejected' ||
-            getAfter(/databases/$(database)/documents/groups/$(requestId)).data.ownerId == resource.data.ownerId)
-        );
+        request.resource.data.ownerId == request.auth.uid &&
+        validAppeal(request.resource.data);
+      allow update: if (
+        authd() && resource.data.ownerId == request.auth.uid &&
+        resource.data.status == 'rejected' &&
+        !exists(/databases/$(database)/documents/groups/$(requestId)) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.kind == resource.data.kind &&
+        validAppeal(request.resource.data)
+      ) || (
+        owner() && resource.data.status == 'pending' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt','reviewedBy','reviewNote']) &&
+        request.resource.data.status in ['approved','rejected'] &&
+        request.resource.data.reviewedBy == request.auth.uid &&
+        txt(request.resource.data.reviewNote,0,500) &&
+        request.resource.data.reviewedAt == request.time &&
+        (request.resource.data.status == 'rejected' ||
+          getAfter(/databases/$(database)/documents/groups/$(requestId)).data.ownerId == resource.data.ownerId)
+      );
       allow delete: if false;
     }
     match /groups/{groupId} {
       allow get,list: if authd() && resource.data.status == 'active';
       allow create: if owner() &&
-        request.resource.data.keys().hasOnly(['ownerId','kind','name','tag','description','category','status','createdAt']) &&
+        request.resource.data.keys().hasOnly(['ownerId','kind','name','tag','description','category','status','createdAt','verified','memberCount']) &&
         groupId == request.resource.data.ownerId + '_' + request.resource.data.kind &&
         request.resource.data.kind in ['clan','community'] &&
         request.resource.data.status == 'active' &&
-        getAfter(/databases/$(database)/documents/groupRequests/$(groupId)).data.status == 'approved' &&
+        request.resource.data.verified == false &&
+        request.resource.data.memberCount == 1 &&
+        validGroupTag(request.resource.data.kind,request.resource.data.tag) &&
         get(/databases/$(database)/documents/groupRequests/$(groupId)).data.status == 'pending' &&
+        getAfter(/databases/$(database)/documents/groupRequests/$(groupId)).data.status == 'approved' &&
         request.resource.data.ownerId == get(/databases/$(database)/documents/groupRequests/$(groupId)).data.ownerId &&
+        request.resource.data.kind == get(/databases/$(database)/documents/groupRequests/$(groupId)).data.kind &&
         request.resource.data.name == get(/databases/$(database)/documents/groupRequests/$(groupId)).data.name &&
         request.resource.data.tag == get(/databases/$(database)/documents/groupRequests/$(groupId)).data.tag &&
         request.resource.data.description == get(/databases/$(database)/documents/groupRequests/$(groupId)).data.description &&
         request.resource.data.category == get(/databases/$(database)/documents/groupRequests/$(groupId)).data.category &&
         request.resource.data.createdAt == request.time &&
-        getAfter(/databases/$(database)/documents/groupTags/$(request.resource.data.tag)).data.groupId == groupId;
-      allow update,delete: if false;
+        getAfter(memberPath(groupId,request.resource.data.ownerId)).data.role == 'leader' &&
+        (request.resource.data.kind == 'community' ||
+          getAfter(/databases/$(database)/documents/groupTags/$(request.resource.data.tag)).data.groupId == groupId);
+      allow update: if (
+        owner() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified','verifiedAt']) &&
+        request.resource.data.verified is bool &&
+        request.resource.data.verifiedAt == request.time
+      ) || (
+        authd() && resource.data.status == 'active' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount']) &&
+        request.resource.data.memberCount is int &&
+        request.resource.data.memberCount >= 1 &&
+        (resource.data.kind == 'clan' || request.resource.data.memberCount <= 30) &&
+        (
+          (request.resource.data.memberCount == resource.data.memberCount + 1 &&
+            !exists(memberPath(groupId,request.auth.uid)) &&
+            getAfter(memberPath(groupId,request.auth.uid)).data.uid == request.auth.uid &&
+            getAfter(memberPath(groupId,request.auth.uid)).data.role == 'member') ||
+          (request.resource.data.memberCount == resource.data.memberCount - 1 &&
+            exists(memberPath(groupId,request.auth.uid)) &&
+            get(memberPath(groupId,request.auth.uid)).data.role == 'member' &&
+            !existsAfter(memberPath(groupId,request.auth.uid)))
+        )
+      );
+      allow delete: if false;
       match /members/{uid} {
-        allow get,list: if authd() &&
-          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
-        allow create: if authd() &&
+        allow get: if owner() || (authd() && request.auth.uid == uid) || isGroupMember(groupId);
+        allow list: if isGroupMember(groupId);
+        allow create: if (
+          owner() && request.resource.data.keys().hasOnly(['uid','role','joinedAt']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.role == 'leader' &&
+          request.resource.data.joinedAt == request.time &&
+          getAfter(/databases/$(database)/documents/groups/$(groupId)).data.ownerId == uid
+        ) || (
+          self(uid) &&
           request.resource.data.keys().hasOnly(['uid','role','joinedAt']) &&
           request.resource.data.uid == uid &&
+          request.resource.data.role == 'member' &&
           request.resource.data.joinedAt == request.time &&
-          (
-            (self(uid) && request.resource.data.role == 'member' &&
-              get(/databases/$(database)/documents/groups/$(groupId)).data.status == 'active') ||
-            (owner() && request.resource.data.role == 'leader' &&
-              getAfter(/databases/$(database)/documents/groups/$(groupId)).data.ownerId == uid)
-          );
+          groupDoc(groupId).data.status == 'active' &&
+          getAfter(/databases/$(database)/documents/groups/$(groupId)).data.memberCount == groupDoc(groupId).data.memberCount + 1 &&
+          (groupDoc(groupId).data.kind == 'clan' || groupDoc(groupId).data.memberCount < 30)
+        );
         allow update: if false;
-        allow delete: if self(uid) && resource.data.role == 'member';
+        allow delete: if self(uid) && resource.data.role == 'member' &&
+          getAfter(/databases/$(database)/documents/groups/$(groupId)).data.memberCount == groupDoc(groupId).data.memberCount - 1;
       }
       match /messages/{messageId} {
-        allow get,list: if authd() &&
-          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
-        allow create: if authd() &&
-          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)) &&
-          request.resource.data.keys().hasOnly(['senderId','type','text','sticker','createdAt']) &&
+        allow get,list: if isGroupMember(groupId);
+        allow create: if isGroupMember(groupId) &&
+          (groupDoc(groupId).data.kind == 'community' || isGroupLeader(groupId)) &&
+          request.resource.data.keys().hasOnly(['senderId','type','text','createdAt']) &&
           request.resource.data.senderId == request.auth.uid &&
           request.resource.data.type == 'text' &&
           txt(request.resource.data.text,1,2000) &&
@@ -378,9 +409,11 @@ service cloud.firestore {
       allow get: if authd();
       allow list: if false;
       allow create: if owner() &&
+        tag.matches('^[A-Za-z0-9_]{3}$') &&
         request.resource.data.keys().hasOnly(['groupId','createdAt']) &&
         request.resource.data.createdAt == request.time &&
-        getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.tag == tag;
+        getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.tag == tag &&
+        getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.kind == 'clan';
       allow update,delete: if false;
     }
     match /{document=**} { allow read,write: if false; }
