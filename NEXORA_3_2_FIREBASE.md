@@ -103,3 +103,10 @@ The test command starts a local Firestore emulator and runs `tests/firestore.rul
 - `functions/index.js` includes an `onNewLike` trigger in addition to comments, messages, and followers. Like notifications are derived from the existing post owner and the like document's user path; self-notifications are skipped.
 - Emulator tests cover creation of a fresh chat, authorized and unauthorized reaction reads, and recipient-only read receipts.
 - **Deployment status remains unchanged:** Cloud Functions and Firestore Rules are committed but not deployed or emulator-tested in this environment. The local runtime could not reach the npm registry to install the Firebase CLI or emulator dependencies.
+
+## Timestamp integrity hardening
+
+- Firestore Rules now require `createdAt == request.time` on new likes, saved posts, followers, following, verification requests and reports.
+- Presence updates require `lastSeen == request.time`, and typing updates require `updatedAt == request.time`.
+- These checks match the currently inspected client calls using `serverTimestamp()`. The local security tests include forged historical timestamps and valid server timestamps.
+- **Tests still require actual execution in the Firebase Emulator.** Do not deploy these rules without testing existing workflows and checking legacy data compatibility.
