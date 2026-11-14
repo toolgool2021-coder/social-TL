@@ -28,8 +28,8 @@ service cloud.firestore {
         (!('username' in request.resource.data) || username(request.resource.data.username));
       allow update: if (
         self(uid) && changed(['name','username','bio','avatarUrl','bannerUrl','websiteUrl','status','privacy','pinnedPostId','updatedAt']) &&
-        txt(request.resource.data.get('name',''),3,20) &&
-        txt(request.resource.data.get('bio',''),0,160) &&
+        (!('name' in request.resource.data) || txt(request.resource.data.name,3,20)) &&
+        (!('bio' in request.resource.data) || txt(request.resource.data.bio,0,160)) &&
         (!('username' in request.resource.data) || username(request.resource.data.username))
       ) || (
         owner() && uid != ownerUid() && resource.data.get('role','user') != 'owner' &&
@@ -48,11 +48,13 @@ service cloud.firestore {
       }
       match /saved/{postId} {
         allow get,list: if self(uid);
-        allow create: if self(uid) && exists(/databases/$(database)/documents/posts/$(postId)) &&
+        // Version 3.0 allowed saving the same item again. Keep that behavior,
+        // but require a real post and a trusted server timestamp.
+        allow create,update: if self(uid) &&
+          exists(/databases/$(database)/documents/posts/$(postId)) &&
           request.resource.data.keys().hasOnly(['createdAt']) &&
           request.resource.data.createdAt == request.time;
         allow delete: if self(uid);
-        allow update: if false;
       }
       match /followers/{followerId} {
         allow get,list: if authd();
