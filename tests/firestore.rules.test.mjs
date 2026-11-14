@@ -2,7 +2,7 @@ import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
-import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, getDocs, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, getDocs, serverTimestamp, runTransaction } from "firebase/firestore";
 
 const OWNER = "FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
 const ALICE = "alice_test_uid";
@@ -183,4 +183,20 @@ test("a valid missing-chat probe does not reveal an existing private chat", asyn
   const cid=ALICE+"_"+BOB;
   await assertSucceeds(getDoc(ref(ALICE,"chats",cid)));
   await assertFails(getDoc(ref(MALLORY,"chats",cid)));
+});
+
+test("opening an existing conversation does not overwrite its preview", async () => {
+  const cid=ALICE+"_"+BOB;
+  const chat=ref(ALICE,"chats",cid);
+  await assertSucceeds(updateDoc(chat,{
+    lastText:"Existing message preview",updatedAt:serverTimestamp()
+  }));
+  await assertSucceeds(runTransaction(db(ALICE),async tx=>{
+    const existing=await tx.get(chat);
+    if(!existing.exists()){
+      tx.set(chat,{participants:[ALICE,BOB],lastText:"",updatedAt:serverTimestamp()});
+    }
+  }));
+  const snapshot=await getDoc(chat);
+  assert.equal(snapshot.data().lastText,"Existing message preview");
 });
