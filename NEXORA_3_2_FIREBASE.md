@@ -125,3 +125,10 @@ The test command starts a local Firestore emulator and runs `tests/firestore.rul
 - The revised `allow get` supports authenticated existence checks for **missing** chat IDs that include the caller's UID in the expected participant position. For **existing** chats, the rule still requires actual membership in `participants`.
 - `allow list` continues to restrict listing to chat members; the client queries using `where('participants','array-contains',uid)`.
 - New test cases assert a missing-chat probe succeeds without exposing existing chats to outsiders. These tests remain unexecuted until Firebase Emulator dependencies are installed.
+
+## Atomic chat initialization and CI
+
+- `chats.html` now creates missing chats using `runTransaction` rather than a non-atomic `getDoc` / `setDoc` pair. This prevents a second client from resetting the latest message preview while a chat is being opened.
+- The emulator test project is explicitly set to `nexora-rules-test`, avoiding accidental use of a live Firebase project.
+- `.github/workflows/firestore-rules.yml` runs security rules tests on relevant pushes and pull requests with Node.js 22 and Java 21. GitHub Actions must be enabled and dependencies downloadable for the workflow to run.
+- **A workflow file being committed does not mean the tests passed.** Check the GitHub Actions job results and resolve failures before deploying.
