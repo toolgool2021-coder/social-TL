@@ -464,8 +464,16 @@
             >
 
             <small class="nx-field-help">
-              Укажи прямую HTTPS-ссылку на PNG, JPG или WebP.
+              Вставь прямую HTTPS-ссылку или выбери изображение с устройства.
             </small>
+            <label class="fieldlabel" for="postImageFile">Или загрузить своё изображение</label>
+            <input id="postImageFile" type="file" accept="image/png,image/jpeg,image/webp">
+            <small class="nx-field-help">PNG, JPG или WebP, до 5 МБ. Загрузка требует Firebase Storage.</small>
+            <label class="fieldlabel" for="postImagePosition">Расположение изображения</label>
+            <select id="postImagePosition">
+              <option value="bottom">Под текстом</option>
+              <option value="top">Над текстом</option>
+            </select>
 
             <div class="between">
               <small class="muted">
@@ -868,9 +876,9 @@
 
   <script type="module" src="./maintenance.js?v=owner-recovery-2"></script>
   <!-- FIREBASE MODULES -->
-  <script type="module" src="./app.js?v=owner-nav-20261114-3"></script>
+  <script type="module" src="./app.js?v=post-editor-20261114-1"></script>
   <script type="module" src="./nexora21.js?v=32-email-gate-1"></script>
-  <script type="module" src="./posts22.js?v=32-email-gate-1"></script>
+  <script type="module" src="./posts22.js?v=counters-20261114-1"></script>
 
   <!-- EMAIL VERIFICATION -->
   <script
