@@ -486,8 +486,8 @@ async function heartbeat(){
   }
 }
 
-onAuthStateChanged(auth,user=>{
-  me=user;
+function applyExtraAuth(user){
+  me=user?.emailVerified ? user : null;
   clearInterval(presenceTimer);
   unsubscribeNotifications?.();
   unsubscribePresence?.();
@@ -496,7 +496,7 @@ onAuthStateChanged(auth,user=>{
   profileUid=null;
   profileVersion++;
 
-  if(!user){
+  if(!me){
     hideExtraPanel();
     return;
   }
@@ -517,6 +517,11 @@ onAuthStateChanged(auth,user=>{
     },
     e=>console.warn("Notifications:",e)
   );
+}
+onAuthStateChanged(auth,applyExtraAuth);
+window.addEventListener("nexora:email-verified",event=>{
+  if(auth.currentUser?.uid===event.detail?.uid && auth.currentUser.emailVerified)
+    applyExtraAuth(auth.currentUser);
 });
 
 document.addEventListener("visibilitychange",()=>{
