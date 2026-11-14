@@ -6,7 +6,7 @@ service cloud.firestore {
     function maintenanceOpen() { return !exists(/databases/$(database)/documents/system/maintenance) || get(/databases/$(database)/documents/system/maintenance).data.enabled != true; }
     function authd() { return signedIn() && request.auth.token.email_verified == true && (maintenanceOpen() || request.auth.uid == ownerUid()); }
     function self(uid) { return authd() && request.auth.uid == uid; }
-    function ownerUid() { return "ElpAtxZIBCZVsLBcLzgdsr8T1w2"; }
+    function ownerUid() { return "ElpAtxZIBCZVsLBcLzgdIsr8T1w2"; }
     function profile(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
     function existsUser(uid) { return exists(/databases/$(database)/documents/users/$(uid)); }
     function owner() { return self(ownerUid()) && existsUser(ownerUid()) && profile(ownerUid()).data.get('role','user') == 'owner'; }
