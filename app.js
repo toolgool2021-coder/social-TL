@@ -642,7 +642,7 @@ onAuthStateChanged(auth, async user => {
       );
     }
   }
-);
+});
 
 /* =========================================
    USERS
