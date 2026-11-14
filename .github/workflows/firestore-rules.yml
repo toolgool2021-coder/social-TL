@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'firestore.rules'
+      - 'docs/firebase/**'
       - 'firebase.json'
       - 'package.json'
       - 'package-lock.json'
@@ -15,6 +16,7 @@ on:
   pull_request:
     paths:
       - 'firestore.rules'
+      - 'docs/firebase/**'
       - 'firebase.json'
       - 'package.json'
       - 'package-lock.json'

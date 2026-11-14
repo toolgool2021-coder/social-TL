@@ -1,0 +1,701 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =====================================
+    // NEXORA 3.0 SECURITY RULES
+    // =====================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function self(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function ownerId() {
+      return "FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
+    }
+
+    function userExists(uid) {
+      return exists(
+        /databases/$(database)/documents/users/$(uid)
+      );
+    }
+
+    function userData(uid) {
+      return get(
+        /databases/$(database)/documents/users/$(uid)
+      ).data;
+    }
+
+    function role() {
+      return signedIn() && userExists(request.auth.uid)
+        ? userData(request.auth.uid).get("role", "user")
+        : "user";
+    }
+
+    function owner() {
+      return signedIn()
+        && request.auth.uid == ownerId()
+        && role() == "owner";
+    }
+
+    function admin() {
+      return owner() || role() == "admin";
+    }
+
+    function moderator() {
+      return admin() || role() == "moderator";
+    }
+
+    function text(value, min, max) {
+      return value is string
+        && value.size() >= min
+        && value.size() <= max;
+    }
+
+    function badge(value) {
+      return value is int
+        && value >= 0
+        && value <= 5;
+    }
+
+    function staffRole(value) {
+      return value in [
+        "user",
+        "moderator",
+        "admin"
+      ];
+    }
+
+    function username(value) {
+      return value is string
+        && value.matches("^[a-z0-9_]{3,20}$");
+    }
+
+    function changesOnly(fields) {
+      return request.resource.data.diff(resource.data)
+        .affectedKeys().hasOnly(fields);
+    }
+
+    // =====================================
+    // ACCOUNTS
+    // =====================================
+
+    match /users/{uid} {
+
+      allow get, list: if signedIn();
+
+      // Новые аккаунты не могут выдавать
+      // себе роль или верификацию.
+      allow create: if self(uid)
+        && request.resource.data.keys().hasOnly([
+          "name",
+          "username",
+          "bio",
+          "avatarUrl",
+          "bannerUrl",
+          "websiteUrl",
+          "status",
+          "privacy",
+          "createdAt"
+        ])
+        && text(request.resource.data.name, 3, 20)
+        && (
+          !request.resource.data.keys().hasAny([
+            "username"
+          ])
+          || username(request.resource.data.username)
+        );
+
+      // Пользователь меняет только
+      // собственные публичные поля.
+      allow update: if (
+        self(uid)
+        && changesOnly([
+          "name",
+          "username",
+          "bio",
+          "avatarUrl",
+          "bannerUrl",
+          "websiteUrl",
+          "status",
+          "privacy",
+          "pinnedPostId",
+          "updatedAt"
+        ])
+        && (
+          !request.resource.data.keys().hasAny([
+            "username"
+          ])
+          || username(request.resource.data.username)
+        )
+        && (
+          !request.resource.data.keys().hasAny([
+            "name"
+          ])
+          || text(request.resource.data.name, 3, 20)
+        )
+        && (
+          !request.resource.data.keys().hasAny([
+            "bio"
+          ])
+          || text(request.resource.data.bio, 0, 160)
+        )
+      ) || (
+        owner()
+        && uid != ownerId()
+        && resource.data.get("role", "user") != "owner"
+        && changesOnly([
+          "role",
+          "verification"
+        ])
+        && staffRole(
+          request.resource.data.get("role", "user")
+        )
+        && badge(
+          request.resource.data.get("verification", 0)
+        )
+      );
+
+      allow delete: if false;
+
+      // ===================================
+      // LIKES
+      // ===================================
+
+      match /likes/{postId} {
+        allow get, list: if self(uid);
+
+        allow create: if self(uid)
+          && exists(
+            /databases/$(database)/documents/posts/$(postId)
+          )
+          && request.resource.data.keys().hasOnly([
+            "createdAt"
+          ]);
+
+        allow delete: if self(uid);
+        allow update: if false;
+      }
+
+      // ===================================
+      // SAVED POSTS
+      // ===================================
+
+      match /saved/{postId} {
+        allow get, list: if self(uid);
+
+        allow create, update: if self(uid)
+          && request.resource.data.keys().hasOnly([
+            "createdAt"
+          ]);
+
+        allow delete: if self(uid);
+      }
+
+      // ===================================
+      // FOLLOWERS
+      // ===================================
+
+      match /followers/{followerId} {
+        allow get, list: if signedIn();
+
+        allow create: if self(followerId)
+          && uid != followerId
+          && userExists(uid)
+          && request.resource.data.keys().hasOnly([
+            "createdAt"
+          ]);
+
+        allow delete: if self(followerId);
+        allow update: if false;
+      }
+
+      // ===================================
+      // FOLLOWING
+      // ===================================
+
+      match /following/{targetId} {
+        allow get, list: if signedIn();
+
+        allow create: if self(uid)
+          && uid != targetId
+          && userExists(targetId)
+          && request.resource.data.keys().hasOnly([
+            "createdAt"
+          ]);
+
+        allow delete: if self(uid);
+        allow update: if false;
+      }
+
+      // ===================================
+      // NOTIFICATIONS
+      // ===================================
+
+      match /notifications/{notificationId} {
+
+        allow get, list: if self(uid);
+
+        // Клиентские уведомления от обычных
+        // пользователей пока запрещены.
+        // Создавать доверенные уведомления
+        // следует через Cloud Functions.
+        allow create: if false;
+
+        allow update: if self(uid)
+          && changesOnly(["read"])
+          && request.resource.data.read == true;
+
+        allow delete: if self(uid);
+      }
+    }
+
+    // =====================================
+    // POSTS
+    // =====================================
+
+    match /posts/{postId} {
+
+      allow get, list: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "text",
+          "imageUrl",
+          "createdAt"
+        ])
+        && text(
+          request.resource.data.text,
+          1,
+          1000
+        )
+        && (
+          !request.resource.data.keys().hasAny([
+            "imageUrl"
+          ])
+          || (
+            request.resource.data.imageUrl is string
+            && request.resource.data.imageUrl.size() <= 2048
+            && request.resource.data.imageUrl.matches(
+              "^https://.*"
+            )
+          )
+        );
+
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && changesOnly([
+          "text",
+          "imageUrl",
+          "editedAt"
+        ])
+        && text(
+          request.resource.data.text,
+          1,
+          1000
+        );
+
+      allow delete: if owner()
+        || (
+          signedIn()
+          && resource.data.uid == request.auth.uid
+        );
+
+      // ===================================
+      // COMMENTS
+      // ===================================
+
+      match /comments/{commentId} {
+
+        allow get, list: if signedIn();
+
+        allow create: if signedIn()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.keys().hasOnly([
+            "uid",
+            "text",
+            "createdAt"
+          ])
+          && text(
+            request.resource.data.text,
+            1,
+            300
+          );
+
+        allow update: if signedIn()
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.uid == resource.data.uid
+          && changesOnly([
+            "text",
+            "editedAt"
+          ])
+          && text(
+            request.resource.data.text,
+            1,
+            300
+          );
+
+        allow delete: if owner()
+          || (
+            signedIn()
+            && resource.data.uid == request.auth.uid
+          );
+      }
+    }
+
+    // =====================================
+    // PRIVATE CHATS
+    // =====================================
+
+    function chatExists(chatId) {
+      return exists(
+        /databases/$(database)/documents/chats/$(chatId)
+      );
+    }
+
+    function chatData(chatId) {
+      return get(
+        /databases/$(database)/documents/chats/$(chatId)
+      ).data;
+    }
+
+    function chatMember(chatId) {
+      return signedIn()
+        && chatExists(chatId)
+        && request.auth.uid in
+          chatData(chatId).participants;
+    }
+
+    function validParticipants(participants) {
+      return signedIn()
+        && participants is list
+        && participants.size() == 2
+        && participants[0] is string
+        && participants[1] is string
+        && participants[0] != participants[1]
+        && request.auth.uid in participants
+        && userExists(participants[0])
+        && userExists(participants[1]);
+    }
+
+    match /chats/{chatId} {
+
+      allow get, list: if signedIn()
+        && request.auth.uid in resource.data.participants;
+
+      allow create: if validParticipants(
+        request.resource.data.participants
+      )
+        && request.resource.data.keys().hasOnly([
+          "participants",
+          "updatedAt",
+          "lastText"
+        ])
+        && request.resource.data.participants ==
+          [
+            request.resource.data.participants[0],
+            request.resource.data.participants[1]
+          ];
+
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.participants
+        && request.resource.data.participants ==
+          resource.data.participants
+        && changesOnly([
+          "updatedAt",
+          "lastText",
+          "pinnedMessageId",
+          "pinnedText"
+        ])
+        && request.resource.data.get(
+          "lastText", ""
+        ) is string
+        && request.resource.data.get(
+          "lastText", ""
+        ).size() <= 2000
+        && request.resource.data.get(
+          "pinnedText", ""
+        ) is string
+        && request.resource.data.get(
+          "pinnedText", ""
+        ).size() <= 160;
+
+      allow delete: if false;
+
+      // ===================================
+      // CHAT MESSAGES
+      // ===================================
+
+      match /messages/{messageId} {
+
+        allow get, list: if chatMember(chatId);
+
+        allow create: if chatMember(chatId)
+          && request.resource.data.senderId ==
+            request.auth.uid
+          && request.resource.data.keys().hasOnly([
+            "senderId",
+            "type",
+            "text",
+            "sticker",
+            "createdAt",
+            "replyTo",
+            "replyText"
+          ])
+          && request.resource.data.type in [
+            "text",
+            "sticker"
+          ]
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 2000
+          && (
+            request.resource.data.type != "text"
+            || request.resource.data.text.size() > 0
+          )
+          && (
+            !request.resource.data.keys().hasAny([
+              "sticker"
+            ])
+            || text(
+              request.resource.data.sticker,
+              1,
+              500
+            )
+          );
+
+        // Автор может редактировать текст.
+        // Собеседник может отмечать прочтение.
+        // Реакции разрешены участникам диалога.
+        allow update: if chatMember(chatId)
+          && request.resource.data.senderId ==
+            resource.data.senderId
+          && request.resource.data.type ==
+            resource.data.type
+          && request.resource.data.createdAt ==
+            resource.data.createdAt
+          && (
+            (
+              self(resource.data.senderId)
+              && changesOnly([
+                "text",
+                "editedAt",
+                "reactions"
+              ])
+              && request.resource.data.text is string
+              && request.resource.data.text.size() <= 2000
+            )
+            ||
+            (
+              !self(resource.data.senderId)
+              && changesOnly([
+                "readAt",
+                "reactions"
+              ])
+            )
+          );
+
+        allow delete: if chatMember(chatId)
+          && self(resource.data.senderId);
+      }
+
+      // ===================================
+      // TYPING INDICATOR
+      // ===================================
+
+      match /typing/{uid} {
+
+        allow get, list: if chatMember(chatId);
+
+        allow create, update: if chatMember(chatId)
+          && self(uid)
+          && request.resource.data.uid == uid
+          && request.resource.data.keys().hasOnly([
+            "uid",
+            "typing",
+            "updatedAt"
+          ])
+          && request.resource.data.typing is bool;
+
+        allow delete: if chatMember(chatId)
+          && self(uid);
+      }
+    }
+
+    // =====================================
+    // ONLINE / LAST SEEN
+    // =====================================
+
+    match /presence/{uid} {
+
+      allow get, list: if signedIn();
+
+      allow create, update: if self(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "lastSeen"
+        ]);
+
+      allow delete: if false;
+    }
+
+    // =====================================
+    // VERIFICATION REQUESTS
+    // =====================================
+
+    match /verificationRequests/{uid} {
+
+      allow get: if self(uid) || owner();
+
+      allow list: if owner();
+
+      allow create: if self(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.type is int
+        && request.resource.data.type >= 1
+        && request.resource.data.type <= 5
+        && text(
+          request.resource.data.reason,
+          10,
+          500
+        )
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "type",
+          "reason",
+          "status",
+          "createdAt"
+        ]);
+
+      allow update: if owner()
+        && resource.data.status == "pending"
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.reason == resource.data.reason
+        && request.resource.data.status in [
+          "approved",
+          "rejected"
+        ]
+        && changesOnly([
+          "status",
+          "reviewedBy",
+          "reviewedAt"
+        ])
+        && request.resource.data.reviewedBy ==
+          request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // =====================================
+    // REPORTS
+    // =====================================
+
+    match /reports/{reportId} {
+
+      allow get: if moderator()
+        || (
+          signedIn()
+          && resource.data.reporterId == request.auth.uid
+        );
+
+      allow list: if moderator();
+
+      allow create: if signedIn()
+        && request.resource.data.reporterId ==
+          request.auth.uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.kind in [
+          "post",
+          "user",
+          "comment",
+          "message"
+        ]
+        && text(
+          request.resource.data.targetId,
+          1,
+          200
+        )
+        && text(
+          request.resource.data.reason,
+          10,
+          500
+        )
+        && request.resource.data.keys().hasOnly([
+          "reporterId",
+          "kind",
+          "targetId",
+          "reason",
+          "status",
+          "createdAt"
+        ]);
+
+      allow update: if owner()
+        && resource.data.status == "pending"
+        && request.resource.data.status in [
+          "resolved",
+          "dismissed"
+        ]
+        && changesOnly([
+          "status",
+          "resolution",
+          "reviewedBy",
+          "reviewedAt"
+        ])
+        && request.resource.data.reviewedBy ==
+          request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // =====================================
+    // AUDIT LOGS
+    // =====================================
+
+    match /auditLogs/{logId} {
+
+      allow get, list: if owner();
+
+      allow create: if owner()
+        && request.resource.data.actorId ==
+          request.auth.uid
+        && text(
+          request.resource.data.action,
+          1,
+          100
+        )
+        && text(
+          request.resource.data.targetId,
+          1,
+          200
+        )
+        && request.resource.data.keys().hasOnly([
+          "actorId",
+          "action",
+          "targetId",
+          "details",
+          "createdAt"
+        ]);
+
+      allow update, delete: if false;
+    }
+
+    // =====================================
+    // ALL OTHER DOCUMENTS
+    // =====================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
