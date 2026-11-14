@@ -3,34 +3,27 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#080c15">
   <meta name="color-scheme" content="dark">
-
-  <meta name="description"
-        content="NEXORA — независимая социальная сеть. Общайся, публикуй, находи людей и создавай своё пространство.">
+  <meta name="description" content="NEXORA — независимая социальная сеть. Общайся, публикуй, находи людей и создавай своё пространство.">
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="NEXORA | Социальная сеть">
-  <meta property="og:description"
-        content="Твоё пространство для общения, публикаций и новых возможностей.">
-  <meta property="og:url"
-        content="https://tlnexora.duckdns.org/">
-  <meta property="og:image"
-        content="https://tlnexora.duckdns.org/image/icon.png">
+  <meta property="og:description" content="Твоё пространство для общения, публикаций и новых возможностей.">
+  <meta property="og:url" content="https://tlnexora.duckdns.org/">
+  <meta property="og:image" content="https://tlnexora.duckdns.org/image/icon.png">
 
-  <title>NEXORA 3.0 | Социальная сеть</title>
+  <title>NEXORA 3.1 | Социальная сеть</title>
 
   <link rel="icon" href="./image/icon.png">
   <link rel="apple-touch-icon" href="./image/icon.png">
 
   <link rel="stylesheet" href="./style.css?v=3">
   <link rel="stylesheet" href="./nexora21.css?v=3">
-  <link rel="stylesheet" href="./posts22.css?v=3">
+  <link rel="stylesheet" href="./posts22.css?v=31">
 
   <style>
-    /* Дополнения интерфейса NEXORA 3.0 */
     .nx-version {
       display: inline-flex;
       align-items: center;
@@ -63,7 +56,7 @@
       border-radius: 50%;
       background: radial-gradient(
         circle,
-        rgba(123, 143, 255, .12),
+        rgba(123,143,255,.12),
         transparent 70%
       );
       pointer-events: none;
@@ -84,7 +77,7 @@
     .nx-welcome h2 {
       position: relative;
       margin: 0 0 8px;
-      font-size: clamp(22px, 3vw, 29px);
+      font-size: clamp(22px,3vw,29px);
     }
 
     .nx-welcome p {
@@ -109,11 +102,7 @@
       height: 40px;
       flex-shrink: 0;
       border-radius: 13px;
-      background: linear-gradient(
-        135deg,
-        #6078c8,
-        #866cbb
-      );
+      background: linear-gradient(135deg,#6078c8,#866cbb);
       color: white;
       font-size: 19px;
     }
@@ -126,7 +115,7 @@
     .nx-compose-head small {
       display: block;
       margin-top: 2px;
-      color: var(--muted, #95a3bb);
+      color: var(--muted,#95a3bb);
       font-size: 11px;
     }
 
@@ -151,10 +140,7 @@
       width: 4px;
       height: 19px;
       border-radius: 4px;
-      background: linear-gradient(
-        #8a9fff,
-        #b38cff
-      );
+      background: linear-gradient(#8a9fff,#b38cff);
     }
 
     .nx-side-heading {
@@ -175,24 +161,24 @@
       align-items: center;
       justify-content: space-between;
       padding: 11px 13px;
-      border: 1px solid rgba(195, 211, 255, .12);
+      border: 1px solid rgba(195,211,255,.12);
       border-radius: 11px;
-      background: rgba(255, 255, 255, .035);
+      background: rgba(255,255,255,.035);
       font-size: 12px;
       font-weight: 700;
       transition: background .2s;
     }
 
     .nx-side-link:hover {
-      background: rgba(139, 157, 255, .12);
+      background: rgba(139,157,255,.12);
     }
 
     .nx-side-note {
       padding: 12px;
-      border: 1px solid rgba(195, 211, 255, .09);
+      border: 1px solid rgba(195,211,255,.09);
       border-radius: 12px;
-      background: rgba(255, 255, 255, .025);
-      color: var(--muted, #95a3bb);
+      background: rgba(255,255,255,.025);
+      color: var(--muted,#95a3bb);
       font-size: 12px;
       line-height: 1.7;
     }
@@ -229,7 +215,7 @@
     .nx-field-help {
       display: block;
       margin-top: -7px;
-      color: var(--muted, #95a3bb);
+      color: var(--muted,#95a3bb);
       font-size: 11px;
     }
 
@@ -244,9 +230,9 @@
       align-items: flex-start;
       gap: 11px;
       padding: 12px;
-      border: 1px solid rgba(195, 211, 255, .1);
+      border: 1px solid rgba(195,211,255,.1);
       border-radius: 12px;
-      background: rgba(255, 255, 255, .025);
+      background: rgba(255,255,255,.025);
     }
 
     .nx-security-item > span {
@@ -256,7 +242,7 @@
       height: 30px;
       flex-shrink: 0;
       border-radius: 9px;
-      background: rgba(139, 157, 255, .12);
+      background: rgba(139,157,255,.12);
     }
 
     .nx-security-item strong {
@@ -267,7 +253,7 @@
     .nx-security-item small {
       display: block;
       margin-top: 3px;
-      color: var(--muted, #95a3bb);
+      color: var(--muted,#95a3bb);
       font-size: 11px;
     }
 
@@ -282,7 +268,7 @@
       color: #9cadd6;
     }
 
-    @media (max-width: 760px) {
+    @media (max-width:760px) {
       .nx-welcome {
         padding: 20px;
       }
@@ -304,64 +290,35 @@
 
   <!-- HEADER -->
   <header class="topbar">
-
     <div class="brand">
-      <img
-        src="./image/icon.png"
-        alt=""
-        onerror="this.hidden=true"
-      >
-
+      <img src="./image/icon.png" alt="" onerror="this.hidden=true">
       <b>NEXORA</b>
-
       <small class="nx-version">
         <span class="nx-version-dot"></span>
-        BETA 3.0
+        BETA 3.1
       </small>
     </div>
 
     <div id="topUser" class="topuser hidden">
       <span id="topName"></span>
-
-      <button
-        id="logout"
-        class="quiet"
-        type="button"
-      >
-        Выйти
-      </button>
+      <button id="logout" class="quiet" type="button">Выйти</button>
     </div>
-
   </header>
 
   <!-- AUTHORIZATION -->
-  <section
-    id="authPage"
-    class="auth glass"
-    aria-labelledby="authTitle"
-  >
-
+  <section id="authPage" class="auth glass" aria-labelledby="authTitle">
     <div class="heroicon">
-      <img
-        src="./image/icon.png"
-        alt="NEXORA"
-        onerror="this.hidden=true"
-      >
+      <img src="./image/icon.png" alt="NEXORA" onerror="this.hidden=true">
     </div>
 
-    <div class="nx-eyebrow"
-         style="justify-content:center;margin-top:22px">
+    <div class="nx-eyebrow" style="justify-content:center;margin-top:22px">
       ✦ NEXORA NETWORK
     </div>
 
     <h1 id="authTitle">С возвращением</h1>
-
-    <p class="muted">
-      Твоё пространство начинается здесь.
-    </p>
+    <p class="muted">Твоё пространство начинается здесь.</p>
 
     <form id="authForm" class="stack">
-
       <input
         id="username"
         class="hidden"
@@ -388,14 +345,9 @@
         required
       >
 
-      <button
-        id="authSubmit"
-        class="primary"
-        type="submit"
-      >
+      <button id="authSubmit" class="primary" type="submit">
         Войти
       </button>
-
     </form>
 
     <button
@@ -407,11 +359,9 @@
       Создать аккаунт
     </button>
 
-    <p class="muted"
-       style="margin:18px 0 0;font-size:11px">
+    <p class="muted" style="margin:18px 0 0;font-size:11px">
       NEXORA · Independent Social Platform
     </p>
-
   </section>
 
   <!-- APPLICATION -->
@@ -419,14 +369,8 @@
 
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar glass">
-
       <nav class="nav" aria-label="Основная навигация">
-
-        <button
-          type="button"
-          data-page="feed"
-          class="active"
-        >
+        <button type="button" data-page="feed" class="active">
           ⌂ <span>Главная</span>
         </button>
 
@@ -434,10 +378,7 @@
           ✦ <span>Рекомендации</span>
         </a>
 
-        <button
-          type="button"
-          data-page="search"
-        >
+        <button type="button" data-page="search">
           ⌕ <span>Поиск</span>
         </button>
 
@@ -445,51 +386,30 @@
           ✉ <span>Сообщения</span>
         </a>
 
-        <button
-          type="button"
-          data-page="profile"
-        >
+        <button type="button" data-page="profile">
           ♙ <span>Мой профиль</span>
         </button>
 
-        <button
-          type="button"
-          data-nx-panel="saved"
-        >
+        <button type="button" data-nx-panel="saved">
           ☆ <span>Сохранённое</span>
         </button>
 
-        <button
-          type="button"
-          data-nx-panel="notifications"
-        >
+        <button type="button" data-nx-panel="notifications">
           ♢ <span>Уведомления</span>
         </button>
 
-        <button
-          type="button"
-          data-nx-panel="verification"
-        >
+        <button type="button" data-nx-panel="verification">
           ✓ <span>Верификация</span>
         </button>
 
-        <button
-          type="button"
-          data-page="settings"
-        >
+        <button type="button" data-page="settings">
           ⚙ <span>Настройки</span>
         </button>
 
-        <a
-          id="ownerButton"
-          href="./owner.html"
-          class="hidden owner-nav"
-        >
+        <a id="ownerButton" href="./owner.html" class="hidden owner-nav">
           🛡 <span>Панель управления</span>
         </a>
-
       </nav>
-
     </aside>
 
     <!-- MAIN CONTENT -->
@@ -497,9 +417,7 @@
 
       <!-- FEED -->
       <section id="feedPage">
-
         <div class="glass panel nx-welcome">
-
           <div class="nx-eyebrow">
             <span class="nx-version-dot"></span>
             NEXORA SOCIAL
@@ -512,27 +430,20 @@
             и оставайся на связи. Здесь начинается
             твоя история.
           </p>
-
         </div>
 
         <!-- POST COMPOSER -->
         <div class="glass panel">
-
           <div class="nx-compose-head">
-
-            <div class="nx-compose-symbol">
-              ✦
-            </div>
+            <div class="nx-compose-symbol">✦</div>
 
             <div>
               <strong>Новая публикация</strong>
               <small>Поделись тем, что происходит</small>
             </div>
-
           </div>
 
           <form id="postForm" class="stack">
-
             <textarea
               id="postInput"
               maxlength="1000"
@@ -541,10 +452,7 @@
               aria-label="Текст публикации"
             ></textarea>
 
-            <label
-              class="fieldlabel"
-              for="postImage"
-            >
+            <label class="fieldlabel" for="postImage">
               Изображение
             </label>
 
@@ -556,60 +464,42 @@
             >
 
             <small class="nx-field-help">
-              Укажи прямую HTTPS-ссылку на PNG,
-              JPG или WebP.
+              Укажи прямую HTTPS-ссылку на PNG, JPG или WebP.
             </small>
 
             <div class="between">
-
               <small class="muted">
                 <span id="postCount">0</span> / 1000
               </small>
 
-              <button
-                class="primary"
-                type="submit"
-              >
+              <button class="primary" type="submit">
                 ✦ Опубликовать
               </button>
-
             </div>
-
           </form>
-
         </div>
 
         <!-- FEED TITLE -->
-        <div class="glass panel"
-             style="padding:16px 20px">
-
+        <div class="glass panel" style="padding:16px 20px">
           <div class="nx-feed-tabs">
-
             <div class="nx-feed-label">
               Лента публикаций
             </div>
 
             <span class="muted" style="font-size:11px">
-              NEXORA 3.0
+              NEXORA 3.1
             </span>
-
           </div>
-
         </div>
 
         <!-- FIREBASE POSTS -->
         <div id="feedList" aria-live="polite"></div>
-
       </section>
 
       <!-- SEARCH -->
       <section id="searchPage" class="hidden">
-
         <div class="glass panel">
-
-          <div class="nx-eyebrow">
-            ✦ DISCOVER
-          </div>
+          <div class="nx-eyebrow">✦ DISCOVER</div>
 
           <h2>Поиск пользователей</h2>
 
@@ -626,22 +516,17 @@
             aria-label="Поиск пользователей"
           >
 
-          <p class="muted"
-             style="font-size:11px;margin-bottom:0">
+          <p class="muted" style="font-size:11px;margin-bottom:0">
             Поиск выполняется среди загруженных профилей.
           </p>
-
         </div>
 
         <div id="searchResults"></div>
-
       </section>
 
       <!-- PROFILE -->
       <section id="profilePage" class="hidden">
-
         <div class="glass panel profile">
-
           <div
             id="profileBanner"
             class="cover"
@@ -649,11 +534,7 @@
           ></div>
 
           <div class="profilebody">
-
-            <div
-              id="profileAvatar"
-              class="avatar large"
-            >
+            <div id="profileAvatar" class="avatar large">
               N
             </div>
 
@@ -661,20 +542,12 @@
               ✦ NEXORA PROFILE
             </div>
 
-            <div
-              id="profileName"
-              class="profilename"
-            ></div>
-
-            <div
-              id="profileHandle"
-              class="muted"
-            ></div>
+            <div id="profileName" class="profilename"></div>
+            <div id="profileHandle" class="muted"></div>
 
             <p id="profileBio"></p>
 
             <div class="stats">
-
               <span>
                 <b id="followersCount">0</b>
                 подписчиков
@@ -684,29 +557,19 @@
                 <b id="followingCount">0</b>
                 подписок
               </span>
-
             </div>
 
             <div id="profileLinks"></div>
-
-            <div
-              id="profileControls"
-              class="buttons"
-            ></div>
-
+            <div id="profileControls" class="buttons"></div>
           </div>
-
         </div>
 
         <div id="profilePosts"></div>
-
       </section>
 
       <!-- SETTINGS -->
       <section id="settingsPage" class="hidden">
-
         <div class="glass panel">
-
           <div class="nx-eyebrow">
             ⚙ PERSONALIZATION
           </div>
@@ -719,20 +582,12 @@
           </p>
 
           <form id="settingsForm" class="stack">
-
             <div class="nx-settings-section">
-
               <h3>О себе</h3>
-
-              <p class="muted">
-                Расскажи немного о себе.
-              </p>
-
+              <p class="muted">Расскажи немного о себе.</p>
             </div>
 
-            <label for="settingsBio">
-              Биография
-            </label>
+            <label for="settingsBio">Биография</label>
 
             <textarea
               id="settingsBio"
@@ -744,15 +599,11 @@
               Максимум 160 символов.
             </small>
 
-            <div class="nx-settings-section"
-                 style="margin:15px 0 0">
-
+            <div class="nx-settings-section" style="margin:15px 0 0">
               <h3>Оформление</h3>
-
               <p class="muted">
                 Добавь аватар и обложку профиля.
               </p>
-
             </div>
 
             <label for="settingsAvatar">
@@ -778,19 +629,15 @@
             >
 
             <small class="nx-field-help">
-              Используй прямые ссылки на изображения
-              PNG, JPG или WebP.
+              Используй прямые ссылки на изображения PNG,
+              JPG или WebP.
             </small>
 
-            <div class="nx-settings-section"
-                 style="margin:15px 0 0">
-
+            <div class="nx-settings-section" style="margin:15px 0 0">
               <h3>Ссылки</h3>
-
               <p class="muted">
                 Укажи свой сайт или публичную страницу.
               </p>
-
             </div>
 
             <label for="settingsWebsite">
@@ -811,28 +658,20 @@
             >
               Сохранить изменения
             </button>
-
           </form>
 
           <details class="help">
-
-            <summary>
-              Как добавить изображение?
-            </summary>
-
+            <summary>Как добавить изображение?</summary>
             <p>
-              Загрузи изображение на подходящий
-              хостинг и скопируй прямую HTTPS-ссылку
-              на файл PNG, JPG или WebP.
+              Загрузи изображение на подходящий хостинг
+              и скопируй прямую HTTPS-ссылку на файл
+              PNG, JPG или WebP.
             </p>
-
           </details>
-
         </div>
 
         <!-- SOCIAL LINKS -->
         <div class="glass panel">
-
           <h2>Официальные ресурсы</h2>
 
           <p class="muted">
@@ -841,7 +680,6 @@
           </p>
 
           <div class="socials">
-
             <a
               id="tgChannel"
               href="#"
@@ -861,7 +699,6 @@
             >
               ✈ Telegram-бот
             </a>
-
           </div>
 
           <p
@@ -869,36 +706,22 @@
             class="muted"
             style="font-size:12px"
           ></p>
-
         </div>
-
       </section>
 
       <!-- EXTRA PANELS -->
       <section id="nx21panel" class="hidden">
-
         <div class="glass panel">
-
           <div class="between">
+            <h2 id="nx21title">NEXORA</h2>
 
-            <h2 id="nx21title">
-              NEXORA
-            </h2>
-
-            <button
-              id="nx21back"
-              class="quiet"
-              type="button"
-            >
+            <button id="nx21back" class="quiet" type="button">
               ← Назад
             </button>
-
           </div>
 
           <div id="nx21body"></div>
-
         </div>
-
       </section>
 
       <footer class="nx-footer">
@@ -909,14 +732,11 @@
           </a>
         </div>
       </footer>
-
     </main>
 
     <!-- RIGHT SIDEBAR -->
     <aside class="right">
-
       <div class="glass panel">
-
         <div class="nx-side-heading">
           <span>✦</span> О платформе
         </div>
@@ -927,28 +747,20 @@
           и взаимодействия между пользователями.
         </p>
 
-        <a
-          class="nx-side-link"
-          href="./explore.html"
-        >
+        <a class="nx-side-link" href="./explore.html">
           <span>Рекомендации</span>
           <span>↗</span>
         </a>
-
       </div>
 
       <div class="glass panel">
-
         <div class="nx-side-heading">
           <span>◈</span> Безопасность
         </div>
 
         <div class="nx-security-list">
-
           <div class="nx-security-item">
-
             <span>♢</span>
-
             <div>
               <strong>Защита аккаунта</strong>
               <small>
@@ -956,13 +768,10 @@
                 и данные для входа.
               </small>
             </div>
-
           </div>
 
           <div class="nx-security-item">
-
             <span>✓</span>
-
             <div>
               <strong>Верификация</strong>
               <small>
@@ -970,13 +779,10 @@
                 подтверждённый аккаунт.
               </small>
             </div>
-
           </div>
 
           <div class="nx-security-item">
-
             <span>⚑</span>
-
             <div>
               <strong>Сообщения о нарушениях</strong>
               <small>
@@ -984,16 +790,13 @@
                 жалоб и модерации.
               </small>
             </div>
-
           </div>
-
         </div>
-
       </div>
 
       <div class="nx-side-note">
         <strong style="color:#dce5ff">
-          NEXORA BETA 3.0
+          NEXORA BETA 3.1
         </strong>
 
         <div style="margin-top:6px">
@@ -1002,9 +805,7 @@
           и отдельных функций.
         </div>
       </div>
-
     </aside>
-
   </div>
 
   <!-- NOTIFICATIONS -->
@@ -1030,12 +831,8 @@
     aria-modal="true"
     aria-labelledby="linkTitle"
   >
-
     <div class="glass dialog">
-
-      <div class="warning">
-        ⚠
-      </div>
+      <div class="warning">⚠</div>
 
       <h2 id="linkTitle">
         Вы покидаете NEXORA
@@ -1047,13 +844,9 @@
         прежде чем вводить личные данные.
       </p>
 
-      <div
-        id="linkTarget"
-        class="urlbox"
-      ></div>
+      <div id="linkTarget" class="urlbox"></div>
 
       <div class="buttons">
-
         <button
           id="cancelLink"
           class="quiet"
@@ -1069,28 +862,14 @@
         >
           Продолжить
         </button>
-
       </div>
-
     </div>
-
   </div>
 
   <!-- FIREBASE MODULES -->
-  <script
-    type="module"
-    src="./app.js?v=3"
-  ></script>
-
-  <script
-    type="module"
-    src="./nexora21.js?v=3"
-  ></script>
-
-  <script
-    type="module"
-    src="./posts22.js?v=3"
-  ></script>
+  <script type="module" src="./app.js?v=3"></script>
+  <script type="module" src="./nexora21.js?v=3"></script>
+  <script type="module" src="./posts22.js?v=31"></script>
 
   <!-- EMAIL VERIFICATION -->
   <script
