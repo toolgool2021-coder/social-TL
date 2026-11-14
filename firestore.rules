@@ -443,6 +443,17 @@ service cloud.firestore {
         request.resource.data.startedAt == request.time;
       allow delete: if false;
     }
+    match /randomizerLuck/{id} {
+      allow get: if authd() && id == 'current';
+      allow list: if false;
+      allow create,update: if authd() && request.auth.uid == ownerUid() && id == 'current' &&
+        request.resource.data.keys().hasOnly(['chance','success','angle','startedAt','updatedAt']) &&
+        request.resource.data.chance is int && request.resource.data.chance >= 1 && request.resource.data.chance <= 99 &&
+        request.resource.data.success is bool &&
+        request.resource.data.angle is int && request.resource.data.angle >= 0 && request.resource.data.angle < 360 &&
+        request.resource.data.startedAt == request.time && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
     match /{document=**} { allow read,write: if false; }
   }
 }
