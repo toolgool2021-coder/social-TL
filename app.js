@@ -762,66 +762,97 @@ $("postForm").addEventListener(
    FEED LISTENERS
 ========================================= */
 
-function listenFeed() {
-  unsubPosts?.();
-  unsubLikes?.();
 
-  const uid = me.uid;
+function renderFeed() {
+  const container = $("feedList");
+  if (!container) return;
 
-  unsubPosts = onSnapshot(
-    query(
-      collection(db, "posts"),
-      orderBy("createdAt", "desc"),
-      limit(LIMITS.posts)
-    ),
-    snapshot => {
-      if (auth.currentUser?.uid !== uid) {
-        return;
-      }
+  if (feedStatus === "loading") {
+    container.innerHTML = `
+      <div class="glass panel empty"
+           role="status">
+        <div style="
+          font-size:24px;
+          margin-bottom:10px;
+        ">◌</div>
 
-      posts = snapshot.docs.map(item => ({
-        id: item.id,
-        ...item.data()
-      }));
+        <strong>Загружаем публикации</strong>
 
-      renderFeed();
+        <p class="muted">
+          Подключаемся к NEXORA...
+        </p>
+      </div>
+    `;
+    return;
+  }
 
-      if (currentPage === "profile") {
-        renderProfilePosts();
-      }
-    },
-    error => {
-      toast(
-        "Ошибка ленты: " + friendlyError(error)
-      );
-    }
-  );
+  if (feedStatus === "error") {
+    container.replaceChildren();
 
-  unsubLikes = onSnapshot(
-    collection(db, "users", uid, "likes"),
-    snapshot => {
-      if (auth.currentUser?.uid !== uid) {
-        return;
-      }
+    const card = document.createElement("div");
+    card.className = "glass panel empty";
 
-      likes = {};
+    const heading = document.createElement("h3");
+    heading.textContent = "Не удалось загрузить ленту";
 
-      snapshot.forEach(item => {
-        likes[item.id] = true;
-      });
+    const description = document.createElement("p");
+    description.className = "muted";
+    description.textContent =
+      feedError || "Ошибка соединения с сервером.";
 
-      renderFeed();
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "primary";
+    retry.textContent = "↻ Повторить";
 
-      if (currentPage === "profile") {
-        renderProfilePosts();
-      }
-    },
-    error => {
-      toast(
-        "Ошибка лайков: " + friendlyError(error)
-      );
-    }
-  );
+    retry.addEventListener("click", () => {
+      if (me) listenFeed();
+    });
+
+    card.append(heading, description, retry);
+    container.append(card);
+    return;
+  }
+
+  if (feedStatus !== "ready") {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = posts.length
+    ? posts.map(postHTML).join("")
+    : `
+      <div class="glass panel empty">
+        <strong>Публикаций пока нет</strong>
+        <p class="muted">
+          Стань первым, кто поделится
+          чем-нибудь в NEXORA.
+        </p>
+      </div>
+    `;
+
+  if (likesError) {
+    const warning = document.createElement("div");
+    warning.className = "glass panel";
+    warning.style.marginBottom = "12px";
+
+    const message = document.createElement("p");
+    message.className = "muted";
+    message.textContent =
+      "Не удалось загрузить реакции: " + likesError;
+
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "quiet";
+    retry.textContent = "Повторить загрузку";
+
+    retry.addEventListener("click", () => {
+      if (me) listenFeed();
+    });
+
+    warning.append(message, retry);
+    container.prepend(warning);
+  }
 }
 
 /* =========================================
