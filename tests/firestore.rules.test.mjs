@@ -9,7 +9,8 @@ const ALICE = "alice_test_uid";
 const BOB = "bob_test_uid";
 const MALLORY = "mallory_test_uid";
 let env;
-const db = uid => env.authenticatedContext(uid).firestore();
+const db = uid => env.authenticatedContext(uid,{email_verified:true}).firestore();
+const unverifiedDb = uid => env.authenticatedContext(uid,{email_verified:false}).firestore();
 const ref = (uid, ...segments) => doc(db(uid), ...segments);
 
 before(async () => {
@@ -33,6 +34,26 @@ before(async () => {
 });
 
 after(async () => { await env?.cleanup(); });
+
+test("unverified email can only bootstrap and read own profile", async () => {
+  const fresh = "new_unverified_user";
+  const udb = unverifiedDb(fresh);
+  await assertSucceeds(setDoc(doc(udb,"users",fresh),{
+    name:"Новый пользователь",bio:"Привет!",createdAt:serverTimestamp()
+  }));
+  await assertSucceeds(getDoc(doc(udb,"users",fresh)));
+  await assertFails(updateDoc(doc(udb,"users",fresh),{bio:"Обход подтверждения"}));
+  await assertFails(getDocs(collection(udb,"users")));
+  await assertFails(getDoc(doc(udb,"users",ALICE)));
+  await assertFails(getDoc(doc(udb,"posts","p1")));
+  await assertFails(setDoc(doc(udb,"posts","unverified-post"),{
+    uid:fresh,text:"Не должно пройти",createdAt:serverTimestamp()
+  }));
+  await assertFails(getDoc(doc(udb,"chats",ALICE+"_"+BOB)));
+  await assertFails(setDoc(doc(udb,"presence",fresh),{
+    uid:fresh,lastSeen:serverTimestamp()
+  }));
+});
 
 test("users cannot grant themselves admin or verification", async () => {
   await assertFails(updateDoc(ref(ALICE,"users",ALICE),{role:"admin"}));
