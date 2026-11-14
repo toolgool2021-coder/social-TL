@@ -41,28 +41,32 @@ service cloud.firestore {
       match /likes/{postId} {
         allow get,list: if self(uid);
         allow create: if self(uid) && exists(/databases/$(database)/documents/posts/$(postId)) &&
-          request.resource.data.keys().hasOnly(['createdAt']);
+          request.resource.data.keys().hasOnly(['createdAt']) &&
+          request.resource.data.createdAt == request.time;
         allow delete: if self(uid);
         allow update: if false;
       }
       match /saved/{postId} {
         allow get,list: if self(uid);
         allow create: if self(uid) && exists(/databases/$(database)/documents/posts/$(postId)) &&
-          request.resource.data.keys().hasOnly(['createdAt']);
+          request.resource.data.keys().hasOnly(['createdAt']) &&
+          request.resource.data.createdAt == request.time;
         allow delete: if self(uid);
         allow update: if false;
       }
       match /followers/{followerId} {
         allow get,list: if authd();
         allow create: if self(followerId) && uid != followerId && existsUser(uid) &&
-          request.resource.data.keys().hasOnly(['createdAt']);
+          request.resource.data.keys().hasOnly(['createdAt']) &&
+          request.resource.data.createdAt == request.time;
         allow delete: if self(followerId);
         allow update: if false;
       }
       match /following/{targetId} {
         allow get,list: if authd();
         allow create: if self(uid) && uid != targetId && existsUser(targetId) &&
-          request.resource.data.keys().hasOnly(['createdAt']);
+          request.resource.data.keys().hasOnly(['createdAt']) &&
+          request.resource.data.createdAt == request.time;
         allow delete: if self(uid);
         allow update: if false;
       }
@@ -157,7 +161,8 @@ service cloud.firestore {
         allow get,list: if chatMember(chatId);
         allow create,update: if chatMember(chatId) && self(uid) &&
           request.resource.data.keys().hasOnly(['uid','typing','updatedAt']) &&
-          request.resource.data.uid == uid && request.resource.data.typing is bool;
+          request.resource.data.uid == uid && request.resource.data.typing is bool &&
+          request.resource.data.updatedAt == request.time;
         allow delete: if chatMember(chatId) && self(uid);
       }
     }
@@ -165,7 +170,8 @@ service cloud.firestore {
       allow get,list: if authd();
       allow create,update: if self(uid) &&
         request.resource.data.keys().hasOnly(['uid','lastSeen']) &&
-        request.resource.data.uid == uid;
+        request.resource.data.uid == uid &&
+        request.resource.data.lastSeen == request.time;
       allow delete: if false;
     }
     match /verificationRequests/{uid} {
@@ -175,7 +181,8 @@ service cloud.firestore {
         'uid','type','reason','status','createdAt'
       ]) && request.resource.data.uid == uid && request.resource.data.status == 'pending' &&
         request.resource.data.type is int && request.resource.data.type >= 1 &&
-        request.resource.data.type <= 5 && txt(request.resource.data.reason,10,500);
+        request.resource.data.type <= 5 && txt(request.resource.data.reason,10,500) &&
+        request.resource.data.createdAt == request.time;
       allow update: if owner() && resource.data.status == 'pending' &&
         changed(['status','reviewedBy','reviewedAt']) &&
         request.resource.data.status in ['approved','rejected'] &&
@@ -190,7 +197,8 @@ service cloud.firestore {
       ]) && request.resource.data.reporterId == request.auth.uid &&
         request.resource.data.status == 'pending' &&
         request.resource.data.kind in ['post','user','comment','message'] &&
-        txt(request.resource.data.targetId,1,200) && txt(request.resource.data.reason,10,500);
+        txt(request.resource.data.targetId,1,200) && txt(request.resource.data.reason,10,500) &&
+        request.resource.data.createdAt == request.time;
       allow update: if owner() && resource.data.status == 'pending' &&
         changed(['status','resolution','reviewedBy','reviewedAt']) &&
         request.resource.data.status in ['resolved','dismissed'] &&
