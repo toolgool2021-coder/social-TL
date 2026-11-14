@@ -778,7 +778,10 @@ async function openChat(uid){
     renderChats();
     searchUsers();
 
-    const cid=chatId(me.uid,uid);
+    // Firestore rules allow message/reaction listeners only for an existing chat.
+    // Create the empty conversation before attaching those listeners.
+    const cid=await ensureChat(uid);
+    if(g!==generation)return;
 
     stopPresence=onSnapshot(
       doc(db,"presence",uid),
