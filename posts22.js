@@ -22,7 +22,11 @@ let busy=false;
 let noticeTimer=null;
 
 onAuthStateChanged(auth,u=>{
-  me=u;
+  me=u?.emailVerified ? u : null;
+});
+window.addEventListener('nexora:email-verified',event=>{
+  if(auth.currentUser?.uid===event.detail?.uid && auth.currentUser.emailVerified)
+    me=auth.currentUser;
 });
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
