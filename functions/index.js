@@ -76,3 +76,17 @@ exports.onNewFollower = onDocumentCreated({
     `follow_${event.params.followerId}`,
     "На вас подписался новый пользователь","follow",event.params.followerId);
 });
+
+exports.onNewLike = onDocumentCreated({
+  document:"users/{uid}/likes/{postId}",region:REGION,
+  retry:true
+},async event=>{
+  const actor=event.params.uid;
+  const postId=event.params.postId;
+  const post=await db.doc(`posts/${postId}`).get();
+  if (!post.exists) return;
+  const author=post.data()?.uid;
+  if (!author || !actor || author===actor) return;
+  await notify(author,actor,`like_${postId}_${actor}`,
+    "Вашу публикацию отметили как понравившуюся","like",postId);
+});
