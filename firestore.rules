@@ -281,6 +281,8 @@ service cloud.firestore {
     // NEXORA groups: creation/approval is trusted-server only.
     // One request document per user and type; clients cannot reset approvals.
     // Group requests have deterministic IDs: UID_kind. Owner alone reviews.
+    // Owner approval is bound to Firebase Auth UID, not a mutable profile role.
+    function groupOwner() { return self(ownerUid()); }
     function groupDoc(id) { return get(/databases/$(database)/documents/groups/$(id)); }
     function memberPath(id,uid) { return /databases/$(database)/documents/groups/$(id)/members/$(uid); }
     function isGroupMember(id) { return authd() && exists(memberPath(id,request.auth.uid)); }
@@ -300,8 +302,8 @@ service cloud.firestore {
         data.createdAt == request.time;
     }
     match /groupRequests/{requestId} {
-      allow get: if owner() || (authd() && resource.data.ownerId == request.auth.uid);
-      allow list: if owner();
+      allow get: if groupOwner() || (authd() && resource.data.ownerId == request.auth.uid);
+      allow list: if groupOwner();
       allow create: if authd() &&
         requestId == request.auth.uid + '_' + request.resource.data.kind &&
         request.resource.data.ownerId == request.auth.uid &&
@@ -314,7 +316,7 @@ service cloud.firestore {
         request.resource.data.kind == resource.data.kind &&
         validAppeal(request.resource.data)
       ) || (
-        owner() && resource.data.status == 'pending' &&
+        groupOwner() && resource.data.status == 'pending' &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt','reviewedBy','reviewNote']) &&
         request.resource.data.status in ['approved','rejected'] &&
         request.resource.data.reviewedBy == request.auth.uid &&
@@ -327,7 +329,7 @@ service cloud.firestore {
     }
     match /groups/{groupId} {
       allow get,list: if authd() && resource.data.status == 'active';
-      allow create: if owner() &&
+      allow create: if groupOwner() &&
         request.resource.data.keys().hasOnly(['ownerId','kind','name','tag','description','category','status','createdAt','verified','memberCount']) &&
         groupId == request.resource.data.ownerId + '_' + request.resource.data.kind &&
         request.resource.data.kind in ['clan','community'] &&
@@ -348,7 +350,7 @@ service cloud.firestore {
         (request.resource.data.kind == 'community' ||
           getAfter(/databases/$(database)/documents/groupTags/$(request.resource.data.tag)).data.groupId == groupId);
       allow update: if (
-        owner() &&
+        groupOwner() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified','verifiedAt']) &&
         request.resource.data.verified is bool &&
         request.resource.data.verifiedAt == request.time
@@ -371,10 +373,10 @@ service cloud.firestore {
       );
       allow delete: if false;
       match /members/{uid} {
-        allow get: if owner() || (authd() && request.auth.uid == uid) || isGroupMember(groupId);
+        allow get: if groupOwner() || (authd() && request.auth.uid == uid) || isGroupMember(groupId);
         allow list: if isGroupMember(groupId);
         allow create: if (
-          owner() && request.resource.data.keys().hasOnly(['uid','role','joinedAt']) &&
+          groupOwner() && request.resource.data.keys().hasOnly(['uid','role','joinedAt']) &&
           request.resource.data.uid == uid &&
           request.resource.data.role == 'leader' &&
           request.resource.data.joinedAt == request.time &&
@@ -408,7 +410,7 @@ service cloud.firestore {
     match /groupTags/{tag} {
       allow get: if authd();
       allow list: if false;
-      allow create: if owner() &&
+      allow create: if groupOwner() &&
         tag.matches('^[A-Za-z0-9_]{3}$') &&
         request.resource.data.keys().hasOnly(['groupId','createdAt']) &&
         request.resource.data.createdAt == request.time &&
