@@ -96,3 +96,10 @@ The test command starts a local Firestore emulator and runs `tests/firestore.rul
 - `chats.html`: 900-millisecond cooldown between successful chat message submissions, including stickers.
 - `index.html`: cache-busting query parameters updated for `app.js` and `nexora21.js`.
 - **Security limitation:** all cooldowns above run in the browser. They are usability measures, not enforceable anti-spam controls. Attackers can bypass them with the Firestore SDK or REST API. Production abuse mitigation needs server-side throttling, App Check, monitoring, and moderation workflows; none is deployed yet.
+
+## Additional 3.2 chat and notification fixes
+
+- New conversations are now created with `ensureChat(uid)` before the client attaches message and reaction listeners. This avoids Firestore permission-denied errors when the chat document does not yet exist. Opening a new conversation now creates an empty chat document.
+- `functions/index.js` includes an `onNewLike` trigger in addition to comments, messages, and followers. Like notifications are derived from the existing post owner and the like document's user path; self-notifications are skipped.
+- Emulator tests cover creation of a fresh chat, authorized and unauthorized reaction reads, and recipient-only read receipts.
+- **Deployment status remains unchanged:** Cloud Functions and Firestore Rules are committed but not deployed or emulator-tested in this environment. The local runtime could not reach the npm registry to install the Firebase CLI or emulator dependencies.
