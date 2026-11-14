@@ -1,272 +1,621 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#080d19">
-  <title>NEXORA 2.2 · Социальная сеть</title>
-  <link rel="icon" href="image/icon.png">
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="nexora21.css">
+
+  <meta name="description"
+        content="NEXORA — независимая социальная сеть для общения, публикаций и новых знакомств.">
+
+  <title>NEXORA 2.2 | Социальная сеть</title>
+
+  <link rel="icon" href="./image/icon.png">
+
+  <!-- Основные стили -->
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- Возможности NEXORA 2.1 -->
+  <link rel="stylesheet" href="./nexora21.css">
+
+  <!-- Публикации NEXORA 2.2 -->
+  <link rel="stylesheet" href="./posts22.css">
 </head>
+
 <body>
+
 <div class="ambient"></div>
+
+<!-- ================= HEADER ================= -->
 
 <header class="topbar">
   <div class="brand">
-    <img src="image/icon.png" alt="" onerror="this.hidden=true">
+    <img
+      src="./image/icon.png"
+      alt="NEXORA"
+      onerror="this.hidden=true"
+    >
+
     <b>NEXORA</b>
     <small>BETA 2.2</small>
   </div>
+
   <div id="topUser" class="topuser hidden">
     <span id="topName"></span>
-    <button id="logout" class="quiet">Выйти</button>
+
+    <button id="logout" class="quiet">
+      Выйти
+    </button>
   </div>
 </header>
 
+<!-- ================= AUTH ================= -->
+
 <section id="authPage" class="auth glass">
+
   <div class="heroicon">
-    <img src="image/icon.png" alt="Nexora" onerror="this.hidden=true">
+    <img
+      src="./image/icon.png"
+      alt="NEXORA"
+      onerror="this.hidden=true"
+    >
   </div>
+
   <h1 id="authTitle">С возвращением</h1>
-  <p class="muted">Твоё пространство для общения</p>
+
+  <p class="muted">
+    Твоё пространство для общения
+  </p>
+
   <form id="authForm" class="stack">
-    <input id="username" class="hidden"
+
+    <input
+      id="username"
+      class="hidden"
       placeholder="Имя пользователя (3–20 символов)"
-      maxlength="20">
-    <input id="email" type="email"
-      placeholder="Электронная почта" required>
-    <input id="password" type="password"
-      placeholder="Пароль" minlength="6" required>
-    <button class="primary" id="authSubmit">Войти</button>
+      maxlength="20"
+      autocomplete="nickname"
+    >
+
+    <input
+      id="email"
+      type="email"
+      placeholder="Электронная почта"
+      autocomplete="email"
+      required
+    >
+
+    <input
+      id="password"
+      type="password"
+      placeholder="Пароль"
+      autocomplete="current-password"
+      minlength="6"
+      required
+    >
+
+    <button
+      id="authSubmit"
+      class="primary"
+      type="submit"
+    >
+      Войти
+    </button>
+
   </form>
-  <button class="linkbutton" id="authSwitch">
+
+  <button
+    id="authSwitch"
+    class="linkbutton"
+    type="button"
+  >
     Создать аккаунт
   </button>
+
 </section>
 
+<!-- ================= APP ================= -->
+
 <div id="app" class="layout hidden">
+
+  <!-- ================= SIDEBAR ================= -->
+
   <aside class="sidebar glass">
+
     <nav class="nav">
-      <button data-page="feed" class="active">
+
+      <button
+        data-page="feed"
+        class="active"
+        type="button"
+      >
         ⌂ <span>Главная</span>
       </button>
+
       <a href="./explore.html">
         ✦ <span>Рекомендации</span>
       </a>
-      <button data-page="search">
+
+      <button
+        data-page="search"
+        type="button"
+      >
         ⌕ <span>Поиск</span>
       </button>
-      <a href="chats.html">
+
+      <a href="./chats.html">
         ✉ <span>Сообщения</span>
       </a>
-      <button data-page="profile">
+
+      <button
+        data-page="profile"
+        type="button"
+      >
         ♙ <span>Профиль</span>
       </button>
-      <button data-nx-panel="saved">
+
+      <button
+        data-nx-panel="saved"
+        type="button"
+      >
         ☆ <span>Сохранённое</span>
       </button>
-      <button data-nx-panel="notifications">
+
+      <button
+        data-nx-panel="notifications"
+        type="button"
+      >
         ♢ <span>Уведомления</span>
       </button>
-      <button data-nx-panel="verification">
+
+      <button
+        data-nx-panel="verification"
+        type="button"
+      >
         ✓ <span>Верификация</span>
       </button>
-      <button data-page="settings">
+
+      <button
+        data-page="settings"
+        type="button"
+      >
         ⚙ <span>Настройки</span>
       </button>
-      <a id="ownerButton" href="./owner.html"
-         class="hidden owner-nav">
+
+      <a
+        id="ownerButton"
+        href="./owner.html"
+        class="hidden owner-nav"
+      >
         🛡 <span>Панель управления</span>
       </a>
+
     </nav>
+
   </aside>
 
+  <!-- ================= MAIN ================= -->
+
   <main>
+
+    <!-- ================= FEED ================= -->
+
     <section id="feedPage">
+
       <div class="glass panel">
+
         <div class="sectionhead">
           <h2>Лента</h2>
-          <span class="muted">NEXORA 2.2</span>
+
+          <span class="muted">
+            NEXORA 2.2
+          </span>
         </div>
+
         <form id="postForm" class="stack">
-          <textarea id="postInput"
-            maxlength="1000" required
-            placeholder="Что нового?"></textarea>
-          <label class="fieldlabel" for="postImage">
+
+          <textarea
+            id="postInput"
+            maxlength="1000"
+            required
+            placeholder="Что нового?"
+          ></textarea>
+
+          <label
+            class="fieldlabel"
+            for="postImage"
+          >
             Изображение (прямая HTTPS-ссылка)
           </label>
-          <input id="postImage" type="url"
-            placeholder="https://example.com/photo.png">
+
+          <input
+            id="postImage"
+            type="url"
+            placeholder="https://example.com/photo.png"
+          >
+
           <div class="between">
+
             <small class="muted">
               <span id="postCount">0</span> / 1000
             </small>
-            <button class="primary">Опубликовать</button>
+
+            <button
+              class="primary"
+              type="submit"
+            >
+              Опубликовать
+            </button>
+
           </div>
+
         </form>
+
       </div>
+
+      <!-- Публикации загружаются из Firebase -->
       <div id="feedList"></div>
+
     </section>
 
+    <!-- ================= SEARCH ================= -->
+
     <section id="searchPage" class="hidden">
+
       <div class="glass panel">
+
         <h2>Поиск людей</h2>
-        <input id="searchInput"
-          placeholder="Найти пользователя">
+
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Найти пользователя"
+          autocomplete="off"
+        >
+
         <p class="muted">
           Поиск среди загруженных профилей
         </p>
+
       </div>
+
       <div id="searchResults"></div>
+
     </section>
+
+    <!-- ================= PROFILE ================= -->
 
     <section id="profilePage" class="hidden">
+
       <div class="glass panel profile">
-        <div id="profileBanner" class="cover"></div>
+
+        <div
+          id="profileBanner"
+          class="cover"
+        ></div>
+
         <div class="profilebody">
-          <div id="profileAvatar"
-            class="avatar large">N</div>
-          <div id="profileName" class="profilename"></div>
-          <div id="profileHandle" class="muted"></div>
-          <p id="profileBio"></p>
-          <div class="stats">
-            <span>
-              <b id="followersCount">0</b> подписчиков
-            </span>
-            <span>
-              <b id="followingCount">0</b> подписок
-            </span>
+
+          <div
+            id="profileAvatar"
+            class="avatar large"
+          >
+            N
           </div>
+
+          <div
+            id="profileName"
+            class="profilename"
+          ></div>
+
+          <div
+            id="profileHandle"
+            class="muted"
+          ></div>
+
+          <p id="profileBio"></p>
+
+          <div class="stats">
+
+            <span>
+              <b id="followersCount">0</b>
+              подписчиков
+            </span>
+
+            <span>
+              <b id="followingCount">0</b>
+              подписок
+            </span>
+
+          </div>
+
           <div id="profileLinks"></div>
-          <div id="profileControls" class="buttons"></div>
+
+          <div
+            id="profileControls"
+            class="buttons"
+          ></div>
+
         </div>
+
       </div>
+
       <div id="profilePosts"></div>
+
     </section>
+
+    <!-- ================= SETTINGS ================= -->
 
     <section id="settingsPage" class="hidden">
+
       <div class="glass panel">
+
         <h2>Настройки профиля</h2>
+
         <p class="muted">
-          Изображения хранятся на стороннем
-          фотохостинге. Nexora сохраняет ссылки.
+          Настрой оформление своего профиля.
+          Для изображений используются прямые HTTPS-ссылки.
         </p>
+
         <form id="settingsForm" class="stack">
-          <label>Описание профиля
-            <textarea id="settingsBio"
-              maxlength="160"></textarea>
+
+          <label for="settingsBio">
+            Описание профиля
           </label>
-          <label>Прямая ссылка на аватар
-            <input id="settingsAvatar" type="url"
-              placeholder="https://example.com/avatar.png">
+
+          <textarea
+            id="settingsBio"
+            maxlength="160"
+            placeholder="Расскажи о себе"
+          ></textarea>
+
+          <label for="settingsAvatar">
+            Прямая ссылка на аватар
           </label>
-          <label>Прямая ссылка на обложку
-            <input id="settingsBanner" type="url"
-              placeholder="https://example.com/banner.png">
+
+          <input
+            id="settingsAvatar"
+            type="url"
+            placeholder="https://example.com/avatar.png"
+          >
+
+          <label for="settingsBanner">
+            Прямая ссылка на обложку
           </label>
-          <label>Ссылка на сайт
-            <input id="settingsWebsite" type="url"
-              placeholder="https://example.com">
+
+          <input
+            id="settingsBanner"
+            type="url"
+            placeholder="https://example.com/banner.png"
+          >
+
+          <label for="settingsWebsite">
+            Ссылка на сайт
           </label>
-          <button class="primary">
+
+          <input
+            id="settingsWebsite"
+            type="url"
+            placeholder="https://example.com"
+          >
+
+          <button
+            class="primary"
+            type="submit"
+          >
             Сохранить профиль
           </button>
+
         </form>
+
         <details class="help">
-          <summary>Как загрузить изображение?</summary>
+
+          <summary>
+            Как загрузить изображение?
+          </summary>
+
           <p>
-            Откройте
-            <a href="https://postimages.org/"
-               target="_blank"
-               rel="noopener noreferrer"
-               data-external>Postimages</a>,
-            загрузите изображение и скопируйте
+            Открой
+            <a
+              href="https://postimages.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-external
+            >
+              Postimages
+            </a>,
+            загрузи изображение и скопируй
             прямую ссылку PNG, JPG или WebP.
           </p>
+
         </details>
+
       </div>
 
       <div class="glass panel">
+
         <h2>Мы в социальных сетях</h2>
+
         <div class="socials">
-          <a id="tgChannel" href="#" class="social"
-             target="_blank"
-             rel="noopener noreferrer">
+
+          <a
+            id="tgChannel"
+            href="#"
+            class="social"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             ✈ Telegram-канал
           </a>
-          <a id="tgBot" href="#" class="social"
-             target="_blank"
-             rel="noopener noreferrer">
+
+          <a
+            id="tgBot"
+            href="#"
+            class="social"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             ✈ Telegram-бот
           </a>
+
         </div>
-        <p id="socialHint" class="muted"></p>
+
+        <p
+          id="socialHint"
+          class="muted"
+        ></p>
+
       </div>
+
     </section>
+
+    <!-- ================= NEXORA PANELS ================= -->
 
     <section id="nx21panel" class="hidden">
+
       <div class="glass panel">
+
         <div class="between">
-          <h2 id="nx21title">NEXORA</h2>
-          <button id="nx21back" class="quiet">
+
+          <h2 id="nx21title">
+            NEXORA
+          </h2>
+
+          <button
+            id="nx21back"
+            class="quiet"
+            type="button"
+          >
             ← Назад
           </button>
+
         </div>
+
         <div id="nx21body"></div>
+
       </div>
+
     </section>
+
   </main>
 
+  <!-- ================= RIGHT SIDEBAR ================= -->
+
   <aside class="right">
+
     <div class="glass panel">
+
       <h3>✦ NEXORA</h3>
+
       <p class="muted">
         Независимая социальная сеть.
-        Публикации, профили и общение.
+        Публикации, профили, рекомендации
+        и общение в реальном времени.
       </p>
+
+      <a href="./explore.html">
+        Открыть рекомендации
+      </a>
+
     </div>
+
     <div class="glass panel">
+
       <h3>Безопасность</h3>
+
       <p class="muted">
-        Не передавайте пароли и личную
+        Не передавай пароли и личную
         информацию незнакомым пользователям.
       </p>
+
     </div>
+
   </aside>
+
 </div>
 
-<div id="toast" class="toast hidden"
-  role="status" aria-live="polite"></div>
+<!-- ================= TOAST ================= -->
 
-<div id="nx21notice" hidden
-  role="status" aria-live="polite"></div>
+<div
+  id="toast"
+  class="toast hidden"
+  role="status"
+  aria-live="polite"
+></div>
 
-<div id="linkDialog" class="modal hidden"
-  role="dialog" aria-modal="true"
-  aria-labelledby="linkTitle">
+<div
+  id="nx21notice"
+  hidden
+  role="status"
+  aria-live="polite"
+></div>
+
+<!-- ================= EXTERNAL LINK WARNING ================= -->
+
+<div
+  id="linkDialog"
+  class="modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="linkTitle"
+>
+
   <div class="glass dialog">
-    <div class="warning">⚠</div>
-    <h2 id="linkTitle">Вы покидаете Nexora</h2>
+
+    <div class="warning">
+      ⚠
+    </div>
+
+    <h2 id="linkTitle">
+      Вы покидаете Nexora
+    </h2>
+
     <p>
       Эта ссылка не подтверждена администрацией.
-      Проверьте адрес и не вводите пароли
+      Проверь адрес и не вводи пароли
       на подозрительных сайтах.
     </p>
-    <div id="linkTarget" class="urlbox"></div>
+
+    <div
+      id="linkTarget"
+      class="urlbox"
+    ></div>
+
     <div class="buttons">
-      <button id="cancelLink" class="quiet">
+
+      <button
+        id="cancelLink"
+        class="quiet"
+        type="button"
+      >
         Отмена
       </button>
-      <button id="confirmLink" class="primary">
+
+      <button
+        id="confirmLink"
+        class="primary"
+        type="button"
+      >
         Продолжить
       </button>
+
     </div>
+
   </div>
+
 </div>
 
-<script type="module" src="app.js"></script>
-<script type="module" src="nexora21.js"></script>
+<!-- ================= FIREBASE & MODULES ================= -->
+
+<!-- Основная система NEXORA -->
+<script type="module" src="./app.js"></script>
+
+<!-- Верификации, уведомления и дополнительные панели -->
+<script type="module" src="./nexora21.js"></script>
+
+<!-- Репосты, цитирование и хештеги -->
+<script type="module" src="./posts22.js"></script>
+
 </body>
 </html>
