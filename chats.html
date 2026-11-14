@@ -575,7 +575,7 @@ async function loadStickerPacks(){
     if(!response.ok)throw Error("Manifest unavailable");
     const packs=await response.json();
     STICKER_PACKS=packs.filter(p=>/^[a-zA-Z0-9_-]+$/.test(p.id)&&Array.isArray(p.files)).map(p=>({
-      id:p.id,title:String(p.title||p.id),files:p.files.filter(f=>/^[a-zA-Z0-9_.-]+\\.(png|webp|gif|jpg|jpeg)$/i.test(f))
+      id:p.id,title:String(p.title||p.id),files:p.files.filter(f=>/^[a-zA-Z0-9_.-]+\.(png|webp|gif|jpg|jpeg)$/i.test(f))
     }));
   }catch(error){console.warn("Sticker packs:",error);STICKER_PACKS=[];}
   renderStickerPacks();
