@@ -90,3 +90,31 @@ exports.onNewLike = onDocumentCreated({
   await notify(author,actor,`like_${postId}_${actor}`,
     "Вашу публикацию отметили как понравившуюся","like",postId);
 });
+
+const OWNER_UID = "FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
+
+// Moderation alerts are sent only to the fixed owner UID. A report's
+// targetId and reason are untrusted; they are never used to construct a
+// document path or a notification identifier.
+exports.onNewReport = onDocumentCreated({
+  document:"reports/{reportId}",region:REGION,retry:true
+},async event=>{
+  const report=event.data?.data();
+  if(!report || report.status!=="pending")return;
+  if(typeof report.reporterId!=="string" || !report.reporterId)return;
+  await notify(OWNER_UID,report.reporterId,
+    `report_${event.params.reportId}`,
+    "Поступила новая жалоба. Откройте панель модерации.",
+    "report",event.params.reportId);
+});
+
+exports.onNewVerificationRequest = onDocumentCreated({
+  document:"verificationRequests/{uid}",region:REGION,retry:true
+},async event=>{
+  const request=event.data?.data();
+  if(!request || request.status!=="pending" || request.uid!==event.params.uid)return;
+  await notify(OWNER_UID,event.params.uid,
+    `verification_${event.params.uid}`,
+    "Поступила новая заявка на верификацию.",
+    "verification",event.params.uid);
+});
