@@ -4,812 +4,741 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080d19">
-<title>NEXORA 2.1 | Owner Control Center</title>
+<meta name="theme-color" content="#080c15">
+<title>NEXORA 3.0 | Owner Control Center</title>
 <link rel="icon" href="./image/icon.png">
 <style>
 :root{
- color-scheme:dark;
- --bg:#080d19;
- --panel:#141d31dc;
- --line:#ffffff22;
- --text:#edf3ff;
- --muted:#9baac5;
- --accent:#82a9ff
+  color-scheme:dark;
+  --bg:#080c15;--panel:#141d2ee8;
+  --line:#c4d5ff20;--text:#eff3ff;
+  --muted:#9caac3;--accent:#9aaaff;
 }
 *{box-sizing:border-box}
 body{
- margin:0;
- color:var(--text);
- background:
- radial-gradient(ellipse at 10% 0%,#315b9b35,transparent 55%),
- radial-gradient(ellipse at 95% 80%,#6743ac25,transparent 50%),
- var(--bg);
- font:14px system-ui,Arial,sans-serif;
- min-height:100vh
+  margin:0;min-height:100vh;color:var(--text);
+  font:14px/1.6 system-ui,sans-serif;
+  background:
+    radial-gradient(ellipse at 0% 0%,#486bb43b,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,#7553a12b,transparent 55%),
+    var(--bg);
 }
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-button:disabled{opacity:.5;cursor:not-allowed}
-a{color:#a9c5ff;text-decoration:none}
+button:disabled{opacity:.45;cursor:not-allowed}
+a{color:#b9c6ff;text-decoration:none}
 .hidden{display:none!important}
 header{
- position:sticky;top:0;z-index:10;
- padding:14px max(16px,calc((100vw - 1150px)/2));
- background:#0c1424ed;
- border-bottom:1px solid var(--line);
- backdrop-filter:blur(20px);
- display:flex;align-items:center;justify-content:space-between;
- gap:12px
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:13px max(16px,calc((100vw - 1200px)/2));
+  border-bottom:1px solid var(--line);
+  background:#0c1424ed;backdrop-filter:blur(20px);
 }
-.brand{display:flex;align-items:center;gap:11px;font-size:18px}
-.brand img{width:36px;height:36px;object-fit:contain}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:39px;height:39px;object-fit:contain}
+.brand b{font-size:18px;letter-spacing:.07em}
 .brand small{display:block;color:var(--accent);font-size:10px}
-main{max-width:1150px;margin:25px auto;padding:0 15px 70px}
-h1{font-size:27px;margin:0 0 8px}
-h2{font-size:19px;margin:0 0 17px}
-h3{font-size:16px}
-.muted{color:var(--muted);line-height:1.6}
+main{max-width:1200px;margin:25px auto;padding:0 16px 70px}
+h1{margin:0;font-size:28px}
+h2{margin:0 0 15px;font-size:19px}
+h3{margin:0 0 10px;font-size:16px}
+.muted{color:var(--muted)}
 .glass{
- background:var(--panel);
- border:1px solid var(--line);
- border-radius:19px;
- backdrop-filter:blur(18px);
- box-shadow:0 12px 35px #0003
+  border:1px solid var(--line);border-radius:19px;
+  background:var(--panel);backdrop-filter:blur(20px);
+  box-shadow:0 15px 40px #0003;
 }
-.panel{padding:22px;margin:18px 0}
+.panel{padding:22px;margin:17px 0}
 button,.button{
- display:inline-flex;align-items:center;justify-content:center;
- padding:11px 15px;border-radius:12px;
- border:1px solid #415475;
- background:#20304c;color:#eaf1ff;
- text-decoration:none;transition:.2s
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:10px 15px;border:1px solid #53617e80;
+  border-radius:12px;background:#22314b;color:white;
+  transition:background .2s,transform .2s;
 }
-button:hover,.button:hover{background:#304669}
+button:hover:not(:disabled),.button:hover{background:#334766}
+button:active:not(:disabled){transform:scale(.98)}
 .primary{
- background:linear-gradient(120deg,#4779eb,#8b74ef);
- border:0;font-weight:750
+  border-color:transparent;
+  background:linear-gradient(120deg,#637ee7,#8d72da);
+  font-weight:750;
 }
-.danger{color:#ffb2ba;border-color:#874654}
+.danger{color:#ffb5bf;border-color:#a14c6280}
 input,select,textarea{
- width:100%;padding:12px;border-radius:11px;
- border:1px solid #394861;background:#0b1424;color:white;
- outline:none
+  width:100%;padding:12px;border:1px solid #ffffff25;
+  border-radius:12px;background:#0b1424;color:white;outline:none;
 }
 input:focus,select:focus,textarea:focus{border-color:var(--accent)}
-textarea{min-height:90px;resize:vertical}
+textarea{min-height:95px;resize:vertical}
 label{display:block;color:var(--muted);font-size:13px}
-label input,label select,label textarea{margin-top:8px}
-.toolbar{display:flex;gap:10px;margin-bottom:15px}
-.toolbar input{flex:1}
-.tabs{display:flex;flex-wrap:wrap;gap:9px;margin:22px 0}
-.tabs button.active{
- background:linear-gradient(120deg,#4779eb,#8b74ef);
- border-color:transparent
+label input,label select{margin-top:7px}
+.toolbar,.actions,.tabs{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px;
 }
+.toolbar{margin-bottom:15px}
+.toolbar input{flex:1;min-width:180px}
+.tabs{margin:22px 0}
+.tabs button.active{background:#7185e3;border-color:transparent}
 .stats{
- display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
- gap:12px;margin:18px 0
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;margin:20px 0;
 }
 .stat{padding:20px}
-.stat b{display:block;font-size:28px;margin-bottom:5px}
-.stat span{color:var(--muted);font-size:12px}
+.stat b{display:block;font-size:28px}
+.stat span{font-size:12px;color:var(--muted)}
 .item{
- padding:16px 0;border-bottom:1px solid var(--line);
- display:flex;justify-content:space-between;
- align-items:flex-start;gap:15px
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:16px;padding:17px 0;border-bottom:1px solid var(--line);
 }
 .item:last-child{border-bottom:0}
-.item-main{min-width:0;flex:1}
-.item strong{overflow-wrap:anywhere}
-.item p{overflow-wrap:anywhere;white-space:pre-wrap}
-.uid{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
-.badge{width:20px;height:20px;object-fit:contain;vertical-align:middle}
+.item-main{flex:1;min-width:0}
+.item p,.uid{overflow-wrap:anywhere}
+.item p{white-space:pre-wrap}
+.uid{font-size:11px;color:var(--muted)}
+.badge{width:21px;height:21px;object-fit:contain;vertical-align:middle}
 .pill{
- display:inline-block;padding:4px 9px;border-radius:20px;
- background:#648aff24;color:#b9caff;font-size:11px
+  display:inline-block;padding:4px 9px;border-radius:20px;
+  background:#8194ff25;color:#c2cdff;font-size:11px;
 }
-.actions{display:flex;gap:8px;flex-wrap:wrap}
 .form-grid{
- display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
- gap:15px;margin:16px 0
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:15px;margin:17px 0;
 }
 #toast{
- position:fixed;z-index:100;bottom:25px;left:50%;
- transform:translateX(-50%);
- padding:14px 20px;border-radius:12px;
- background:#253858;border:1px solid #6384b8;
- box-shadow:0 10px 40px #0008;
- max-width:90vw;text-align:center
+  position:fixed;bottom:24px;left:50%;z-index:100;
+  transform:translateX(-50%);padding:13px 19px;
+  border:1px solid #8294d577;border-radius:13px;
+  background:#243551;box-shadow:0 10px 40px #0008;
+  max-width:calc(100vw - 30px);text-align:center;
 }
-@media(max-width:700px){
- .stats{grid-template-columns:repeat(2,1fr)}
- .form-grid{grid-template-columns:1fr}
- .toolbar,.item{flex-direction:column}
- .item button{width:100%}
- .panel{padding:16px}
- .brand{font-size:15px}
+@media(max-width:760px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .item{flex-direction:column}
+  .panel{padding:16px}
+  .brand b{font-size:15px}
 }
 </style>
 </head>
 <body>
+
 <header>
- <div class="brand">
-  <img src="./image/icon.png" alt="NEXORA">
-  <div>
-   <b>NEXORA 2.1</b>
-   <small>OWNER CONTROL CENTER</small>
+  <div class="brand">
+    <img src="./image/icon.png" alt="">
+    <div>
+      <b>NEXORA 3.0</b>
+      <small>OWNER CONTROL CENTER</small>
+    </div>
   </div>
- </div>
- <a href="./index.html" class="button">← На сайт</a>
+  <a class="button" href="./index.html">← На сайт</a>
 </header>
 
 <main>
- <h1>Панель управления</h1>
- <p class="muted">
-  Пользователи, жалобы, заявки на верификацию и аудит.
- </p>
+  <h1>Панель управления</h1>
+  <p class="muted">
+    Аккаунты, роли, верификация, жалобы и журнал действий.
+  </p>
 
- <section class="glass panel">
-  <p id="status">Проверка прав доступа...</p>
- </section>
+  <section class="glass panel">
+    <p id="status">Проверка доступа...</p>
+  </section>
 
- <div id="dashboard" class="hidden">
-  <div class="stats">
-   <div class="glass stat">
-    <b id="countUsers">0</b><span>Загружено аккаунтов</span>
-   </div>
-   <div class="glass stat">
-    <b id="countVerified">0</b><span>Верифицированных</span>
-   </div>
-   <div class="glass stat">
-    <b id="countStaff">0</b><span>Участников команды</span>
-   </div>
-   <div class="glass stat">
-    <b id="countPending">0</b><span>Ожидают рассмотрения</span>
-   </div>
+  <div id="dashboard" class="hidden">
+
+    <div class="stats">
+      <div class="glass stat">
+        <b id="countUsers">0</b>
+        <span>Загружено аккаунтов</span>
+      </div>
+      <div class="glass stat">
+        <b id="countVerified">0</b>
+        <span>Верифицированных</span>
+      </div>
+      <div class="glass stat">
+        <b id="countStaff">0</b>
+        <span>Участников команды</span>
+      </div>
+      <div class="glass stat">
+        <b id="countPending">0</b>
+        <span>Заявок на рассмотрении</span>
+      </div>
+    </div>
+
+    <nav class="tabs" aria-label="Разделы управления">
+      <button class="active" data-tab="users">Пользователи</button>
+      <button data-tab="reports">Жалобы</button>
+      <button data-tab="verification">Верификация</button>
+      <button data-tab="audit">Журнал</button>
+    </nav>
+
+    <section id="usersTab" class="glass panel">
+      <h2>Пользователи</h2>
+      <div class="toolbar">
+        <input id="search" placeholder="Поиск по имени, @username или UID">
+        <button id="reloadUsers">Обновить</button>
+      </div>
+      <div id="usersList">Загрузка...</div>
+    </section>
+
+    <section id="reportsTab" class="glass panel hidden">
+      <div class="toolbar">
+        <h2 style="flex:1">Жалобы</h2>
+        <button id="reloadReports">Обновить</button>
+      </div>
+      <div id="reportsList"></div>
+    </section>
+
+    <section id="verificationTab" class="glass panel hidden">
+      <div class="toolbar">
+        <h2 style="flex:1">Заявки на верификацию</h2>
+        <button id="reloadVerification">Обновить</button>
+      </div>
+      <div id="verificationList"></div>
+    </section>
+
+    <section id="auditTab" class="glass panel hidden">
+      <div class="toolbar">
+        <h2 style="flex:1">Журнал действий</h2>
+        <button id="reloadAudit">Обновить</button>
+      </div>
+      <p class="muted">
+        Здесь отображаются операции, записанные этой панелью.
+      </p>
+      <div id="auditList"></div>
+    </section>
+
+    <section id="editor" class="glass panel hidden">
+      <div class="toolbar">
+        <h2 style="flex:1">Редактирование аккаунта</h2>
+        <button id="closeEditor">✕</button>
+      </div>
+
+      <h3 id="selectedName"></h3>
+      <p id="selectedUid" class="uid"></p>
+
+      <div class="form-grid">
+        <label>
+          Роль
+          <select id="role">
+            <option value="user">Пользователь</option>
+            <option value="moderator">Модератор</option>
+            <option value="admin">Администратор</option>
+          </select>
+        </label>
+
+        <label>
+          Верификация
+          <select id="verification">
+            <option value="0">Без верификации</option>
+            <option value="1">1 · Подтверждённый</option>
+            <option value="2">2 · Официальный бренд</option>
+            <option value="3">3 · Создатель</option>
+            <option value="4">4 · Команда NEXORA</option>
+            <option value="5">5 · Спонсор</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="muted">
+        Верификация не выдаёт административные права.
+        Роль Owner нельзя назначить через эту панель.
+      </p>
+
+      <div class="actions">
+        <button id="saveUser" class="primary">Сохранить</button>
+        <button id="cancelEditor">Отмена</button>
+      </div>
+    </section>
   </div>
-
-  <nav class="tabs">
-   <button class="active" data-tab="users">Пользователи</button>
-   <button data-tab="reports">Жалобы</button>
-   <button data-tab="verification">Верификация</button>
-   <button data-tab="audit">Журнал действий</button>
-  </nav>
-
-  <section id="usersTab" class="glass panel">
-   <h2>Управление пользователями</h2>
-   <div class="toolbar">
-    <input id="search" placeholder="Имя или UID">
-    <button id="reloadUsers">Обновить</button>
-   </div>
-   <div id="usersList">Загрузка...</div>
-  </section>
-
-  <section id="reportsTab" class="glass panel hidden">
-   <div class="toolbar">
-    <h2 style="flex:1">Жалобы</h2>
-    <button id="reloadReports">Обновить</button>
-   </div>
-   <div id="reportsList"></div>
-  </section>
-
-  <section id="verificationTab" class="glass panel hidden">
-   <div class="toolbar">
-    <h2 style="flex:1">Заявки на верификацию</h2>
-    <button id="reloadVerification">Обновить</button>
-   </div>
-   <div id="verificationList"></div>
-  </section>
-
-  <section id="auditTab" class="glass panel hidden">
-   <div class="toolbar">
-    <h2 style="flex:1">Журнал действий</h2>
-    <button id="reloadAudit">Обновить</button>
-   </div>
-   <p class="muted">
-    Журнал фиксирует действия, выполненные через эту панель.
-   </p>
-   <div id="auditList"></div>
-  </section>
-
-  <section id="editor" class="glass panel hidden">
-   <div class="toolbar">
-    <h2 style="flex:1">Редактирование аккаунта</h2>
-    <button id="closeEditor">✕</button>
-   </div>
-   <h3 id="selectedName"></h3>
-   <p id="selectedUid" class="uid"></p>
-
-   <div class="form-grid">
-    <label>
-     Роль аккаунта
-     <select id="role">
-      <option value="user">Пользователь</option>
-      <option value="moderator">Модератор</option>
-      <option value="admin">Администратор</option>
-      <option value="owner">Владелец</option>
-     </select>
-    </label>
-    <label>
-     Тип верификации
-     <select id="verification">
-      <option value="0">Без верификации</option>
-      <option value="1">1 · Подтверждённый</option>
-      <option value="2">2 · Официальный бренд</option>
-      <option value="3">3 · Основатель</option>
-      <option value="4">4 · Модерация</option>
-      <option value="5">5 · Спонсор</option>
-     </select>
-    </label>
-   </div>
-
-   <p class="muted">
-    Значок верификации не предоставляет административных прав.
-    Статус владельца защищён.
-   </p>
-
-   <div class="actions">
-    <button id="saveUser" class="primary">Сохранить</button>
-    <button id="cancelEditor">Отмена</button>
-   </div>
-  </section>
- </div>
 </main>
 
-<div id="toast" class="hidden" role="status"></div>
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
 
 <script type="module">
-import {initializeApp} from
-'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
-import {getAuth,onAuthStateChanged} from
-'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-import {
- getFirestore,collection,doc,getDoc,getDocs,
- query,limit,updateDoc,deleteDoc,writeBatch,
- serverTimestamp
-} from
-'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+import {getApps,initializeApp} from
+"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
-const cfg={
- apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
- authDomain:'toolchat-bfac8.firebaseapp.com',
- projectId:'toolchat-bfac8',
- storageBucket:'toolchat-bfac8.firebasestorage.app',
- messagingSenderId:'52396840735',
- appId:'1:52396840735:web:a608b9c037c8481f2dc22a'
+import {getAuth,onAuthStateChanged} from
+"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+import {
+  getFirestore,collection,doc,getDoc,getDocs,
+  query,limit,writeBatch,serverTimestamp
+} from
+"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const config={
+  apiKey:"AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",
+  authDomain:"toolchat-bfac8.firebaseapp.com",
+  projectId:"toolchat-bfac8",
+  storageBucket:"toolchat-bfac8.firebasestorage.app",
+  messagingSenderId:"52396840735",
+  appId:"1:52396840735:web:a608b9c037c8481f2dc22a"
 };
 
-const OWNER_UID='FXtmMsn8JYfx04zpxiSaXZ0iHWg2';
-const app=initializeApp(cfg);
+const OWNER_UID="FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
+
+const app=getApps()[0]||initializeApp(config);
 const auth=getAuth(app);
 const db=getFirestore(app);
 const $=id=>document.getElementById(id);
 
 let currentUser=null;
-let currentRole=null;
-let records=[];
+let ownerVerified=false;
+let users=[];
 let selected=null;
 let toastTimer=null;
+let busy=false;
 
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;',
- '"':'&quot;',"'":'&#39;'
-}[c]));
+const BADGE_NAMES={
+  1:"Подтверждённый пользователь",
+  2:"Официальный бренд",
+  3:"Создатель",
+  4:"Команда NEXORA",
+  5:"Спонсор"
+};
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#39;"
+})[c]);
 
 function toast(message){
- clearTimeout(toastTimer);
- $('toast').textContent=message;
- $('toast').classList.remove('hidden');
- toastTimer=setTimeout(
-  ()=>$('toast').classList.add('hidden'),4500
- );
+  clearTimeout(toastTimer);
+  $("toast").textContent=String(message);
+  $("toast").classList.remove("hidden");
+  toastTimer=setTimeout(()=>$("toast").classList.add("hidden"),4200);
 }
 
-function timeLabel(value){
- return value?.toDate?.().toLocaleString('ru-RU')||'';
+function date(t){
+  return t?.toDate?.().toLocaleString("ru-RU")||"";
 }
 
 function roleName(role){
- return {
-  user:'Пользователь',
-  moderator:'Модератор',
-  admin:'Администратор',
-  owner:'Владелец'
- }[role]||'Пользователь';
+  return {
+    user:"Пользователь",
+    moderator:"Модератор",
+    admin:"Администратор",
+    owner:"Владелец"
+  }[role]||"Пользователь";
 }
 
 function canManage(){
- return currentUser?.uid===OWNER_UID&&currentRole==='owner';
+  return currentUser?.uid===OWNER_UID&&ownerVerified;
 }
 
-function safeImage(url){
- try{
-  const parsed=new URL(url);
-  return parsed.protocol==='https:'?parsed.href:'';
- }catch{return ''}
+function safeImage(raw){
+  try{
+    const url=new URL(raw);
+    return url.protocol==="https:"&&!url.username&&!url.password
+      ?url.href:"";
+  }catch{return "";}
 }
 
 function userAvatar(user){
- const url=safeImage(user.avatarUrl);
- return url
-  ?`<img src="${esc(url)}" alt=""
-      style="width:42px;height:42px;border-radius:12px;object-fit:cover">`
-  :'<span>◈</span>';
+  const url=safeImage(user.avatarUrl);
+  return url
+    ?`<img src="${esc(url)}" alt=""
+       style="width:42px;height:42px;border-radius:12px;object-fit:cover">`
+    :'<span style="font-size:22px">◈</span>';
 }
 
-function status(message){
- $('status').textContent=message;
+async function commit(action,target,details,operation){
+  if(!canManage())throw Error("Нет доступа.");
+  const batch=writeBatch(db);
+  operation(batch);
+
+  batch.set(doc(collection(db,"auditLogs")),{
+    actorId:currentUser.uid,
+    action,
+    targetId:target,
+    details,
+    createdAt:serverTimestamp()
+  });
+
+  await batch.commit();
 }
 
-async function writeAudit(action,target,details){
- if(!canManage())throw Error('Нет доступа');
+async function execute(fn){
+  if(busy)return;
+  busy=true;
+  try{await fn();}
+  catch(e){toast("Ошибка: "+(e?.message||e));}
+  finally{busy=false;}
+}
 
- // Аудит фиксируется вместе с изменением данных.
- const ref=doc(collection(db,'auditLogs'));
-
- return {
-  ref,
-  data:{
-   actorId:currentUser.uid,
-   action,
-   targetId:target,
-   details,
-   createdAt:serverTimestamp()
+function selectTab(name){
+  for(const tab of ["users","reports","verification","audit"]){
+    $(tab+"Tab").classList.toggle("hidden",tab!==name);
   }
- };
+  $("editor").classList.add("hidden");
+
+  document.querySelectorAll("[data-tab]").forEach(button=>{
+    button.classList.toggle("active",button.dataset.tab===name);
+  });
+
+  if(name==="users")loadUsers();
+  if(name==="reports")loadReports();
+  if(name==="verification")loadVerification();
+  if(name==="audit")loadAudit();
 }
 
-async function commitAction(action,target,details,operation){
- const audit=await writeAudit(action,target,details);
- const batch=writeBatch(db);
- operation(batch);
- batch.set(audit.ref,audit.data);
- await batch.commit();
-}
-
-function selectTab(tab){
- for(const name of ['users','reports','verification','audit']){
-  $(name+'Tab').classList.toggle('hidden',name!==tab);
- }
- $('editor').classList.add('hidden');
- document.querySelectorAll('[data-tab]').forEach(button=>{
-  button.classList.toggle('active',button.dataset.tab===tab);
- });
-
- if(tab==='users')loadUsers();
- if(tab==='reports')loadReports();
- if(tab==='verification')loadVerification();
- if(tab==='audit')loadAudit();
-}
-
-document.querySelectorAll('[data-tab]').forEach(button=>{
- button.onclick=()=>selectTab(button.dataset.tab);
+document.querySelectorAll("[data-tab]").forEach(button=>{
+  button.onclick=()=>selectTab(button.dataset.tab);
 });
 
 onAuthStateChanged(auth,async user=>{
- currentUser=user;
- currentRole=null;
- $('dashboard').classList.add('hidden');
+  currentUser=user;
+  ownerVerified=false;
+  $("dashboard").classList.add("hidden");
 
- if(!user){
-  status('Войди в аккаунт на главной странице NEXORA.');
-  return;
- }
-
- if(user.uid!==OWNER_UID){
-  status('Доступ запрещён. Панель предназначена владельцу NEXORA.');
-  return;
- }
-
- try{
-  const snapshot=await getDoc(doc(db,'users',user.uid));
-  if(auth.currentUser?.uid!==user.uid)return;
-
-  if(!snapshot.exists()||snapshot.data().role!=='owner'){
-   status('Роль Owner не подтверждена в Firestore.');
-   return;
+  if(!user){
+    $("status").textContent="Войди в аккаунт NEXORA.";
+    return;
   }
 
-  currentRole='owner';
-  status('Доступ подтверждён · Owner');
-  $('dashboard').classList.remove('hidden');
-  await loadUsers();
- }catch(error){
-  status('Ошибка: '+error.message);
- }
+  if(user.uid!==OWNER_UID){
+    $("status").textContent="Доступ запрещён.";
+    return;
+  }
+
+  try{
+    const snap=await getDoc(doc(db,"users",user.uid));
+    if(auth.currentUser?.uid!==user.uid)return;
+
+    if(!snap.exists()||snap.data().role!=="owner"){
+      $("status").textContent="Роль владельца не подтверждена.";
+      return;
+    }
+
+    ownerVerified=true;
+    $("status").textContent="✓ Доступ владельца подтверждён";
+    $("dashboard").classList.remove("hidden");
+    await loadUsers();
+  }catch(e){
+    $("status").textContent="Ошибка проверки: "+e.message;
+  }
 });
 
 async function loadUsers(){
- $('usersList').textContent='Загрузка...';
+  if(!canManage())return;
+  $("usersList").textContent="Загрузка...";
 
- try{
-  const snapshot=await getDocs(query(
-   collection(db,'users'),limit(200)
-  ));
+  try{
+    const snap=await getDocs(query(collection(db,"users"),limit(200)));
+    users=snap.docs.map(d=>({uid:d.id,...d.data()}));
 
-  records=snapshot.docs.map(item=>({
-   uid:item.id,...item.data()
-  }));
+    $("countUsers").textContent=users.length;
+    $("countVerified").textContent=users.filter(
+      u=>Number(u.verification||0)>0
+    ).length;
+    $("countStaff").textContent=users.filter(
+      u=>["owner","admin","moderator"].includes(u.role)
+    ).length;
 
-  $('countUsers').textContent=records.length;
-  $('countVerified').textContent=records.filter(
-   u=>Number(u.verification||0)>0
-  ).length;
-  $('countStaff').textContent=records.filter(
-   u=>['owner','admin','moderator'].includes(u.role)
-  ).length;
-
-  renderUsers();
- }catch(error){
-  $('usersList').textContent='Ошибка: '+error.message;
- }
+    renderUsers();
+  }catch(e){
+    $("usersList").textContent="Ошибка: "+e.message;
+  }
 }
 
 function renderUsers(){
- const term=$('search').value.toLowerCase().trim();
- const filtered=records.filter(u=>
-  (u.name||'').toLowerCase().includes(term)||
-  u.uid.toLowerCase().includes(term)
- );
+  const term=$("search").value.trim().toLowerCase().replace(/^@/,"");
 
- $('usersList').innerHTML=filtered.map(u=>{
-  const v=Number(u.verification||0);
-  const badge=v>=1&&v<=5
-   ?`<img class="badge" src="image/Verified_${v}.png" alt="">`
-   :'';
+  const filtered=users.filter(u=>
+    String(u.name||"").toLowerCase().includes(term)||
+    String(u.username||"").toLowerCase().includes(term)||
+    u.uid.toLowerCase().includes(term)
+  );
 
-  return `
-   <div class="item">
-    <div class="item-main">
-     <strong>${userAvatar(u)} ${esc(u.name||'Без имени')} ${badge}</strong>
-     <p class="uid">${esc(u.uid)}</p>
-     <span class="pill">${esc(roleName(u.role))}</span>
-    </div>
-    <button data-edit="${esc(u.uid)}">Управлять</button>
-   </div>
-  `;
- }).join('')||'<p class="muted">Ничего не найдено</p>';
+  $("usersList").innerHTML=filtered.map(u=>{
+    const v=Number(u.verification||0);
+    const badge=v>=1&&v<=5
+      ?`<img class="badge" src="./image/Verified_${v}.png" alt="">`
+      :"";
+
+    return `<div class="item">
+      <div class="item-main">
+        <strong>${userAvatar(u)} ${esc(u.name||"Без имени")} ${badge}</strong>
+        <p class="uid">${esc(u.uid)}</p>
+        ${u.username?`<p class="uid">@${esc(u.username)}</p>`:""}
+        <span class="pill">${esc(roleName(u.role))}</span>
+      </div>
+      <button data-edit="${esc(u.uid)}">Управлять</button>
+    </div>`;
+  }).join("")||'<p class="muted">Ничего не найдено.</p>';
 }
 
-$('search').oninput=renderUsers;
-$('reloadUsers').onclick=loadUsers;
+$("search").oninput=renderUsers;
+$("reloadUsers").onclick=loadUsers;
 
-$('usersList').addEventListener('click',event=>{
- const button=event.target.closest('[data-edit]');
- if(!button)return;
+$("usersList").onclick=event=>{
+  const button=event.target.closest("[data-edit]");
+  if(!button)return;
 
- const user=records.find(u=>u.uid===button.dataset.edit);
- if(!user)return;
+  const user=users.find(u=>u.uid===button.dataset.edit);
+  if(!user)return;
 
- selected=user.uid;
- $('selectedName').textContent=user.name||'Без имени';
- $('selectedUid').textContent='UID: '+user.uid;
- $('role').value=user.role||'user';
- $('verification').value=String(user.verification||0);
+  selected=user.uid;
+  $("selectedName").textContent=user.name||"Без имени";
+  $("selectedUid").textContent="UID: "+user.uid;
+  $("role").value=user.role==="owner"?"user":user.role||"user";
+  $("verification").value=String(user.verification||0);
 
- const protectedUser=user.uid===OWNER_UID;
- $('role').disabled=protectedUser;
- $('verification').disabled=protectedUser;
- $('saveUser').disabled=protectedUser;
+  const protectedAccount=user.uid===OWNER_UID||user.role==="owner";
 
- $('editor').classList.remove('hidden');
- $('editor').scrollIntoView({behavior:'smooth'});
+  $("role").disabled=protectedAccount;
+  $("verification").disabled=protectedAccount;
+  $("saveUser").disabled=protectedAccount;
 
- if(protectedUser)toast('Статус владельца защищён.');
-});
+  $("editor").classList.remove("hidden");
+  $("editor").scrollIntoView({behavior:"smooth"});
+
+  if(protectedAccount)toast("Аккаунт владельца защищён.");
+};
 
 function closeEditor(){
- selected=null;
- $('editor').classList.add('hidden');
+  selected=null;
+  $("editor").classList.add("hidden");
 }
 
-$('closeEditor').onclick=closeEditor;
-$('cancelEditor').onclick=closeEditor;
+$("closeEditor").onclick=closeEditor;
+$("cancelEditor").onclick=closeEditor;
 
-$('saveUser').onclick=async()=>{
- if(!canManage()||!selected||selected===OWNER_UID)return;
+$("saveUser").onclick=()=>execute(async()=>{
+  if(!canManage()||!selected||selected===OWNER_UID)return;
 
- const user=records.find(u=>u.uid===selected);
- if(!user)return;
+  const user=users.find(u=>u.uid===selected);
+  if(!user||user.role==="owner")return;
 
- const role=$('role').value;
- const verification=Number($('verification').value);
+  const role=$("role").value;
+  const verification=Number($("verification").value);
 
- if(!['user','moderator','admin'].includes(role)||
-    ![0,1,2,4,5].includes(verification)){
-  toast('Недопустимые значения');
-  return;
- }
+  if(!["user","moderator","admin"].includes(role)||
+     ![0,1,2,3,4,5].includes(verification)){
+    throw Error("Недопустимая роль или верификация.");
+  }
 
- if(!confirm('Сохранить изменения аккаунта '+user.name+'?')){
-  return;
- }
+  if(!confirm("Сохранить изменения аккаунта "+user.name+"?"))return;
 
- $('saveUser').disabled=true;
-
- try{
-  await commitAction(
-   'user.update',
-   selected,
-   {
-    oldRole:user.role||'user',
+  await commit("user.update",selected,{
+    oldRole:user.role||"user",
     newRole:role,
     oldVerification:Number(user.verification||0),
     newVerification:verification
-   },
-   batch=>batch.update(doc(db,'users',selected),{
-    role,verification
-   })
-  );
+  },batch=>{
+    batch.update(doc(db,"users",selected),{role,verification});
+  });
 
-  toast('Аккаунт обновлён');
+  toast("Аккаунт обновлён.");
   closeEditor();
   await loadUsers();
- }catch(error){
-  toast('Ошибка: '+error.message);
- }finally{
-  $('saveUser').disabled=false;
- }
-};
+});
 
 async function loadReports(){
- $('reportsList').textContent='Загрузка...';
+  $("reportsList").textContent="Загрузка...";
+  try{
+    const snap=await getDocs(query(collection(db,"reports"),limit(100)));
+    const items=snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
- try{
-  const snapshot=await getDocs(query(
-   collection(db,'reports'),limit(100)
-  ));
+    $("countPending").textContent=items.filter(
+      r=>r.status==="pending"
+    ).length;
 
-  const items=snapshot.docs.map(d=>({
-   id:d.id,...d.data()
-  })).sort((a,b)=>
-   (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)
-  );
-
-  $('reportsList').innerHTML=items.map(item=>`
-   <div class="item">
-    <div class="item-main">
-     <strong>Жалоба на ${esc(item.kind||'объект')}</strong>
-     <p>${esc(item.reason||'Без причины')}</p>
-     <p class="uid">Объект: ${esc(item.targetId||'')}</p>
-     <p class="uid">Автор жалобы: ${esc(item.reporterId||'')}</p>
-     <span class="pill">${esc(item.status||'pending')}</span>
-     <p class="muted">${esc(timeLabel(item.createdAt))}</p>
-    </div>
-    ${item.status==='pending'?`
-     <div class="actions">
-      <button data-report-close="${esc(item.id)}">
-       Закрыть
-      </button>
-      <button class="danger"
-       data-report-delete="${esc(item.id)}">
-       Удалить публикацию
-      </button>
-     </div>
-    `:''}
-   </div>
-  `).join('')||'<p class="muted">Жалоб пока нет</p>';
-
-  $('countPending').textContent=items.filter(
-   x=>x.status==='pending'
-  ).length;
- }catch(error){
-  $('reportsList').textContent='Ошибка: '+error.message;
- }
+    $("reportsList").innerHTML=items.map(r=>`
+      <div class="item">
+        <div class="item-main">
+          <strong>Жалоба: ${esc(r.kind||"объект")}</strong>
+          <p>${esc(r.reason||"Без причины")}</p>
+          <p class="uid">Объект: ${esc(r.targetId||"")}</p>
+          <p class="uid">Заявитель: ${esc(r.reporterId||"")}</p>
+          <span class="pill">${esc(r.status||"pending")}</span>
+          <p class="muted">${esc(date(r.createdAt))}</p>
+        </div>
+        ${r.status==="pending"?`
+          <div class="actions">
+            <button data-report-close="${esc(r.id)}">Закрыть</button>
+            ${r.kind==="post"?`
+              <button class="danger" data-report-delete="${esc(r.id)}">
+                Удалить публикацию
+              </button>`:""}
+          </div>`:""}
+      </div>
+    `).join("")||'<p class="muted">Жалоб нет.</p>';
+  }catch(e){
+    $("reportsList").textContent="Ошибка: "+e.message;
+  }
 }
 
-$('reloadReports').onclick=loadReports;
+$("reloadReports").onclick=loadReports;
 
-$('reportsList').addEventListener('click',async event=>{
- const close=event.target.closest('[data-report-close]');
- const remove=event.target.closest('[data-report-delete]');
- const id=close?.dataset.reportClose||remove?.dataset.reportDelete;
+$("reportsList").onclick=event=>execute(async()=>{
+  const close=event.target.closest("[data-report-close]");
+  const remove=event.target.closest("[data-report-delete]");
+  const id=close?.dataset.reportClose||remove?.dataset.reportDelete;
+  if(!id||!canManage())return;
 
- if(!id||!canManage())return;
+  const ref=doc(db,"reports",id);
+  const snap=await getDoc(ref);
+  if(!snap.exists()||snap.data().status!=="pending")
+    throw Error("Жалоба уже рассмотрена или удалена.");
 
- try{
-  const ref=doc(db,'reports',id);
-  const snapshot=await getDoc(ref);
-  if(!snapshot.exists())throw Error('Жалоба не найдена');
-
-  const report=snapshot.data();
-  if(report.status!=='pending'){
-   throw Error('Жалоба уже рассмотрена');
-  }
+  const report=snap.data();
 
   if(remove){
-   if(report.kind!=='post'){
-    throw Error('Удаление поддерживается только для публикаций');
-   }
-   if(!confirm('Удалить публикацию? Это действие нельзя отменить.')){
-    return;
-   }
+    if(report.kind!=="post")throw Error("Это не жалоба на публикацию.");
+    if(!confirm("Удалить публикацию? Действие нельзя отменить."))return;
 
-   const postRef=doc(db,'posts',report.targetId);
-   const post=await getDoc(postRef);
+    const postRef=doc(db,"posts",report.targetId);
+    const post=await getDoc(postRef);
 
-   await commitAction(
-    'report.remove_post',id,
-    {postId:report.targetId},
-    batch=>{
-     if(post.exists())batch.delete(postRef);
-     batch.update(ref,{
-      status:'resolved',
-      resolution:'post_removed',
-      reviewedBy:currentUser.uid,
-      reviewedAt:serverTimestamp()
-     });
-    }
-   );
+    await commit("report.remove_post",id,{
+      postId:report.targetId
+    },batch=>{
+      if(post.exists())batch.delete(postRef);
+      batch.update(ref,{
+        status:"resolved",
+        resolution:"post_removed",
+        reviewedBy:currentUser.uid,
+        reviewedAt:serverTimestamp()
+      });
+    });
   }else{
-   await commitAction(
-    'report.dismiss',id,
-    {targetId:report.targetId},
-    batch=>batch.update(ref,{
-     status:'dismissed',
-     reviewedBy:currentUser.uid,
-     reviewedAt:serverTimestamp()
-    })
-   );
+    await commit("report.dismiss",id,{
+      targetId:report.targetId
+    },batch=>{
+      batch.update(ref,{
+        status:"dismissed",
+        reviewedBy:currentUser.uid,
+        reviewedAt:serverTimestamp()
+      });
+    });
   }
 
-  toast('Жалоба рассмотрена');
+  toast("Жалоба рассмотрена.");
   await loadReports();
- }catch(error){
-  toast('Ошибка: '+error.message);
- }
 });
 
 async function loadVerification(){
- $('verificationList').textContent='Загрузка...';
+  $("verificationList").textContent="Загрузка...";
+  try{
+    const snap=await getDocs(query(
+      collection(db,"verificationRequests"),limit(100)
+    ));
 
- try{
-  const snapshot=await getDocs(query(
-   collection(db,'verificationRequests'),
-   limit(100)
-  ));
+    const items=snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
-  const requests=snapshot.docs.map(d=>({
-   id:d.id,...d.data()
-  })).sort((a,b)=>
-   (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)
-  );
-
-  $('verificationList').innerHTML=requests.map(item=>`
-   <div class="item">
-    <div class="item-main">
-     <strong>Заявка на тип ${esc(item.type)}</strong>
-     <p>${esc(item.reason||'')}</p>
-     <p class="uid">UID: ${esc(item.uid||item.id)}</p>
-     <span class="pill">${esc(item.status||'pending')}</span>
-     <p class="muted">${esc(timeLabel(item.createdAt))}</p>
-    </div>
-    ${item.status==='pending'?`
-     <div class="actions">
-      <button class="primary"
-       data-verify-approve="${esc(item.id)}">
-       Одобрить
-      </button>
-      <button data-verify-reject="${esc(item.id)}">
-       Отклонить
-      </button>
-     </div>
-    `:''}
-   </div>
-  `).join('')||'<p class="muted">Заявок пока нет</p>';
- }catch(error){
-  $('verificationList').textContent='Ошибка: '+error.message;
- }
+    $("verificationList").innerHTML=items.map(r=>`
+      <div class="item">
+        <div class="item-main">
+          <strong>${esc(BADGE_NAMES[Number(r.type)]||"Неизвестная категория")}</strong>
+          <p>${esc(r.reason||"")}</p>
+          <p class="uid">UID: ${esc(r.uid||r.id)}</p>
+          <span class="pill">${esc(r.status||"pending")}</span>
+          <p class="muted">${esc(date(r.createdAt))}</p>
+        </div>
+        ${r.status==="pending"?`
+          <div class="actions">
+            <button class="primary" data-verify-approve="${esc(r.id)}">
+              Одобрить
+            </button>
+            <button data-verify-reject="${esc(r.id)}">
+              Отклонить
+            </button>
+          </div>`:""}
+      </div>
+    `).join("")||'<p class="muted">Заявок нет.</p>';
+  }catch(e){
+    $("verificationList").textContent="Ошибка: "+e.message;
+  }
 }
 
-$('reloadVerification').onclick=loadVerification;
+$("reloadVerification").onclick=loadVerification;
 
-$('verificationList').addEventListener('click',async event=>{
- const approve=event.target.closest('[data-verify-approve]');
- const reject=event.target.closest('[data-verify-reject]');
- const id=approve?.dataset.verifyApprove||
-          reject?.dataset.verifyReject;
+$("verificationList").onclick=event=>execute(async()=>{
+  const approve=event.target.closest("[data-verify-approve]");
+  const reject=event.target.closest("[data-verify-reject]");
+  const id=approve?.dataset.verifyApprove||reject?.dataset.verifyReject;
+  if(!id||!canManage())return;
 
- if(!id||!canManage())return;
+  const ref=doc(db,"verificationRequests",id);
+  const snap=await getDoc(ref);
+  if(!snap.exists()||snap.data().status!=="pending")
+    throw Error("Заявка уже рассмотрена.");
 
- try{
-  const ref=doc(db,'verificationRequests',id);
-  const snapshot=await getDoc(ref);
-  if(!snapshot.exists())throw Error('Заявка не найдена');
-
-  const request=snapshot.data();
+  const request=snap.data();
   const target=request.uid||id;
+  const type=Number(request.type);
 
-  if(request.status!=='pending'){
-   throw Error('Заявка уже рассмотрена');
-  }
-
-  if(target===OWNER_UID){
-   throw Error('Статус основателя защищён');
-  }
-
-  if(![1,2].includes(Number(request.type))){
-   throw Error('Недопустимый тип верификации');
-  }
+  if(target===OWNER_UID)throw Error("Аккаунт владельца защищён.");
+  if(![1,2,3,4,5].includes(type))
+    throw Error("Недопустимый тип верификации.");
 
   if(approve){
-   const user=await getDoc(doc(db,'users',target));
-   if(!user.exists())throw Error('Аккаунт не найден');
+    const user=await getDoc(doc(db,"users",target));
+    if(!user.exists())throw Error("Пользователь не найден.");
 
-   if(!confirm('Выдать верификацию этому аккаунту?')){
-    return;
-   }
+    if(!confirm("Выдать значок «"+BADGE_NAMES[type]+"»?"))return;
 
-   await commitAction(
-    'verification.approve',target,
-    {type:Number(request.type),requestId:id},
-    batch=>{
-     batch.update(doc(db,'users',target),{
-      verification:Number(request.type)
-     });
-     batch.update(ref,{
-      status:'approved',
-      reviewedBy:currentUser.uid,
-      reviewedAt:serverTimestamp()
-     });
-    }
-   );
+    await commit("verification.approve",target,{
+      requestId:id,type
+    },batch=>{
+      batch.update(doc(db,"users",target),{verification:type});
+      batch.update(ref,{
+        status:"approved",
+        reviewedBy:currentUser.uid,
+        reviewedAt:serverTimestamp()
+      });
+    });
   }else{
-   await commitAction(
-    'verification.reject',target,
-    {requestId:id},
-    batch=>batch.update(ref,{
-     status:'rejected',
-     reviewedBy:currentUser.uid,
-     reviewedAt:serverTimestamp()
-    })
-   );
+    await commit("verification.reject",target,{
+      requestId:id
+    },batch=>{
+      batch.update(ref,{
+        status:"rejected",
+        reviewedBy:currentUser.uid,
+        reviewedAt:serverTimestamp()
+      });
+    });
   }
 
-  toast('Заявка рассмотрена');
+  toast("Заявка рассмотрена.");
   await loadVerification();
- }catch(error){
-  toast('Ошибка: '+error.message);
- }
 });
 
 async function loadAudit(){
- $('auditList').textContent='Загрузка...';
+  $("auditList").textContent="Загрузка...";
+  try{
+    const snap=await getDocs(query(
+      collection(db,"auditLogs"),limit(100)
+    ));
+    const items=snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
- try{
-  const snapshot=await getDocs(query(
-   collection(db,'auditLogs'),limit(100)
-  ));
-
-  const records=snapshot.docs.map(d=>({
-   id:d.id,...d.data()
-  })).sort((a,b)=>
-   (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)
-  );
-
-  $('auditList').innerHTML=records.map(item=>`
-   <div class="item">
-    <div class="item-main">
-     <strong>${esc(item.action||'Действие')}</strong>
-     <p class="uid">Объект: ${esc(item.targetId||'')}</p>
-     <p class="uid">Исполнитель: ${esc(item.actorId||'')}</p>
-     <p class="muted">${esc(timeLabel(item.createdAt))}</p>
-     <details>
-      <summary>Подробности</summary>
-      <pre style="white-space:pre-wrap;overflow-wrap:anywhere">${
-       esc(JSON.stringify(item.details||{},null,2))
-      }</pre>
-     </details>
-    </div>
-   </div>
-  `).join('')||'<p class="muted">Записей пока нет</p>';
- }catch(error){
-  $('auditList').textContent='Ошибка: '+error.message;
- }
+    $("auditList").innerHTML=items.map(item=>`
+      <div class="item">
+        <div class="item-main">
+          <strong>${esc(item.action||"Действие")}</strong>
+          <p class="uid">Объект: ${esc(item.targetId||"")}</p>
+          <p class="uid">Исполнитель: ${esc(item.actorId||"")}</p>
+          <p class="muted">${esc(date(item.createdAt))}</p>
+          <details>
+            <summary>Подробности</summary>
+            <pre style="white-space:pre-wrap;overflow-wrap:anywhere">${
+              esc(JSON.stringify(item.details||{},null,2))
+            }</pre>
+          </details>
+        </div>
+      </div>
+    `).join("")||'<p class="muted">Записей нет.</p>';
+  }catch(e){
+    $("auditList").textContent="Ошибка: "+e.message;
+  }
 }
 
-$('reloadAudit').onclick=loadAudit;
+$("reloadAudit").onclick=loadAudit;
 </script>
 </body>
 </html>
