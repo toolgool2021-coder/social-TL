@@ -3,964 +3,937 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080d19">
-<title>Сообщения · NEXORA 2.1</title>
-<link rel="icon" href="./image/icon.png">
+<title>Сообщения | NEXORA 2.1</title>
 <style>
 :root{
-  color-scheme:dark;
-  --bg:#080d19;
-  --panel:rgba(19,29,49,.86);
-  --line:rgba(180,205,255,.13);
-  --text:#edf3ff;
-  --muted:#9baac5;
-  --accent:#82a9ff;
+ color-scheme:dark;
+ --bg:#080d19;
+ --panel:#141d31ed;
+ --line:#ffffff20;
+ --text:#edf3ff;
+ --muted:#9baac5;
+ --blue:#82a9ff
 }
 *{box-sizing:border-box}
 body{
-  margin:0;
-  min-height:100dvh;
-  color:var(--text);
-  background:
-    radial-gradient(ellipse at 10% 0%,#315b9b35,transparent 50%),
-    radial-gradient(ellipse at 95% 80%,#6743ac25,transparent 50%),
-    var(--bg);
-  font:14px system-ui,Arial,sans-serif;
+ margin:0;
+ min-height:100dvh;
+ font:14px system-ui,sans-serif;
+ color:var(--text);
+ background:
+ radial-gradient(ellipse at 15% 5%,#315b9b40,transparent 55%),
+ radial-gradient(ellipse at 90% 90%,#6743ac30,transparent 55%),
+ var(--bg)
 }
-button,input{font:inherit}
+button,input,select{font:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
-a{color:#a9c5ff;text-decoration:none}
+a{color:#b3c9ff;text-decoration:none}
 header{
-  height:65px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 max(18px,calc((100vw - 1200px)/2));
-  background:#0c1424e8;
-  border-bottom:1px solid var(--line);
-  backdrop-filter:blur(20px);
+ height:64px;
+ padding:0 max(16px,calc((100vw - 1180px)/2));
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ background:#0c1424ee;
+ border-bottom:1px solid var(--line)
 }
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:19px;
-  font-weight:900;
-}
-.brand img{width:30px;height:30px;object-fit:contain}
-.brand small{
-  color:var(--accent);
-  font-size:10px;
-  letter-spacing:1px;
-}
-main{
-  max-width:1200px;
-  height:calc(100dvh - 90px);
-  min-height:420px;
-  margin:12px auto;
-  padding:0 12px;
-  display:grid;
-  grid-template-columns:320px minmax(0,1fr);
-  gap:14px;
+.brand{font-size:19px;font-weight:900;letter-spacing:.4px}
+.brand span{font-size:10px;color:var(--blue)}
+#layout{
+ max-width:1180px;
+ height:calc(100dvh - 88px);
+ min-height:380px;
+ margin:12px auto;
+ padding:0 12px;
+ display:grid;
+ grid-template-columns:310px minmax(0,1fr);
+ gap:12px
 }
 .glass{
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  min-height:0;
-  overflow:hidden;
-  border:1px solid var(--line);
-  border-radius:20px;
-  background:var(--panel);
-  backdrop-filter:blur(20px);
-  box-shadow:0 12px 35px #0003;
+ display:flex;
+ flex-direction:column;
+ min-width:0;
+ min-height:0;
+ overflow:hidden;
+ background:var(--panel);
+ border:1px solid var(--line);
+ border-radius:19px;
+ backdrop-filter:blur(20px);
+ box-shadow:0 15px 40px #0003
 }
-.head{
-  padding:17px;
-  border-bottom:1px solid var(--line);
-}
+.head{padding:17px;border-bottom:1px solid var(--line)}
 .head h2{margin:0 0 14px}
 input{
-  width:100%;
-  background:#0b1424;
-  color:white;
-  border:1px solid #394861;
-  border-radius:12px;
-  padding:12px;
-  outline:none;
+ width:100%;
+ min-width:0;
+ padding:12px 14px;
+ color:white;
+ background:#0b1424;
+ border:1px solid #394861;
+ border-radius:12px;
+ outline:none
 }
-input:focus{border-color:var(--accent)}
-.scroll{
-  flex:1;
-  min-height:0;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-}
+input:focus{border-color:var(--blue)}
+.scroll{overflow:auto;flex:1;min-height:0}
 .person{
-  width:100%;
-  padding:14px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  border:0;
-  border-bottom:1px solid var(--line);
-  color:var(--text);
-  background:transparent;
-  text-align:left;
-  transition:background .2s;
+ width:100%;
+ display:flex;
+ gap:11px;
+ align-items:center;
+ padding:13px;
+ color:var(--text);
+ background:transparent;
+ border:0;
+ border-bottom:1px solid var(--line);
+ text-align:left
 }
-.person:hover,.person.selected{background:#34466b75}
+.person:hover,.person.active{background:#34466b80}
 .avatar{
-  width:43px;
-  height:43px;
-  flex-shrink:0;
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-  border-radius:15px;
-  background:linear-gradient(135deg,#537cda,#a073d7);
-  font-weight:800;
+ width:43px;
+ height:43px;
+ flex-shrink:0;
+ display:grid;
+ place-items:center;
+ overflow:hidden;
+ border-radius:14px;
+ background:linear-gradient(135deg,#527cda,#a073d7);
+ font-weight:800
 }
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.person-content{min-width:0;flex:1}
-.person-name{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  font-weight:750;
-}
-.person-name img{
-  width:19px;
-  height:19px;
-  object-fit:contain;
-}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.person-info{min-width:0;flex:1}
+.person-name{font-weight:750}
+.person-name img{width:18px;height:18px;vertical-align:middle}
 .preview{
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  margin-top:5px;
-  color:var(--muted);
-  font-size:12px;
+ margin-top:5px;
+ color:var(--muted);
+ font-size:12px;
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis
 }
-.empty{
-  padding:26px 18px;
-  text-align:center;
-  color:var(--muted);
-  line-height:1.6;
+.muted{font-size:12px;color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted);line-height:1.6}
+.chathead{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ padding:14px;
+ min-height:74px;
+ border-bottom:1px solid var(--line)
 }
-.muted{color:var(--muted);font-size:12px}
-.conversation-head{
-  min-height:75px;
-  padding:13px 16px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  border-bottom:1px solid var(--line);
-}
-.peer-info{flex:1;min-width:0}
-.peer-name{font-size:16px;font-weight:800}
-#peerStatus{margin-top:4px}
+#peerInfo{min-width:0;flex:1}
+#peer{font-size:16px;font-weight:800}
+#peerStatus{margin-top:5px}
 .online{color:#78e6b0}
-.typing{color:#9fb6ff}
-.messages{
-  padding:14px 0;
-  display:flex;
-  flex-direction:column;
+.typing{color:#9db5ff}
+#messages{
+ padding:12px 0;
+ display:flex;
+ flex-direction:column
 }
 .bubble{
-  max-width:min(75%,470px);
-  width:max-content;
-  margin:5px 14px;
-  padding:11px 14px;
-  background:#293a59;
-  border:1px solid #ffffff10;
-  border-radius:17px 17px 17px 5px;
-  overflow-wrap:anywhere;
-  white-space:pre-wrap;
-  animation:appear .18s ease;
+ width:max-content;
+ max-width:min(75%,470px);
+ margin:5px 14px;
+ padding:11px 14px;
+ border:1px solid #ffffff12;
+ border-radius:17px 17px 17px 5px;
+ background:#293a59;
+ overflow-wrap:anywhere;
+ white-space:pre-wrap;
+ animation:rise .2s ease
 }
 .bubble.mine{
-  margin-left:auto;
-  border-radius:17px 17px 5px 17px;
-  background:linear-gradient(135deg,#485ec0,#6959b7);
+ margin-left:auto;
+ border-radius:17px 17px 5px 17px;
+ background:linear-gradient(135deg,#465fc0,#705cb6)
 }
 .bubble small{
-  display:block;
-  margin-top:7px;
-  text-align:right;
-  font-size:10px;
-  opacity:.75;
-}
-.sticker-image{
-  width:140px;
-  height:140px;
-  max-width:100%;
-  object-fit:contain;
+ display:block;
+ margin-top:7px;
+ text-align:right;
+ opacity:.75;
+ font-size:10px
 }
 .bubble.sticker{
-  background:transparent;
-  border:0;
-  padding:4px;
+ padding:5px;
+ border:0;
+ background:transparent
+}
+.sticker img{
+ width:150px;
+ height:150px;
+ max-width:100%;
+ object-fit:contain
 }
 .compose-wrap{
-  position:relative;
-  border-top:1px solid var(--line);
+ position:relative;
+ border-top:1px solid var(--line)
 }
-.compose{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:12px;
+#form{
+ display:flex;
+ align-items:center;
+ gap:8px;
+ padding:12px
 }
-.compose input{flex:1;min-width:0}
-.action{
-  border:1px solid #40506d;
-  background:#1b2940;
-  color:#dbe6ff;
-  padding:11px 13px;
-  border-radius:12px;
+#message{flex:1}
+.action,.primary{
+ padding:11px 14px;
+ border-radius:12px;
+ color:#eaf1ff;
+ border:1px solid #40506d;
+ background:#20304c
 }
 .primary{
-  border:0;
-  border-radius:12px;
-  background:linear-gradient(120deg,#4779eb,#8b74ef);
-  color:white;
-  padding:12px 17px;
-  font-weight:700;
+ border:0;
+ background:linear-gradient(120deg,#4779eb,#8b74ef);
+ font-weight:750
 }
 #stickerPanel{
-  position:absolute;
-  bottom:calc(100% + 5px);
-  left:10px;
-  width:min(360px,calc(100vw - 40px));
-  max-height:310px;
-  display:flex;
-  flex-direction:column;
-  border:1px solid #526487;
-  border-radius:16px;
-  background:#17243c;
-  box-shadow:0 15px 45px #0009;
-  overflow:hidden;
-  z-index:5;
+ position:absolute;
+ bottom:calc(100% + 5px);
+ left:10px;
+ z-index:5;
+ width:min(360px,calc(100vw - 40px));
+ max-height:340px;
+ display:flex;
+ flex-direction:column;
+ overflow:hidden;
+ border:1px solid #526487;
+ border-radius:15px;
+ background:#17243c;
+ box-shadow:0 15px 45px #0009
 }
-#stickerPanel[hidden]{display:none}
-.sticker-top{
-  padding:12px;
-  display:flex;
-  gap:8px;
-  border-bottom:1px solid var(--line);
+[hidden]{display:none!important}
+.sticker-head{
+ display:flex;
+ gap:8px;
+ padding:12px;
+ border-bottom:1px solid var(--line)
 }
-.sticker-top select{
-  flex:1;
-  background:#0b1424;
-  border:1px solid #394861;
-  color:white;
-  border-radius:9px;
-  padding:8px;
+.sticker-head select{
+ flex:1;
+ min-width:0;
+ color:white;
+ background:#0b1424;
+ border:1px solid #394861;
+ border-radius:9px;
+ padding:8px
 }
-.sticker-grid{
-  overflow:auto;
-  padding:10px;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:7px;
+#stickerGrid{
+ overflow:auto;
+ padding:10px;
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:8px
 }
-.sticker-grid button{
-  padding:5px;
-  border:1px solid transparent;
-  background:#ffffff08;
-  border-radius:12px;
+#stickerGrid button{
+ padding:5px;
+ background:#ffffff09;
+ border:1px solid transparent;
+ border-radius:10px
 }
-.sticker-grid button:hover{border-color:#829cff}
-.sticker-grid img{
-  width:100%;
-  aspect-ratio:1;
-  object-fit:contain;
-}
+#stickerGrid button:hover{border-color:var(--blue)}
+#stickerGrid img{width:100%;aspect-ratio:1;object-fit:contain}
 #error{
-  padding:12px;
-  color:#ffc4c4;
-  background:#7a273030;
-  font-size:12px;
+ padding:12px;
+ color:#ffb9c0;
+ background:#7a273035;
+ font-size:12px
 }
-#error[hidden]{display:none}
 #back{display:none}
-@keyframes appear{
-  from{opacity:0;transform:translateY(6px)}
-  to{opacity:1;transform:translateY(0)}
+@keyframes rise{
+ from{opacity:0;transform:translateY(6px)}
+ to{opacity:1;transform:translateY(0)}
 }
 @media(max-width:650px){
-  header{padding:0 14px}
-  main{
-    display:block;
-    height:calc(100dvh - 79px);
-    margin:7px auto;
-    padding:0 7px;
-  }
-  .glass{height:100%}
-  main:not(.open) #conversation,
-  main.open #sidebar{display:none}
-  #back{display:block}
-  .bubble{max-width:85%}
+ header{padding:0 14px}
+ #layout{
+  display:block;
+  height:calc(100dvh - 78px);
+  margin:7px auto;
+  padding:0 7px
+ }
+ .glass{height:100%}
+ #layout:not(.open) #conversation,
+ #layout.open #sidebar{display:none}
+ #back{display:block}
+ .bubble{max-width:85%}
 }
 @media(prefers-reduced-motion:reduce){
-  .bubble{animation:none}
+ .bubble{animation:none}
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand">
-    <img src="./image/icon.png" alt="">
-    <span>NEXORA <small>2.1</small></span>
-  </div>
-  <a href="./index.html">← Главная</a>
+ <div class="brand">NEXORA <span>2.1</span></div>
+ <a href="./index.html">← Главная</a>
 </header>
 
 <main id="layout">
-  <section id="sidebar" class="glass">
-    <div class="head">
-      <h2>Сообщения</h2>
-      <input id="search" placeholder="Поиск пользователей"
-        autocomplete="off">
-      <p class="muted">Найди человека и начни диалог</p>
-    </div>
-    <div id="people" class="scroll"></div>
-    <div class="head">
-      <b>Мои диалоги</b>
-    </div>
-    <div id="chats" class="scroll"></div>
-  </section>
+ <section id="sidebar" class="glass">
+  <div class="head">
+   <h2>Сообщения</h2>
+   <input id="search" placeholder="Поиск пользователей">
+  </div>
+  <div id="people" class="scroll"></div>
+  <div class="head"><b>Мои диалоги</b></div>
+  <div id="chats" class="scroll"></div>
+ </section>
 
-  <section id="conversation" class="glass">
-    <div class="conversation-head">
-      <button id="back" class="action">←</button>
-      <div id="peerAvatar" class="avatar">N</div>
-      <div class="peer-info">
-        <div id="peer" class="peer-name">
-          Выбери собеседника
-        </div>
-        <div id="peerStatus" class="muted">
-          Сообщения доступны участникам диалога
-        </div>
-      </div>
+ <section id="conversation" class="glass">
+  <div class="chathead">
+   <button id="back" class="action">←</button>
+   <div id="peerAvatar" class="avatar">N</div>
+   <div id="peerInfo">
+    <div id="peer">Выбери собеседника</div>
+    <div id="peerStatus" class="muted">
+     Сообщения доступны участникам диалога
     </div>
+   </div>
+  </div>
 
-    <div id="error" hidden></div>
+  <div id="error" hidden></div>
 
-    <div id="messages" class="scroll messages">
-      <div class="empty">
-        Выбери диалог, чтобы начать общение
-      </div>
+  <div id="messages" class="scroll">
+   <div class="empty">Выбери диалог для общения</div>
+  </div>
+
+  <div class="compose-wrap">
+   <div id="stickerPanel" hidden>
+    <div class="sticker-head">
+     <select id="stickerPack"></select>
+     <button id="closeStickers" class="action">✕</button>
     </div>
+    <div id="stickerGrid"></div>
+   </div>
 
-    <div class="compose-wrap">
-      <div id="stickerPanel" hidden>
-        <div class="sticker-top">
-          <select id="stickerPack"></select>
-          <button id="closeStickers" class="action">✕</button>
-        </div>
-        <div id="stickerGrid" class="sticker-grid"></div>
-      </div>
-
-      <form id="form" class="compose">
-        <button type="button" id="stickers"
-          class="action" disabled>☺</button>
-        <input id="message" maxlength="2000"
-          placeholder="Написать сообщение..."
-          autocomplete="off" disabled>
-        <button id="send" class="primary" disabled>➤</button>
-      </form>
-    </div>
-  </section>
+   <form id="form">
+    <button type="button" id="stickers"
+      class="action" disabled>☺</button>
+    <input id="message" maxlength="2000"
+      placeholder="Сообщение..." disabled>
+    <button id="send" class="primary" disabled>➤</button>
+   </form>
+  </div>
+ </section>
 </main>
 
 <script type="module">
 import {initializeApp} from
 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
-
 import {getAuth,onAuthStateChanged} from
 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-
 import {
-  getFirestore,collection,doc,getDocs,getDoc,
-  query,where,limit,orderBy,onSnapshot,
-  writeBatch,serverTimestamp,setDoc,updateDoc
+ getFirestore,collection,doc,getDoc,getDocs,
+ query,where,limit,orderBy,onSnapshot,
+ writeBatch,serverTimestamp,setDoc
 } from
 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
-const firebaseConfig={
-  apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
-  authDomain:'toolchat-bfac8.firebaseapp.com',
-  projectId:'toolchat-bfac8',
-  storageBucket:'toolchat-bfac8.firebasestorage.app',
-  messagingSenderId:'52396840735',
-  appId:'1:52396840735:web:a608b9c037c8481f2dc22a'
+const cfg={
+ apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
+ authDomain:'toolchat-bfac8.firebaseapp.com',
+ projectId:'toolchat-bfac8',
+ storageBucket:'toolchat-bfac8.firebasestorage.app',
+ messagingSenderId:'52396840735',
+ appId:'1:52396840735:web:a608b9c037c8481f2dc22a'
 };
 
-const app=initializeApp(firebaseConfig);
+const app=initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
 const $=id=>document.getElementById(id);
 
 let me=null;
 let users={};
-let active=null;
+let activeUid=null;
 let stopMessages=null;
 let stopChats=null;
-let stopTyping=null;
 let stopPresence=null;
+let stopTyping=null;
+let currentMessages=[];
 let typingTimeout=null;
 let typingActive=false;
-let currentMessages=[];
-let readInProgress=false;
+let reading=false;
+let chatGeneration=0;
+let peerOnline=false;
+let peerTyping=false;
 
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
-  '&':'&amp;',
-  '<':'&lt;',
-  '>':'&gt;',
-  '"':'&quot;',
-  "'":'&#39;'
-}[c]));
+const escapeHTML=value=>String(value??'').replace(
+ /[&<>"']/g,
+ c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;',
+  '"':'&quot;',"'":'&#39;'
+ })[c]
+);
 
-const chatId=(a,b)=>[a,b].sort().join('_');
-
-function errorMessage(message){
-  $('error').hidden=false;
-  $('error').textContent=message;
-}
-
-function clearError(){
-  $('error').hidden=true;
-  $('error').textContent='';
-}
-
-function avatarHTML(user){
-  const url=safeImage(user?.avatarUrl);
-
-  return url
-    ? `<img src="${esc(url)}" alt="">`
-    : esc((user?.name||'N').slice(0,2).toUpperCase());
+function chatId(a,b){
+ return [a,b].sort().join('_');
 }
 
 function safeImage(url){
-  try{
-    const parsed=new URL(url);
-    return parsed.protocol==='https:'?parsed.href:'';
-  }catch{return ''}
+ try{
+  const parsed=new URL(url);
+  return parsed.protocol==='https:'?parsed.href:'';
+ }catch{return ''}
 }
 
-function badgeHTML(user){
-  const n=Number(user?.verification||0);
-  return n>=1&&n<=5
-    ? `<img src="./image/Verified_${n}.png"
-         alt="Верификация">`
-    :'';
+function avatar(user){
+ const url=safeImage(user?.avatarUrl);
+ return url
+  ?`<img src="${escapeHTML(url)}" alt="">`
+  :escapeHTML((user?.name||'N').slice(0,2).toUpperCase());
 }
 
-function personRow(uid,subtitle=''){
-  const user=users[uid]||{};
+function badge(user){
+ const v=Number(user?.verification||0);
+ return v>=1&&v<=5
+  ?`<img src="./image/Verified_${v}.png" alt="✓">`
+  :'';
+}
 
-  return `
-    <button type="button" class="person"
-      data-user="${esc(uid)}">
-      <span class="avatar">${avatarHTML(user)}</span>
-      <span class="person-content">
-        <span class="person-name">
-          ${esc(user.name||'Пользователь')}
-          ${badgeHTML(user)}
-        </span>
-        <span class="preview">${esc(subtitle)}</span>
-      </span>
-    </button>
-  `;
+function personRow(uid,preview=''){
+ const user=users[uid]||{};
+ return `
+  <button class="person" data-user="${escapeHTML(uid)}">
+   <span class="avatar">${avatar(user)}</span>
+   <span class="person-info">
+    <span class="person-name">
+     ${escapeHTML(user.name||'Пользователь')}
+     ${badge(user)}
+    </span>
+    <div class="preview">${escapeHTML(preview)}</div>
+   </span>
+  </button>
+ `;
+}
+
+function showError(message){
+ $('error').hidden=false;
+ $('error').textContent=message;
+}
+
+function clearError(){
+ $('error').hidden=true;
+ $('error').textContent='';
 }
 
 function searchUsers(){
-  if(!me)return;
+ if(!me)return;
 
-  const term=$('search').value.toLowerCase().trim();
+ const term=$('search').value.toLowerCase().trim();
 
-  $('people').innerHTML=term
-    ?Object.keys(users)
-      .filter(uid=>
-        uid!==me.uid&&
-        users[uid].name?.toLowerCase().includes(term)
-      )
-      .slice(0,20)
-      .map(uid=>personRow(uid,'Написать сообщение'))
-      .join('')||
-      '<div class="empty">Не найдено</div>'
-    :'';
+ if(!term){
+  $('people').innerHTML='';
+  return;
+ }
+
+ const matches=Object.keys(users)
+  .filter(uid=>
+   uid!==me.uid &&
+   (users[uid].name||'').toLowerCase().includes(term)
+  )
+  .slice(0,30);
+
+ $('people').innerHTML=matches.map(
+  uid=>personRow(uid,'Начать диалог')
+ ).join('')||'<div class="empty">Ничего не найдено</div>';
 }
 
 $('search').oninput=searchUsers;
 
 document.addEventListener('click',event=>{
-  const person=event.target.closest('[data-user]');
-  if(person)openChat(person.dataset.user);
+ const button=event.target.closest('[data-user]');
+ if(button)openChat(button.dataset.user);
 });
 
-$('back').onclick=()=>{
-  $('layout').classList.remove('open');
-  $('stickerPanel').hidden=true;
-};
+function updatePeerStatus(){
+ if(!activeUid)return;
 
-function stopActiveListeners(){
-  stopMessages?.();
-  stopTyping?.();
-  stopPresence?.();
+ const element=$('peerStatus');
 
-  stopMessages=null;
-  stopTyping=null;
-  stopPresence=null;
+ if(peerTyping){
+  element.textContent='Печатает...';
+  element.className='muted typing';
+ }else if(peerOnline){
+  element.textContent='● Недавно был активен';
+  element.className='muted online';
+ }else{
+  element.textContent='○ Не в сети';
+  element.className='muted';
+ }
+}
 
-  clearTimeout(typingTimeout);
-  typingActive=false;
-  currentMessages=[];
+function stopActive(){
+ stopMessages?.();
+ stopPresence?.();
+ stopTyping?.();
+
+ stopMessages=null;
+ stopPresence=null;
+ stopTyping=null;
+
+ clearTimeout(typingTimeout);
+ typingActive=false;
+ peerOnline=false;
+ peerTyping=false;
+ currentMessages=[];
+ chatGeneration++;
 }
 
 async function openChat(uid){
-  if(!me||uid===me.uid)return;
+ if(!me||uid===me.uid)return;
 
-  if(!users[uid]){
-    try{
-      const snapshot=await getDoc(doc(db,'users',uid));
-      if(!snapshot.exists())return;
-      users[uid]=snapshot.data();
-    }catch(error){
-      errorMessage(error.message);
-      return;
-    }
+ stopActive();
+ activeUid=uid;
+ const generation=chatGeneration;
+
+ clearError();
+
+ if(!users[uid]){
+  try{
+   const snapshot=await getDoc(doc(db,'users',uid));
+
+   if(!snapshot.exists())throw Error('Пользователь не найден');
+   if(generation!==chatGeneration)return;
+
+   users[uid]=snapshot.data();
+  }catch(error){
+   showError(error.message);
+   return;
   }
+ }
 
-  stopActiveListeners();
+ $('layout').classList.add('open');
+ $('peer').textContent=users[uid].name||'Пользователь';
+ $('peerAvatar').innerHTML=avatar(users[uid]);
+ $('messages').innerHTML=
+  '<div class="empty">Загрузка сообщений...</div>';
 
-  active=uid;
-  clearError();
+ $('message').disabled=false;
+ $('send').disabled=false;
+ $('stickers').disabled=false;
 
-  $('layout').classList.add('open');
-  $('peer').textContent=users[uid].name||'Пользователь';
-  $('peerAvatar').innerHTML=avatarHTML(users[uid]);
-  $('peerStatus').textContent='Проверка статуса...';
-  $('message').disabled=false;
-  $('send').disabled=false;
-  $('stickers').disabled=false;
-  $('messages').innerHTML=
-    '<div class="empty">Загрузка сообщений...</div>';
+ const id=chatId(me.uid,uid);
 
-  const id=chatId(me.uid,uid);
+ stopPresence=onSnapshot(
+  doc(db,'presence',uid),
+  snapshot=>{
+   if(generation!==chatGeneration)return;
 
-  stopPresence=onSnapshot(
-    doc(db,'presence',uid),
-    snapshot=>{
-      if(active!==uid)return;
+   const lastSeen=snapshot.data()?.lastSeen?.toMillis?.();
 
-      const seen=snapshot.data()?.lastSeen?.toMillis?.();
-      const online=seen&&Date.now()-seen<120000;
+   peerOnline=Boolean(
+    lastSeen && Math.abs(Date.now()-lastSeen)<120000
+   );
 
-      $('peerStatus').textContent=online
-        ?'● Недавно был активен'
-        :'○ Не в сети';
+   updatePeerStatus();
+  },
+  ()=>{}
+ );
 
-      $('peerStatus').className=online
-        ?'muted online':'muted';
-    },
-    ()=>{
-      $('peerStatus').textContent='Статус недоступен';
-    }
-  );
+ // Отсутствующий документ набора не считается ошибкой.
+ stopTyping=onSnapshot(
+  doc(db,'chats',id,'typing',uid),
+  snapshot=>{
+   if(generation!==chatGeneration)return;
 
-  stopTyping=onSnapshot(
-    doc(db,'chats',id,'typing',uid),
-    snapshot=>{
-      if(active!==uid)return;
+   const data=snapshot.data();
+   const last=data?.updatedAt?.toMillis?.()||0;
 
-      const data=snapshot.data();
-      const updated=data?.updatedAt?.toMillis?.()||0;
+   peerTyping=Boolean(
+    data?.typing &&
+    last &&
+    Math.abs(Date.now()-last)<10000
+   );
 
-      if(data?.typing&&Date.now()-updated<10000){
-        $('peerStatus').textContent='Печатает...';
-        $('peerStatus').className='muted typing';
-      }
-    },
-    error=>console.warn('Typing:',error.message)
-  );
+   updatePeerStatus();
+  },
+  error=>console.warn('Typing:',error.message)
+ );
 
-  stopMessages=onSnapshot(
-    query(
-      collection(db,'chats',id,'messages'),
-      orderBy('createdAt','asc'),
-      limit(200)
-    ),
-    snapshot=>{
-      if(active!==uid)return;
+ stopMessages=onSnapshot(
+  query(
+   collection(db,'chats',id,'messages'),
+   orderBy('createdAt','asc'),
+   limit(200)
+  ),
+  snapshot=>{
+   if(generation!==chatGeneration)return;
 
-      currentMessages=snapshot.docs.map(item=>({
-        id:item.id,
-        ...item.data()
-      }));
+   currentMessages=snapshot.docs.map(item=>({
+    id:item.id,
+    ...item.data()
+   }));
 
-      renderMessages();
-      markRead(id,uid);
-    },
-    error=>errorMessage(
-      'Ошибка загрузки сообщений: '+error.message
-    )
-  );
+   renderMessages();
+   markRead(id,uid);
+  },
+  error=>showError(
+   'Не удалось загрузить переписку: '+error.message
+  )
+ );
+}
+
+function stickerSource(key){
+ if(typeof key!=='string')return '';
+
+ const parts=key.split('/');
+ if(parts.length!==2)return '';
+
+ const pack=STICKER_PACKS.find(p=>p.id===parts[0]);
+
+ if(!pack||!pack.files.includes(parts[1])){
+  return '';
+ }
+
+ return './image/stic/'+parts[0]+'/'+parts[1];
 }
 
 function renderMessages(){
-  const element=$('messages');
+ const box=$('messages');
 
-  element.innerHTML=currentMessages.map(message=>{
-    const mine=message.senderId===me.uid;
+ box.innerHTML=currentMessages.map(message=>{
+  const mine=message.senderId===me.uid;
 
-    const date=message.createdAt?.toDate?.()
-      .toLocaleTimeString('ru-RU',{
-        hour:'2-digit',
-        minute:'2-digit'
-      })||'';
+  const time=message.createdAt?.toDate?.()
+   .toLocaleTimeString('ru-RU',{
+    hour:'2-digit',
+    minute:'2-digit'
+   })||'';
 
-    let content='';
+  const isSticker=message.type==='sticker';
+  const src=isSticker?stickerSource(message.sticker):'';
 
-    if(message.type==='sticker'){
-      const src=stickerSource(message.sticker);
+  const content=isSticker
+   ?src
+    ?`<img src="${escapeHTML(src)}" alt="Стикер">`
+    :'<span>Стикер недоступен</span>'
+   :escapeHTML(message.text||'');
 
-      content=src
-        ?`<img class="sticker-image"
-            src="${esc(src)}" alt="Стикер">`
-        :'<span>Стикер недоступен</span>';
-    }else{
-      content=esc(message.text||'');
-    }
+  const status=mine
+   ?message.readAt?' · Прочитано':' · Отправлено'
+   :'';
 
-    const read=mine
-      ?message.readAt?' · Прочитано':' · Отправлено'
-      :'';
+  return `
+   <div class="bubble
+    ${mine?'mine':''}
+    ${isSticker?'sticker':''}">
+    ${content}
+    <small>${escapeHTML(time+status)}</small>
+   </div>
+  `;
+ }).join('')||
+ '<div class="empty">Сообщений пока нет</div>';
 
-    return `
-      <div class="bubble
-        ${mine?'mine':''}
-        ${message.type==='sticker'?'sticker':''}">
-        ${content}
-        <small>${esc(date+read)}</small>
-      </div>
-    `;
-  }).join('')||
-  '<div class="empty">Сообщений пока нет</div>';
-
-  element.scrollTop=element.scrollHeight;
+ box.scrollTop=box.scrollHeight;
 }
 
 async function markRead(id,peerUid){
-  if(readInProgress||!me||active!==peerUid)return;
+ if(reading||!me||activeUid!==peerUid)return;
 
-  const unread=currentMessages.filter(message=>
-    message.senderId===peerUid&&!message.readAt
-  );
+ const unread=currentMessages.filter(message=>
+  message.senderId===peerUid&&!message.readAt
+ );
 
-  if(!unread.length)return;
+ if(!unread.length)return;
 
-  readInProgress=true;
+ reading=true;
 
-  try{
-    const batch=writeBatch(db);
+ try{
+  // Не более 200 сообщений за один пакет.
+  const batch=writeBatch(db);
 
-    unread.forEach(message=>{
-      batch.update(
-        doc(db,'chats',id,'messages',message.id),
-        {readAt:serverTimestamp()}
-      );
-    });
+  unread.forEach(message=>{
+   batch.update(
+    doc(db,'chats',id,'messages',message.id),
+    {readAt:serverTimestamp()}
+   );
+  });
 
-    await batch.commit();
-  }catch(error){
-    console.warn('Read receipts:',error.message);
-  }finally{
-    readInProgress=false;
-  }
+  await batch.commit();
+ }catch(error){
+  console.warn('Read receipts:',error.message);
+ }finally{
+  reading=false;
+ }
+}
+
+async function ensureChat(uid){
+ const id=chatId(me.uid,uid);
+ const ref=doc(db,'chats',id);
+ const snapshot=await getDoc(ref);
+
+ if(!snapshot.exists()){
+  await setDoc(ref,{
+   participants:[me.uid,uid].sort(),
+   updatedAt:serverTimestamp(),
+   lastText:''
+  });
+ }
+
+ return id;
 }
 
 async function sendMessage(payload){
-  if(!me||!active)return;
+ if(!me||!activeUid)return;
 
-  const uid=active;
-  const id=chatId(me.uid,uid);
-  const batch=writeBatch(db);
+ const uid=activeUid;
+ const id=await ensureChat(uid);
 
-  const preview=payload.type==='sticker'
-    ?'Стикер'
-    :payload.text.slice(0,100);
+ if(activeUid!==uid)return;
 
-  batch.set(
-    doc(db,'chats',id),
-    {
-      participants:[me.uid,uid].sort(),
-      updatedAt:serverTimestamp(),
-      lastText:preview
-    },
-    {merge:true}
-  );
+ const batch=writeBatch(db);
 
-  batch.set(
-    doc(collection(db,'chats',id,'messages')),
-    {
-      senderId:me.uid,
-      type:payload.type||'text',
-      text:payload.text||'',
-      sticker:payload.sticker||'',
-      createdAt:serverTimestamp()
-    }
-  );
+ const preview=payload.type==='sticker'
+  ?'Стикер'
+  :payload.text.slice(0,100);
 
-  await batch.commit();
+ batch.set(
+  doc(db,'chats',id),
+  {
+   participants:[me.uid,uid].sort(),
+   updatedAt:serverTimestamp(),
+   lastText:preview
+  },
+  {merge:true}
+ );
+
+ batch.set(
+  doc(collection(db,'chats',id,'messages')),
+  {
+   senderId:me.uid,
+   type:payload.type||'text',
+   text:payload.text||'',
+   sticker:payload.sticker||'',
+   createdAt:serverTimestamp()
+  }
+ );
+
+ await batch.commit();
 }
 
 $('form').onsubmit=async event=>{
-  event.preventDefault();
+ event.preventDefault();
 
-  const value=$('message').value.trim();
-  if(!value||value.length>2000)return;
+ const text=$('message').value.trim();
+ if(!text||text.length>2000)return;
 
-  $('send').disabled=true;
+ $('send').disabled=true;
 
-  try{
-    await sendMessage({type:'text',text:value});
-    $('message').value='';
-    await setTyping(false);
-  }catch(error){
-    errorMessage('Не удалось отправить: '+error.message);
-  }finally{
-    $('send').disabled=false;
-  }
+ try{
+  await sendMessage({type:'text',text});
+  $('message').value='';
+  await setTyping(false);
+ }catch(error){
+  showError('Ошибка отправки: '+error.message);
+ }finally{
+  $('send').disabled=false;
+ }
 };
 
 async function setTyping(value){
-  if(!me||!active)return;
+ if(!me||!activeUid)return;
+ if(typingActive===value)return;
 
-  if(typingActive===value)return;
-  typingActive=value;
+ const uid=activeUid;
+ typingActive=value;
 
-  const id=chatId(me.uid,active);
+ try{
+  const id=await ensureChat(uid);
 
-  try{
-    await setDoc(
-      doc(db,'chats',id,'typing',me.uid),
-      {
-        uid:me.uid,
-        typing:value,
-        updatedAt:serverTimestamp()
-      }
-    );
-  }catch(error){
-    console.warn('Typing:',error.message);
-  }
+  if(activeUid!==uid)return;
+
+  await setDoc(
+   doc(db,'chats',id,'typing',me.uid),
+   {
+    uid:me.uid,
+    typing:value,
+    updatedAt:serverTimestamp()
+   }
+  );
+ }catch(error){
+  typingActive=false;
+  console.warn('Typing:',error.message);
+ }
 }
 
 $('message').addEventListener('input',()=>{
-  if(!active)return;
+ if(!activeUid)return;
 
-  setTyping(Boolean($('message').value.trim()));
+ setTyping(Boolean($('message').value.trim()));
 
-  clearTimeout(typingTimeout);
-  typingTimeout=setTimeout(()=>{
-    setTyping(false);
-  },2500);
+ clearTimeout(typingTimeout);
+
+ typingTimeout=setTimeout(()=>{
+  setTyping(false);
+ },2500);
 });
 
-/*
-  Стикерпаки NEXORA.
+$('back').onclick=()=>{
+ $('layout').classList.remove('open');
+ $('stickerPanel').hidden=true;
+};
 
-  Для добавления стикеров:
-  1. Создай папку image/stic/packname/
-  2. Добавь PNG/WebP-файлы.
-  3. Укажи имена файлов в массиве ниже.
-
-  Встроенный пример:
-  image/stic/kemomimiori/1.webp
-  image/stic/kemomimiori/2.webp
-
-  Файлы должны реально существовать.
-*/
-
+// Список файлов должен совпадать с файлами в репозитории.
+// Пока реальных файлов нет, список оставлен пустым.
 const STICKER_PACKS=[
-  {
-    id:'kemomimiori',
-    title:'Kemomimiori',
-    files:[
-      '1.webp',
-      '2.webp',
-      '3.webp',
-      '4.webp',
-      '5.webp',
-      '6.webp'
-    ]
-  }
+ {
+  id:'kemomimiori',
+  title:'Kemomimiori',
+  files:[]
+ }
 ];
 
-function stickerSource(value){
-  if(typeof value!=='string')return '';
-
-  const [packId,file]=value.split('/');
-
-  const pack=STICKER_PACKS.find(
-    item=>item.id===packId
-  );
-
-  if(!pack||!pack.files.includes(file))return '';
-
-  return './image/stic/'+packId+'/'+file;
-}
-
 function renderStickerPacks(){
-  $('stickerPack').innerHTML=STICKER_PACKS.map(pack=>
-    `<option value="${esc(pack.id)}">
-      ${esc(pack.title)}
-    </option>`
-  ).join('');
+ $('stickerPack').innerHTML=STICKER_PACKS.map(pack=>`
+  <option value="${escapeHTML(pack.id)}">
+   ${escapeHTML(pack.title)}
+  </option>
+ `).join('');
 
-  renderStickers();
+ renderStickers();
 }
 
 function renderStickers(){
-  const pack=STICKER_PACKS.find(
-    item=>item.id===$('stickerPack').value
-  );
+ const pack=STICKER_PACKS.find(
+  p=>p.id===$('stickerPack').value
+ );
 
-  $('stickerGrid').innerHTML=pack
-    ?pack.files.map(file=>{
-      const key=pack.id+'/'+file;
-      const src=stickerSource(key);
+ if(!pack||!pack.files.length){
+  $('stickerGrid').innerHTML=
+   '<p class="muted">Стикеры пока не загружены</p>';
+  return;
+ }
 
-      return `
-        <button type="button"
-          data-sticker="${esc(key)}"
-          title="Отправить стикер">
-          <img src="${esc(src)}"
-            loading="lazy"
-            alt="Стикер"
-            onerror="this.parentElement.hidden=true">
-        </button>
-      `;
-    }).join('')
-    :'<p class="muted">Нет стикеров</p>';
+ $('stickerGrid').innerHTML=pack.files.map(file=>{
+  const key=pack.id+'/'+file;
+  const src=stickerSource(key);
+
+  return `
+   <button type="button" data-sticker="${escapeHTML(key)}">
+    <img src="${escapeHTML(src)}"
+     alt="Стикер" loading="lazy">
+   </button>
+  `;
+ }).join('');
 }
 
 $('stickerPack').onchange=renderStickers;
 
 $('stickers').onclick=()=>{
-  $('stickerPanel').hidden=!$('stickerPanel').hidden;
+ $('stickerPanel').hidden=!$('stickerPanel').hidden;
 };
 
 $('closeStickers').onclick=()=>{
-  $('stickerPanel').hidden=true;
+ $('stickerPanel').hidden=true;
 };
 
 $('stickerGrid').addEventListener('click',async event=>{
-  const button=event.target.closest('[data-sticker]');
-  if(!button||!active)return;
+ const button=event.target.closest('[data-sticker]');
+ if(!button||!activeUid)return;
 
-  button.disabled=true;
+ button.disabled=true;
 
-  try{
-    await sendMessage({
-      type:'sticker',
-      sticker:button.dataset.sticker
-    });
+ try{
+  await sendMessage({
+   type:'sticker',
+   sticker:button.dataset.sticker
+  });
 
-    $('stickerPanel').hidden=true;
-  }catch(error){
-    errorMessage('Ошибка отправки стикера: '+error.message);
-  }finally{
-    button.disabled=false;
-  }
+  $('stickerPanel').hidden=true;
+ }catch(error){
+  showError('Ошибка стикера: '+error.message);
+ }finally{
+  button.disabled=false;
+ }
 });
 
 renderStickerPacks();
 
 onAuthStateChanged(auth,async user=>{
-  stopChats?.();
-  stopChats=null;
+ stopChats?.();
+ stopChats=null;
 
-  stopActiveListeners();
-  active=null;
-  me=user;
+ stopActive();
+ activeUid=null;
+ me=user;
 
-  if(!user){
-    document.querySelector('main').innerHTML=`
-      <section class="glass" style="padding:25px">
-        <h2>Войди в аккаунт</h2>
-        <p>Для сообщений нужна авторизация.</p>
-        <a href="./index.html">Перейти на главную</a>
-      </section>
-    `;
-    return;
+ if(!user){
+  $('layout').innerHTML=`
+   <section class="glass" style="padding:25px">
+    <h2>Требуется вход</h2>
+    <p>Авторизуйся для просмотра сообщений.</p>
+    <a href="./index.html">На главную</a>
+   </section>
+  `;
+  return;
+ }
+
+ try{
+  const snapshot=await getDocs(query(
+   collection(db,'users'),
+   limit(200)
+  ));
+
+  if(auth.currentUser?.uid!==user.uid)return;
+
+  users={};
+
+  snapshot.forEach(item=>{
+   users[item.id]=item.data();
+  });
+
+  searchUsers();
+
+  const requested=new URLSearchParams(
+   location.search
+  ).get('user');
+
+  if(requested&&requested!==user.uid){
+   await openChat(requested);
   }
 
-  try{
-    const snapshot=await getDocs(
-      query(collection(db,'users'),limit(200))
+  stopChats=onSnapshot(
+   query(
+    collection(db,'chats'),
+    where('participants','array-contains',user.uid),
+    limit(100)
+   ),
+   snapshot=>{
+    const records=snapshot.docs.sort((a,b)=>
+     (b.data().updatedAt?.seconds||0)-
+     (a.data().updatedAt?.seconds||0)
     );
 
-    if(auth.currentUser?.uid!==user.uid)return;
+    $('chats').innerHTML=records.map(item=>{
+     const data=item.data();
 
-    users={};
+     const other=data.participants?.find(
+      uid=>uid!==user.uid
+     );
 
-    snapshot.forEach(item=>{
-      users[item.id]=item.data();
-    });
-
-    searchUsers();
-
-    const requested=new URLSearchParams(
-      location.search
-    ).get('user');
-
-    if(requested&&requested!==user.uid){
-      await openChat(requested);
-    }
-
-    stopChats=onSnapshot(
-      query(
-        collection(db,'chats'),
-        where('participants','array-contains',user.uid),
-        limit(100)
-      ),
-      snapshot=>{
-        const records=snapshot.docs.sort((a,b)=>
-          (b.data().updatedAt?.seconds||0)-
-          (a.data().updatedAt?.seconds||0)
-        );
-
-        $('chats').innerHTML=records.map(item=>{
-          const data=item.data();
-
-          const other=data.participants?.find(
-            id=>id!==user.uid
-          );
-
-          return other
-            ?personRow(other,data.lastText||'Диалог')
-            :'';
-        }).join('')||
-        '<div class="empty">Диалогов пока нет</div>';
-      },
-      error=>errorMessage(
-        'Ошибка диалогов: '+error.message
-      )
-    );
-  }catch(error){
-    errorMessage('Ошибка загрузки: '+error.message);
-  }
+     return other
+      ?personRow(other,data.lastText||'Диалог')
+      :'';
+    }).join('')||
+    '<div class="empty">Диалогов пока нет</div>';
+   },
+   error=>showError(
+    'Ошибка списка диалогов: '+error.message
+   )
+  );
+ }catch(error){
+  showError('Ошибка загрузки: '+error.message);
+ }
 });
 </script>
 </body>
 </html>
+
