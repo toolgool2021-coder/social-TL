@@ -54,3 +54,11 @@ Status: incremental migration. Do not deploy new Firestore rules until they have
 - Composite indexes are not necessary for the inspected basic queries, but preserve any existing production custom indexes.
 - Firebase Storage rules, media upload pipeline, and anti-spam server enforcement have not been implemented or tested.
 - Owner permissions rely on the existing owner UID and `users/{ownerUid}.role == 'owner'`. Do not change the owner profile without a recovery plan.
+
+## 3.2 chat reaction migration (new)
+
+- The client now writes one reaction per user and message at `chats/{chatId}/reactions/{messageId}_{uid}` with `uid`, `messageId`, `emoji`, `createdAt`.
+- The new `firestore.rules` permits only chat participants to read these reactions, and only the authenticated user to create, change, or delete their own reaction. Reaction emoji are restricted to the six built-in options.
+- The chat client subscribes to the reactions collection in realtime and unsubscribes on chat change.
+- Existing legacy `messages/{messageId}.reactions` maps are not migrated and will no longer display; migrate legacy data separately if retention is required.
+- Important: these rules have NOT been validated in Firebase Emulator, and the migration has NOT been deployed to Firebase. Do not claim production completion.
