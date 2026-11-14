@@ -1509,7 +1509,16 @@ onAuthStateChanged(auth,async user=>{
       openChat(requested);
     }
   }catch(err){
-    showError("Пользователи: "+err.message);
+    console.error("[NEXORA] Users in messages:",err);
+    showError("Не удалось загрузить каталог пользователей: "+err.message);
+    // Диалоги остаются доступны через независимый слушатель chats.
+    // Если адресат передан в URL, разрешаем открыть переписку
+    // даже при временном отказе общего каталога пользователей.
+    const requested=new URLSearchParams(location.search).get("user");
+    if(requested&&requested!==user.uid&&auth.currentUser?.uid===user.uid){
+      try{await openChat(requested);}
+      catch(openError){showError("Диалог: "+openError.message);}
+    }
   }
 });
 </script>
