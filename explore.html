@@ -757,6 +757,7 @@ onAuthStateChanged(auth,async user=>{
   searchTag();
  }
 });
+window.addEventListener("nexora:email-verified", () => location.reload());
 </script>
 <script type="module" src="./email-verification.js?v=2"></script>
 </body>
