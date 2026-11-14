@@ -235,11 +235,12 @@ label input,label select{margin-top:7px}
             <option value="2">2 · Официальный бренд</option>
             <option value="3">3 · Создатель</option>
             <option value="4">4 · Команда NEXORA</option>
-            <option value="5">5 · Спонсор</option>
+            <option value="5">5 · Спонсор</option><option value="6">6 · Автор контента</option>
           </select>
         </label>
       </div>
 
+      <label>Срок действия значка <select id="badgeDuration"><option value="permanent">Бессрочно</option><option value="1">1 день</option><option value="7">7 дней</option><option value="30">30 дней</option><option value="90">90 дней</option><option value="365">365 дней</option></select></label>
       <p class="muted">
         Верификация не выдаёт административные права.
         Роль Owner нельзя назначить через эту панель.
@@ -263,7 +264,7 @@ import {getAuth,onAuthStateChanged} from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import {
-  getFirestore,collection,doc,getDoc,getDocs,
+  getFirestore,collection,doc,getDoc,getDocs,Timestamp,
   query,limit,writeBatch,serverTimestamp
 } from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
@@ -297,7 +298,7 @@ const BADGE_NAMES={
   2:"Официальный бренд",
   3:"Создатель",
   4:"Команда NEXORA",
-  5:"Спонсор"
+  5:"Спонсор", 6:"Автор контента"
 };
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({
@@ -456,7 +457,7 @@ function renderUsers(){
 
   $("usersList").innerHTML=filtered.map(u=>{
     const v=Number(u.verification||0);
-    const badge=v>=1&&v<=5
+    const badge=v>=1&&v<=6&&(!u.verificationExpiresAt||u.verificationExpiresAt.toMillis?.()>Date.now())
       ?`<img class="badge" src="./image/Verified_${v}.png" alt="">`
       :"";
 
@@ -486,7 +487,7 @@ $("usersList").onclick=event=>{
   $("selectedName").textContent=user.name||"Без имени";
   $("selectedUid").textContent="UID: "+user.uid;
   $("role").value=user.role==="owner"?"user":user.role||"user";
-  $("verification").value=String(user.verification||0);
+  $("verification").value=String(user.verification||0); $("badgeDuration").value="permanent";
 
   const protectedAccount=user.uid===OWNER_UID||user.role==="owner";
 
@@ -518,10 +519,11 @@ $("saveUser").onclick=()=>execute(async()=>{
   const verification=Number($("verification").value);
 
   if(!["user","moderator","admin"].includes(role)||
-     ![0,1,2,3,4,5].includes(verification)){
+     ![0,1,2,3,4,5,6].includes(verification)){
     throw Error("Недопустимая роль или верификация.");
   }
 
+  const duration=$("badgeDuration").value; const expiry=verification>0&&duration!=="permanent"?Timestamp.fromMillis(Date.now()+Number(duration)*86400000):null;
   if(!confirm("Сохранить изменения аккаунта "+user.name+"?"))return;
 
   await commit("user.update",selected,{
@@ -530,7 +532,7 @@ $("saveUser").onclick=()=>execute(async()=>{
     oldVerification:Number(user.verification||0),
     newVerification:verification
   },batch=>{
-    batch.update(doc(db,"users",selected),{role,verification});
+    batch.update(doc(db,"users",selected),{role,verification,verificationExpiresAt:expiry});
   });
 
   toast("Аккаунт обновлён.");
@@ -688,7 +690,7 @@ $("verificationList").onclick=event=>execute(async()=>{
     await commit("verification.approve",target,{
       requestId:id,type
     },batch=>{
-      batch.update(doc(db,"users",target),{verification:type});
+      batch.update(doc(db,"users",target),{verification:type,verificationExpiresAt:null});
       batch.update(ref,{
         status:"approved",
         reviewedBy:currentUser.uid,
