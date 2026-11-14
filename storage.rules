@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Only verified users can upload images under their own UID.
+    match /posts/{uid}/{filename} {
+      allow read: if request.auth != null && request.auth.token.email_verified == true;
+      allow create: if request.auth != null &&
+        request.auth.token.email_verified == true &&
+        request.auth.uid == uid &&
+        filename.matches('^[A-Za-z0-9-]{36}\\.(png|jpg|webp)$') &&
+        request.resource.size > 0 &&
+        request.resource.size <= 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/(png|jpeg|webp)');
+      allow update, delete: if false;
+    }
+  }
+}
