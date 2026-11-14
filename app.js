@@ -111,6 +111,8 @@ function waitForAction(kind) {
 
 let posting = false;
 let authBusy = false;
+let registrationProfile = null;
+const commentThreads = new Map();
 
 const pendingActions = new Set();
 
@@ -539,6 +541,9 @@ $("authForm").addEventListener(
           );
         }
 
+        // Firebase emits the auth event before createUser resolves. Both paths
+        // use the same requested name and an atomic create-if-missing operation.
+        registrationProfile = { name, email: email.toLowerCase() };
         const result =
           await createUserWithEmailAndPassword(
             auth,
@@ -546,14 +551,7 @@ $("authForm").addEventListener(
             password
           );
 
-        await setDoc(
-          doc(db, "users", result.user.uid),
-          {
-            name,
-            bio: "Привет! Я в NEXORA.",
-            createdAt: serverTimestamp()
-          }
-        );
+        await getOrCreateProfile(result.user, name);
 
         toast("Аккаунт создан!");
       } else {
@@ -566,6 +564,7 @@ $("authForm").addEventListener(
     } catch (error) {
       toast(friendlyError(error));
     } finally {
+      registrationProfile = null;
       authBusy = false;
       button.disabled = false;
     }
@@ -584,8 +583,25 @@ $("logout").addEventListener("click", async () => {
    AUTH STATE
 ========================================= */
 
+// Never overwrite an existing (including legacy) profile or assign privileges.
+async function getOrCreateProfile(user, preferredName = "Пользователь") {
+  const profileRef = doc(db, "users", user.uid);
+  return runTransaction(db, async transaction => {
+    const snapshot = await transaction.get(profileRef);
+    if (snapshot.exists()) return snapshot.data();
+    const profile = {
+      name: preferredName,
+      bio: "Привет! Я в NEXORA.",
+      createdAt: serverTimestamp()
+    };
+    transaction.set(profileRef, profile);
+    return profile;
+  });
+}
+
 onAuthStateChanged(auth, async user => {
   const token = ++authToken;
+  closeAllComments();
 
   unsubPosts?.();
   unsubLikes?.();
@@ -621,20 +637,13 @@ onAuthStateChanged(auth, async user => {
   if (!user) return;
 
   try {
-    const snapshot = await getDoc(
-      doc(db, "users", user.uid)
-    );
+    const requestedName = registrationProfile &&
+      registrationProfile.email === String(user.email || "").toLowerCase()
+        ? registrationProfile.name : "Пользователь";
+    const profile = await getOrCreateProfile(user, requestedName);
 
     if (token !== authToken) return;
-
-    if (!snapshot.exists()) {
-      toast(
-        "Профиль не найден. Проверь регистрацию."
-      );
-      return;
-    }
-
-    myProfile = snapshot.data();
+    myProfile = profile;
 
     $("topName").textContent =
       myProfile.name || "Пользователь";
@@ -644,6 +653,7 @@ onAuthStateChanged(auth, async user => {
     try {
       await loadUsers();
     } catch (error) {
+      if (token !== authToken) return;
       console.error("[NEXORA] Users:", error);
       users = { [user.uid]: myProfile };
       toast("Пользователи временно недоступны: " + friendlyError(error));
@@ -666,7 +676,7 @@ onAuthStateChanged(auth, async user => {
    USERS
 ========================================= */
 
-async function loadUsers() {
+async function loadUsers(token = authToken) {
   const snapshot = await getDocs(
     query(
       collection(db, "users"),
@@ -674,6 +684,7 @@ async function loadUsers() {
     )
   );
 
+  if (token !== authToken) return;
   const result = {};
 
   snapshot.forEach(documentSnapshot => {
@@ -949,7 +960,7 @@ function postHTML(post) {
       </div>
 
       <div
-        id="comments-${esc(post.id)}"
+        data-comments-for="${esc(post.id)}"
         class="hidden"
         style="margin-top:15px"
       ></div>
@@ -961,6 +972,12 @@ function postHTML(post) {
 function renderFeed() {
   const container = $("feedList");
   if (!container) return;
+
+  if (feedStatus !== "ready") {
+    for (const box of container.querySelectorAll("[data-comments-for]")) {
+      if (commentThreads.has(box)) closeComments(box);
+    }
+  }
 
   if (feedStatus === "loading") {
     container.innerHTML = '<div class="glass panel empty" role="status"><strong>Загружаем публикации...</strong><p class="muted">Подключаемся к NEXORA.</p></div>';
@@ -991,9 +1008,9 @@ function renderFeed() {
     return;
   }
 
-  container.innerHTML = posts.length
+  renderPostList(container, posts.length
     ? posts.map(postHTML).join("")
-    : '<div class="glass panel empty"><strong>Публикаций пока нет</strong><p class="muted">Стань первым, кто поделится чем-нибудь в NEXORA.</p></div>';
+    : '<div class="glass panel empty"><strong>Публикаций пока нет</strong><p class="muted">Стань первым, кто поделится чем-нибудь в NEXORA.</p></div>');
 
   if (likesError) {
     const warning = document.createElement("div");
@@ -1120,7 +1137,8 @@ document.addEventListener(
       }
 
       if (action === "comments") {
-        await openComments(id);
+        await openComments(id, button.closest("article[data-post]")
+          ?.querySelector("[data-comments-for]"));
       }
 
       if (action === "author") {
@@ -1186,125 +1204,108 @@ $("linkDialog").addEventListener(
    COMMENTS
 ========================================= */
 
-async function openComments(postId) {
-  const box = $("comments-" + postId);
-  if (!box) return;
+function closeComments(box) {
+  const state = commentThreads.get(box);
+  commentThreads.delete(box);
+  state?.unsubscribe?.();
+  box.classList.add("hidden");
+}
 
-  if (!box.classList.contains("hidden")) {
-    box.classList.add("hidden");
+function closeAllComments() {
+  for (const box of commentThreads.keys()) closeComments(box);
+}
+
+// Retain each open thread's actual form and listener during a feed/like update.
+// Keeping the nodes also preserves an in-progress submission and its draft.
+function renderPostList(container, html) {
+  const open = [...container.querySelectorAll("[data-comments-for]")]
+    .filter(box => commentThreads.has(box));
+  const focused = document.activeElement;
+  const selection = focused && typeof focused.selectionStart === "number"
+    ? [focused.selectionStart, focused.selectionEnd] : null;
+  container.innerHTML = html;
+  for (const box of open) {
+    const placeholder = [...container.querySelectorAll("[data-comments-for]")]
+      .find(item => item.dataset.commentsFor === box.dataset.commentsFor);
+    if (placeholder) placeholder.replaceWith(box);
+    else closeComments(box);
+  }
+  if (focused?.isConnected && open.some(box => box.contains(focused))) {
+    focused.focus({preventScroll:true});
+    if (selection) focused.setSelectionRange(...selection);
+  }
+}
+
+async function openComments(postId, box) {
+  if (!box || !me) return;
+  if (commentThreads.has(box)) {
+    closeComments(box);
     return;
   }
 
+  const uid = me.uid;
+  const token = authToken;
+  const state = {unsubscribe:null, sending:false};
+  const active = () => commentThreads.get(box) === state &&
+    authToken === token && me?.uid === uid;
+  commentThreads.set(box, state);
   box.classList.remove("hidden");
-  box.textContent = "Загрузка комментариев...";
+  box.replaceChildren();
+
+  const list = document.createElement("div");
+  list.setAttribute("aria-live", "polite");
+  list.textContent = "Загрузка комментариев...";
+  const form = document.createElement("form");
+  form.className = "stack";
+  form.innerHTML = `
+    <input maxlength="${LIMITS.comment}" required
+      placeholder="Написать комментарий..." aria-label="Текст комментария">
+    <button type="submit" class="primary">Отправить</button>`;
+  box.append(list, form);
+  const input = form.querySelector("input");
+  const button = form.querySelector("button");
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!active() || state.sending) return;
+    const draft = input.value;
+    const text = draft.trim();
+    if (!text || text.length > LIMITS.comment || !waitForAction("comment")) return;
+    state.sending = true;
+    button.disabled = true;
+    try {
+      await addDoc(collection(db, "posts", postId, "comments"), {
+        uid, text, createdAt:serverTimestamp()
+      });
+      if (!active()) return;
+      lastSent.comment = Date.now();
+      if (input.value === draft) input.value = "";
+    } catch (error) {
+      if (active()) toast(friendlyError(error));
+    } finally {
+      state.sending = false;
+      button.disabled = false;
+    }
+  });
 
   try {
-    const snapshot = await getDocs(
-      query(
-        collection(
-          db,
-          "posts",
-          postId,
-          "comments"
-        ),
-        orderBy("createdAt", "desc"),
-        limit(LIMITS.comments)
-      )
-    );
-
-    box.innerHTML = snapshot.docs.map(item => {
-      const comment = item.data();
-
-      return `
-        <div class="comment">
-          ${nameHTML(comment.uid)}
-          <p>${linkify(comment.text || "")}</p>
-        </div>
-      `;
-    }).join("") || `
-      <p class="muted">
-        Комментариев пока нет.
-      </p>
-    `;
-
-    const form = document.createElement(
-      "form"
-    );
-
-    form.className = "stack";
-
-    form.innerHTML = `
-      <input
-        maxlength="${LIMITS.comment}"
-        required
-        placeholder="Написать комментарий..."
-        aria-label="Текст комментария"
-      >
-
-      <button
-        type="submit"
-        class="primary"
-      >
-        Отправить
-      </button>
-    `;
-
-    form.addEventListener(
-      "submit",
-      async event => {
-        event.preventDefault();
-
-        const input = form.querySelector(
-          "input"
-        );
-
-        const text = input.value.trim();
-
-        if (
-          !text ||
-          text.length > LIMITS.comment
-        ) {
-          return;
-        }
-
-        if (!waitForAction("comment")) return;
-
-        const button = form.querySelector(
-          "button"
-        );
-
-        button.disabled = true;
-
-        try {
-          await addDoc(
-            collection(
-              db,
-              "posts",
-              postId,
-              "comments"
-            ),
-            {
-              uid: me.uid,
-              text,
-              createdAt: serverTimestamp()
-            }
-          );
-
-          lastSent.comment = Date.now();
-          box.classList.add("hidden");
-          await openComments(postId);
-        } catch (error) {
-          toast(friendlyError(error));
-        } finally {
-          button.disabled = false;
-        }
+    state.unsubscribe = onSnapshot(
+      query(collection(db, "posts", postId, "comments"),
+        orderBy("createdAt", "desc"), limit(LIMITS.comments)),
+      snapshot => {
+        if (!active()) return;
+        list.innerHTML = snapshot.docs.map(item => {
+          const comment = item.data();
+          return `<div class="comment">${nameHTML(comment.uid)}
+            <p>${linkify(comment.text || "")}</p></div>`;
+        }).join("") || '<p class="muted">Комментариев пока нет.</p>';
+      },
+      error => {
+        if (active()) list.textContent = "Ошибка: " + friendlyError(error);
       }
     );
-
-    box.append(form);
   } catch (error) {
-    box.textContent =
-      "Ошибка: " + friendlyError(error);
+    list.textContent = "Ошибка: " + friendlyError(error);
   }
 }
 
@@ -1398,7 +1399,7 @@ async function openProfile(uid) {
 
   $("profileName").textContent = "Загрузка...";
   $("profileControls").innerHTML = "";
-  $("profilePosts").innerHTML = "";
+  renderPostList($("profilePosts"), "");
 
   try {
     const user = await ensureUser(uid);
@@ -1555,7 +1556,7 @@ async function openProfile(uid) {
 }
 
 function renderProfilePosts() {
-  $("profilePosts").innerHTML =
+  renderPostList($("profilePosts"),
     posts
       .filter(post => post.uid === viewUid)
       .map(postHTML)
@@ -1563,7 +1564,7 @@ function renderProfilePosts() {
         <div class="glass panel empty">
           Публикаций в загруженной ленте нет.
         </div>
-      `;
+      `);
 }
 
 /* =========================================

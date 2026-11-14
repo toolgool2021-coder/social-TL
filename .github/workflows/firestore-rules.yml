@@ -1,10 +1,15 @@
-name: Firestore Security Rules
+name: Firebase integration
 on:
   push:
     paths:
       - 'firestore.rules'
       - 'firebase.json'
       - 'package.json'
+      - 'package-lock.json'
+      - '*.js'
+      - '*.html'
+      - 'functions/**'
+      - 'scripts/**'
       - 'tests/**'
       - '.github/workflows/firestore-rules.yml'
   pull_request:
@@ -12,6 +17,11 @@ on:
       - 'firestore.rules'
       - 'firebase.json'
       - 'package.json'
+      - 'package-lock.json'
+      - '*.js'
+      - '*.html'
+      - 'functions/**'
+      - 'scripts/**'
       - 'tests/**'
       - '.github/workflows/firestore-rules.yml'
 permissions:
@@ -25,9 +35,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
-      - run: npm install --no-audit --no-fund
-      - run: npm run test:rules
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix functions --no-audit --no-fund
+      - run: node -e "require('./functions/index.js')"
+      - run: npm test

@@ -11,6 +11,25 @@ service cloud.firestore {
     function mod() { return owner() || role() in ['moderator','admin']; }
     function txt(v,min,max) { return v is string && v.size() >= min && v.size() <= max; }
     function changed(fields) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields); }
+    function fieldChanged(field) { return request.resource.data.diff(resource.data).affectedKeys().hasAny([field]); }
+    function optionalUrl(v) { return txt(v,0,2048) && (v == '' || v.matches('^https://[^ ].*')); }
+    function profileFields(d) {
+      return (!('bio' in d) || txt(d.bio,0,160)) &&
+        (!('username' in d) || username(d.username)) &&
+        (!('avatarUrl' in d) || optionalUrl(d.avatarUrl)) &&
+        (!('bannerUrl' in d) || optionalUrl(d.bannerUrl)) &&
+        (!('websiteUrl' in d) || optionalUrl(d.websiteUrl));
+    }
+    function profileChanges() {
+      // Validate only changed optional fields so legacy data remains editable.
+      return (!fieldChanged('name') || !('name' in request.resource.data) || txt(request.resource.data.name,3,20)) &&
+        (!fieldChanged('bio') || !('bio' in request.resource.data) || txt(request.resource.data.bio,0,160)) &&
+        (!fieldChanged('username') || !('username' in request.resource.data) || username(request.resource.data.username)) &&
+        (!fieldChanged('avatarUrl') || !('avatarUrl' in request.resource.data) || optionalUrl(request.resource.data.avatarUrl)) &&
+        (!fieldChanged('bannerUrl') || !('bannerUrl' in request.resource.data) || optionalUrl(request.resource.data.bannerUrl)) &&
+        (!fieldChanged('websiteUrl') || !('websiteUrl' in request.resource.data) || optionalUrl(request.resource.data.websiteUrl)) &&
+        (!fieldChanged('updatedAt') || request.resource.data.updatedAt == request.time);
+    }
     function username(v) { return v is string && v.matches('^[a-z0-9_]{3,20}$'); }
     function badge(v) { return v is int && v >= 0 && v <= 5; }
     function chatPath(id) { return /databases/$(database)/documents/chats/$(id); }
@@ -24,13 +43,11 @@ service cloud.firestore {
       allow get,list: if authd();
       allow create: if self(uid) && request.resource.data.keys().hasOnly([
         'name','username','bio','avatarUrl','bannerUrl','websiteUrl','status','privacy','createdAt'
-      ]) && txt(request.resource.data.name,3,20) &&
-        (!('username' in request.resource.data) || username(request.resource.data.username));
+      ]) && txt(request.resource.data.name,3,20) && profileFields(request.resource.data) &&
+        request.resource.data.createdAt == request.time;
       allow update: if (
         self(uid) && changed(['name','username','bio','avatarUrl','bannerUrl','websiteUrl','status','privacy','pinnedPostId','updatedAt']) &&
-        (!('name' in request.resource.data) || txt(request.resource.data.name,3,20)) &&
-        (!('bio' in request.resource.data) || txt(request.resource.data.bio,0,160)) &&
-        (!('username' in request.resource.data) || username(request.resource.data.username))
+        profileChanges()
       ) || (
         owner() && uid != ownerUid() && resource.data.get('role','user') != 'owner' &&
         changed(['role','verification']) &&
@@ -89,17 +106,22 @@ service cloud.firestore {
           (txt(request.resource.data.imageUrl,1,2048) && request.resource.data.imageUrl.matches('^https://.*')));
       allow update: if authd() && resource.data.uid == request.auth.uid &&
         request.resource.data.uid == resource.data.uid &&
-        changed(['text','imageUrl','editedAt']) && txt(request.resource.data.text,1,1000);
+        changed(['text','imageUrl','editedAt']) && txt(request.resource.data.text,1,1000) &&
+        (!fieldChanged('imageUrl') || !('imageUrl' in request.resource.data) ||
+          (txt(request.resource.data.imageUrl,1,2048) && request.resource.data.imageUrl.matches('^https://.*'))) &&
+        (!fieldChanged('editedAt') || request.resource.data.editedAt == request.time);
       allow delete: if owner() || (authd() && resource.data.uid == request.auth.uid);
       match /comments/{commentId} {
         allow get,list: if authd();
         allow create: if authd() && request.resource.data.uid == request.auth.uid &&
+          exists(/databases/$(database)/documents/posts/$(postId)) &&
           request.resource.data.keys().hasOnly(['uid','text','createdAt']) &&
           request.resource.data.createdAt == request.time &&
           txt(request.resource.data.text,1,300);
         allow update: if authd() && resource.data.uid == request.auth.uid &&
           request.resource.data.uid == resource.data.uid &&
-          changed(['text','editedAt']) && txt(request.resource.data.text,1,300);
+          changed(['text','editedAt']) && txt(request.resource.data.text,1,300) &&
+          (!fieldChanged('editedAt') || request.resource.data.editedAt == request.time);
         allow delete: if owner() || (authd() && resource.data.uid == request.auth.uid);
       }
     }
@@ -125,7 +147,8 @@ service cloud.firestore {
         request.resource.data.participants == resource.data.participants &&
         changed(['updatedAt','lastText','pinnedMessageId','pinnedText']) &&
         txt(request.resource.data.get('lastText',''),0,2000) &&
-        txt(request.resource.data.get('pinnedText',''),0,160);
+        txt(request.resource.data.get('pinnedText',''),0,160) &&
+        (!fieldChanged('updatedAt') || request.resource.data.updatedAt == request.time);
       allow delete: if false;
       match /messages/{messageId} {
         allow get,list: if chatMember(chatId);
@@ -134,18 +157,20 @@ service cloud.firestore {
           request.resource.data.createdAt == request.time &&
           request.resource.data.type in ['text','sticker'] &&
           txt(request.resource.data.text,request.resource.data.type == 'text' ? 1 : 0,2000) &&
-          txt(request.resource.data.get('sticker',''),0,500) &&
-          txt(request.resource.data.get('replyText',''),0,160);
+          txt(request.resource.data.get('sticker',''),request.resource.data.type == 'sticker' ? 1 : 0,500) &&
+          txt(request.resource.data.get('replyText',''),0,160) &&
+          (!('replyTo' in request.resource.data) || txt(request.resource.data.replyTo,1,200));
         allow update: if chatMember(chatId) &&
           request.resource.data.senderId == resource.data.senderId &&
           request.resource.data.type == resource.data.type &&
           request.resource.data.createdAt == resource.data.createdAt &&
           (
             (self(resource.data.senderId) && changed(['text','editedAt']) &&
-              txt(request.resource.data.text,0,2000))
+              txt(request.resource.data.text,request.resource.data.type == 'text' ? 1 : 0,2000) &&
+              (!fieldChanged('editedAt') || request.resource.data.editedAt == request.time))
             ||
             (!self(resource.data.senderId) && changed(['readAt']) &&
-              !('readAt' in resource.data) && request.resource.data.readAt == request.time)
+              resource.data.get('readAt',null) == null && request.resource.data.readAt == request.time)
           );
         // Reaction arrays are intentionally not writable by clients: untrusted clients
         // could forge another user's reactions. Migrate to per-user documents or backend.
@@ -167,7 +192,8 @@ service cloud.firestore {
           request.resource.data.messageId == resource.data.messageId &&
           changed(['emoji','createdAt']) &&
           request.resource.data.emoji in ['❤️','👍','😂','😮','😢','🔥'] &&
-          request.resource.data.createdAt == request.time;
+          request.resource.data.createdAt == request.time &&
+          exists(/databases/$(database)/documents/chats/$(chatId)/messages/$(resource.data.messageId));
         allow delete: if chatMember(chatId) && resource.data.uid == request.auth.uid;
       }
       match /typing/{uid} {
@@ -199,7 +225,8 @@ service cloud.firestore {
       allow update: if owner() && resource.data.status == 'pending' &&
         changed(['status','reviewedBy','reviewedAt']) &&
         request.resource.data.status in ['approved','rejected'] &&
-        request.resource.data.reviewedBy == request.auth.uid;
+        request.resource.data.reviewedBy == request.auth.uid &&
+        request.resource.data.reviewedAt == request.time;
       allow delete: if false;
     }
     match /reports/{reportId} {
@@ -215,7 +242,8 @@ service cloud.firestore {
       allow update: if owner() && resource.data.status == 'pending' &&
         changed(['status','resolution','reviewedBy','reviewedAt']) &&
         request.resource.data.status in ['resolved','dismissed'] &&
-        request.resource.data.reviewedBy == request.auth.uid;
+        request.resource.data.reviewedBy == request.auth.uid &&
+        request.resource.data.reviewedAt == request.time;
       allow delete: if false;
     }
     match /auditLogs/{logId} {
@@ -224,7 +252,8 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly(['actorId','action','targetId','details','createdAt']) &&
         request.resource.data.actorId == request.auth.uid &&
         txt(request.resource.data.action,1,100) &&
-        txt(request.resource.data.targetId,1,200);
+        txt(request.resource.data.targetId,1,200) &&
+        request.resource.data.createdAt == request.time;
       allow update,delete: if false;
     }
     match /{document=**} { allow read,write: if false; }
