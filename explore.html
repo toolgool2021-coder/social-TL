@@ -1,0 +1,579 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080d19">
+<title>NEXORA 2.2 | Explore</title>
+<style>
+:root{
+ color-scheme:dark;
+ --bg:#080d19;
+ --surface:#141d2ce8;
+ --line:#ffffff20;
+ --text:#edf3ff;
+ --muted:#9baac5;
+ --blue:#82a9ff
+}
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;
+ font:14px system-ui,sans-serif;color:var(--text);
+ background:
+ radial-gradient(ellipse at 10% 0%,#315b9b35,transparent 55%),
+ radial-gradient(ellipse at 90% 80%,#6743ac30,transparent 55%),
+ var(--bg)
+}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.5}
+a{color:#b2c8ff;text-decoration:none}
+header{
+ position:sticky;top:0;z-index:10;
+ display:flex;justify-content:space-between;align-items:center;
+ gap:12px;padding:15px max(16px,calc((100vw - 1050px)/2));
+ background:#0c1424ef;border-bottom:1px solid var(--line);
+ backdrop-filter:blur(18px)
+}
+.brand{font-size:19px;font-weight:900;letter-spacing:.5px}
+.brand span{font-size:10px;color:var(--blue)}
+main{max-width:1050px;margin:24px auto;padding:0 15px 70px}
+h1{font-size:28px;margin:0 0 7px}
+h2{font-size:19px;margin:0 0 15px}
+p{line-height:1.6}
+.muted{color:var(--muted);font-size:13px}
+.glass{
+ background:var(--surface);border:1px solid var(--line);
+ border-radius:20px;backdrop-filter:blur(18px);
+ box-shadow:0 12px 35px #0003
+}
+.panel{padding:21px;margin-bottom:16px}
+.tabs{display:flex;gap:9px;flex-wrap:wrap;margin:24px 0}
+button,.button{
+ padding:11px 15px;color:var(--text);
+ background:#1b2940;border:1px solid #40506d;
+ border-radius:12px;transition:.2s
+}
+button:hover,.button:hover{background:#34466b}
+button.active,.primary{
+ border:0;background:linear-gradient(120deg,#4779eb,#8b74ef);
+ font-weight:750
+}
+input,textarea{
+ width:100%;padding:13px;color:white;background:#0b1424;
+ border:1px solid #394861;border-radius:12px;outline:none
+}
+input:focus,textarea:focus{border-color:var(--blue)}
+textarea{min-height:145px;resize:vertical}
+.stack{display:grid;gap:12px}
+.hidden{display:none!important}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row>*{min-width:0}
+.row input{flex:1}
+.post{
+ padding:18px 0;border-bottom:1px solid var(--line);
+ overflow-wrap:anywhere
+}
+.post:last-child{border-bottom:0}
+.post .name{font-weight:800}
+.post .content{white-space:pre-wrap;line-height:1.65;margin:12px 0}
+.post img{
+ display:block;max-width:100%;max-height:420px;
+ object-fit:contain;border-radius:12px
+}
+.tag{
+ display:inline-block;margin:4px 5px 4px 0;
+ padding:7px 10px;border:1px solid #5374a1;
+ background:#263e67;border-radius:30px;
+ color:#cbdcff;font-size:12px
+}
+.draft{
+ display:flex;align-items:flex-start;justify-content:space-between;
+ gap:12px;padding:15px 0;border-bottom:1px solid var(--line)
+}
+.draft:last-child{border-bottom:0}
+.draft p{white-space:pre-wrap;overflow-wrap:anywhere}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+#notice{
+ position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+ padding:13px 18px;background:#293d5d;
+ border:1px solid #6483b6;border-radius:13px;
+ max-width:90vw;z-index:30
+}
+@media(max-width:650px){
+ main{margin:15px auto}
+ .panel{padding:15px}
+ .draft{flex-direction:column}
+ h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="brand">NEXORA <span>2.2 EXPLORE</span></div>
+ <a href="./index.html">← Главная</a>
+</header>
+
+<main>
+ <h1>Открывай новое</h1>
+ <p class="muted">
+  Публикации, темы, рекомендации и черновики.
+ </p>
+
+ <nav class="tabs">
+  <button class="active" data-tab="recommendations">
+   ✦ Рекомендации
+  </button>
+  <button data-tab="hashtags">
+   # Хештеги
+  </button>
+  <button data-tab="drafts">
+   ◫ Черновики
+  </button>
+ </nav>
+
+ <section id="recommendations" class="glass panel">
+  <h2>Рекомендации</h2>
+  <p class="muted">
+   Подборка по активности тем и свежести публикаций.
+  </p>
+  <button id="refresh">Обновить</button>
+  <div id="recommendedPosts"></div>
+ </section>
+
+ <section id="hashtags" class="glass panel hidden">
+  <h2>Поиск по хештегам</h2>
+  <div class="row">
+   <input id="hashtagSearch"
+    placeholder="#NEXORA или название темы"
+    maxlength="60">
+   <button id="findTag" class="primary">Найти</button>
+  </div>
+  <div id="popularTags"></div>
+  <div id="hashtagResults"></div>
+ </section>
+
+ <section id="drafts" class="glass panel hidden">
+  <h2>Черновики публикаций</h2>
+  <p class="muted">
+   Черновики сохраняются только в этом браузере.
+   Они не синхронизируются с другими устройствами.
+  </p>
+
+  <form id="draftForm" class="stack">
+   <textarea id="draftText"
+    placeholder="Что хочешь опубликовать?"
+    maxlength="1000" required></textarea>
+   <input id="draftImage" type="url"
+    placeholder="HTTPS-ссылка на изображение (необязательно)">
+   <div class="row">
+    <button class="primary" type="submit">
+     Сохранить черновик
+    </button>
+    <span id="draftCounter" class="muted">0 / 1000</span>
+   </div>
+  </form>
+
+  <h2 style="margin-top:25px">Сохранённые черновики</h2>
+  <div id="draftList"></div>
+ </section>
+</main>
+
+<div id="notice" hidden role="status"></div>
+
+<script type="module">
+import {initializeApp} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+import {getAuth,onAuthStateChanged} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+import {
+ getFirestore,collection,query,orderBy,limit,getDocs
+} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+
+const config={
+ apiKey:'AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8',
+ authDomain:'toolchat-bfac8.firebaseapp.com',
+ projectId:'toolchat-bfac8',
+ storageBucket:'toolchat-bfac8.firebasestorage.app',
+ messagingSenderId:'52396840735',
+ appId:'1:52396840735:web:a608b9c037c8481f2dc22a'
+};
+
+const app=initializeApp(config);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+let me=null;
+let posts=[];
+let users={};
+let drafts=[];
+let activeDraft=null;
+let timer=null;
+
+function escapeHTML(value){
+ return String(value??'').replace(/[&<>"']/g,c=>({
+  '&':'&amp;',
+  '<':'&lt;',
+  '>':'&gt;',
+  '"':'&quot;',
+  "'":'&#39;'
+ }[c]));
+}
+
+function notify(message){
+ clearTimeout(timer);
+ $('notice').textContent=message;
+ $('notice').hidden=false;
+ timer=setTimeout(()=>$('notice').hidden=true,3500);
+}
+
+function safeURL(value){
+ if(!value)return '';
+ try{
+  const url=new URL(value);
+  return url.protocol==='https:'?url.href:'';
+ }catch{return ''}
+}
+
+function dateLabel(value){
+ return value?.toDate?.().toLocaleString('ru-RU')||'';
+}
+
+function extractTags(text){
+ const matches=String(text||'').match(
+  /#[\p{L}\p{N}_]{2,40}/gu
+ )||[];
+ return [...new Set(matches.map(t=>t.toLowerCase()))];
+}
+
+function score(post){
+ const age=post.createdAt?.toMillis?.()
+  ?Math.max(0,Date.now()-post.createdAt.toMillis())
+  :Date.now();
+
+ const hours=age/3600000;
+ const freshness=100/(1+hours/24);
+ const topics=extractTags(post.text).length*4;
+ const textQuality=Math.min((post.text||'').length/100,5);
+
+ return freshness+topics+textQuality;
+}
+
+function postHTML(post){
+ const author=users[post.uid];
+ const name=author?.name||'Пользователь';
+ const image=safeURL(post.imageUrl);
+ const tags=extractTags(post.text);
+
+ return `
+  <article class="post">
+   <div class="name">${escapeHTML(name)}</div>
+   <div class="muted">
+    ${escapeHTML(dateLabel(post.createdAt))}
+   </div>
+   <div class="content">${escapeHTML(post.text||'')}</div>
+   ${image?`
+    <img src="${escapeHTML(image)}"
+     alt="Изображение публикации" loading="lazy"
+     referrerpolicy="no-referrer">
+   `:''}
+   <div>
+    ${tags.map(tag=>`
+     <button class="tag" data-tag="${escapeHTML(tag)}">
+      ${escapeHTML(tag)}
+     </button>
+    `).join('')}
+   </div>
+  </article>
+ `;
+}
+
+async function loadPosts(){
+ $('recommendedPosts').textContent='Загрузка...';
+
+ try{
+  const [postSnapshot,userSnapshot]=await Promise.all([
+   getDocs(query(
+    collection(db,'posts'),
+    orderBy('createdAt','desc'),
+    limit(100)
+   )),
+   getDocs(query(
+    collection(db,'users'),
+    limit(200)
+   ))
+  ]);
+
+  posts=postSnapshot.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  users={};
+  userSnapshot.forEach(d=>{
+   users[d.id]=d.data();
+  });
+
+  renderRecommendations();
+  renderPopularTags();
+ }catch(error){
+  $('recommendedPosts').textContent=
+   'Ошибка загрузки: '+error.message;
+ }
+}
+
+function renderRecommendations(){
+ const sorted=[...posts].sort(
+  (a,b)=>score(b)-score(a)
+ );
+
+ $('recommendedPosts').innerHTML=sorted.map(postHTML).join('')||
+  '<p class="muted">Публикаций пока нет.</p>';
+}
+
+function renderPopularTags(){
+ const counts=new Map();
+
+ for(const post of posts){
+  for(const tag of extractTags(post.text)){
+   counts.set(tag,(counts.get(tag)||0)+1);
+  }
+ }
+
+ const popular=[...counts.entries()]
+  .sort((a,b)=>b[1]-a[1])
+  .slice(0,20);
+
+ $('popularTags').innerHTML=popular.map(([tag,count])=>`
+  <button class="tag" data-tag="${escapeHTML(tag)}">
+   ${escapeHTML(tag)} · ${count}
+  </button>
+ `).join('');
+}
+
+function searchTag(){
+ let term=$('hashtagSearch').value.trim().toLowerCase();
+ if(!term)return;
+
+ if(!term.startsWith('#'))term='#'+term;
+
+ const matches=posts.filter(post=>
+  extractTags(post.text).includes(term)
+ );
+
+ $('hashtagResults').innerHTML=matches.map(postHTML).join('')||
+  '<p class="muted">Публикации с таким хештегом не найдены.</p>';
+}
+
+$('findTag').onclick=searchTag;
+
+$('hashtagSearch').addEventListener('keydown',event=>{
+ if(event.key==='Enter'){
+  event.preventDefault();
+  searchTag();
+ }
+});
+
+document.addEventListener('click',event=>{
+ const button=event.target.closest('[data-tag]');
+ if(!button)return;
+
+ $('hashtagSearch').value=button.dataset.tag;
+ selectTab('hashtags');
+ searchTag();
+});
+
+$('refresh').onclick=loadPosts;
+
+function selectTab(name){
+ for(const tab of [
+  'recommendations','hashtags','drafts'
+ ]){
+  $(tab).classList.toggle('hidden',tab!==name);
+ }
+
+ document.querySelectorAll('[data-tab]').forEach(button=>{
+  button.classList.toggle(
+   'active',
+   button.dataset.tab===name
+  );
+ });
+}
+
+document.querySelectorAll('[data-tab]').forEach(button=>{
+ button.onclick=()=>selectTab(button.dataset.tab);
+});
+
+function storageKey(){
+ return me?'nexora22_drafts_'+me.uid:null;
+}
+
+function loadDrafts(){
+ try{
+  const raw=localStorage.getItem(storageKey());
+  const parsed=JSON.parse(raw||'[]');
+  drafts=Array.isArray(parsed)?parsed:[];
+ }catch{
+  drafts=[];
+ }
+ renderDrafts();
+}
+
+function persistDrafts(){
+ try{
+  localStorage.setItem(
+   storageKey(),
+   JSON.stringify(drafts)
+  );
+  return true;
+ }catch{
+  notify('Не удалось сохранить данные в браузере');
+  return false;
+ }
+}
+
+function renderDrafts(){
+ $('draftList').innerHTML=drafts.map(draft=>`
+  <div class="draft">
+   <div style="flex:1;min-width:0">
+    <p>${escapeHTML(draft.text)}</p>
+    <small class="muted">
+     ${escapeHTML(
+      new Date(draft.updatedAt).toLocaleString('ru-RU')
+     )}
+    </small>
+   </div>
+   <div class="actions">
+    <button data-edit="${escapeHTML(draft.id)}">
+     Изменить
+    </button>
+    <button data-copy="${escapeHTML(draft.id)}">
+     Копировать
+    </button>
+    <button data-delete="${escapeHTML(draft.id)}">
+     Удалить
+    </button>
+   </div>
+  </div>
+ `).join('')||
+ '<p class="muted">Черновиков пока нет.</p>';
+}
+
+$('draftText').oninput=()=>{
+ $('draftCounter').textContent=
+  $('draftText').value.length+' / 1000';
+};
+
+$('draftForm').onsubmit=event=>{
+ event.preventDefault();
+
+ if(!me){
+  notify('Необходимо войти в аккаунт');
+  return;
+ }
+
+ const text=$('draftText').value.trim();
+ const rawImage=$('draftImage').value.trim();
+ const image=safeURL(rawImage);
+
+ if(!text){
+  notify('Черновик пуст');
+  return;
+ }
+
+ if(rawImage&&!image){
+  notify('Разрешены только HTTPS-ссылки');
+  return;
+ }
+
+ const id=activeDraft||crypto.randomUUID();
+
+ const entry={
+  id,
+  text,
+  imageUrl:image,
+  updatedAt:Date.now()
+ };
+
+ drafts=drafts.filter(d=>d.id!==id);
+ drafts.unshift(entry);
+
+ if(drafts.length>100)drafts.length=100;
+
+ if(persistDrafts()){
+  activeDraft=null;
+  $('draftForm').reset();
+  $('draftCounter').textContent='0 / 1000';
+  renderDrafts();
+  notify('Черновик сохранён');
+ }
+};
+
+$('draftList').onclick=async event=>{
+ const edit=event.target.closest('[data-edit]');
+ const copy=event.target.closest('[data-copy]');
+ const remove=event.target.closest('[data-delete]');
+
+ const id=edit?.dataset.edit||
+  copy?.dataset.copy||
+  remove?.dataset.delete;
+
+ if(!id)return;
+
+ const draft=drafts.find(d=>d.id===id);
+ if(!draft)return;
+
+ if(edit){
+  activeDraft=id;
+  $('draftText').value=draft.text;
+  $('draftImage').value=draft.imageUrl||'';
+  $('draftCounter').textContent=
+   draft.text.length+' / 1000';
+  $('draftText').focus();
+ }
+
+ if(copy){
+  try{
+   await navigator.clipboard.writeText(draft.text);
+   notify('Текст скопирован');
+  }catch{
+   notify('Не удалось скопировать текст');
+  }
+ }
+
+ if(remove){
+  if(!confirm('Удалить черновик?'))return;
+
+  drafts=drafts.filter(d=>d.id!==id);
+
+  if(activeDraft===id){
+   activeDraft=null;
+   $('draftForm').reset();
+  }
+
+  persistDrafts();
+  renderDrafts();
+  notify('Черновик удалён');
+ }
+};
+
+onAuthStateChanged(auth,user=>{
+ me=user;
+
+ if(!user){
+  $('recommendedPosts').innerHTML=
+   '<p class="muted">Войди в NEXORA, чтобы просматривать публикации.</p>';
+  $('draftList').innerHTML=
+   '<p class="muted">Войди в аккаунт для работы с черновиками.</p>';
+  return;
+ }
+
+ loadDrafts();
+ loadPosts();
+});
+</script>
+</body>
+</html>
