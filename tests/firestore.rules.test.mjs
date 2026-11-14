@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, getDocs, serverTimestamp, runTransaction, writeBatch, query, where, orderBy } from "firebase/firestore";
 
-const OWNER = "FXtmMsn8JYfx04zpxiSaXZ0iHWg2";
+const OWNER = "ElpAtxZIBCZVsLBcLzgdIsr8T1w2";
 const ALICE = "alice_test_uid";
 const BOB = "bob_test_uid";
 const MALLORY = "mallory_test_uid";
