@@ -171,3 +171,16 @@ test("ordinary users cannot create owner notification alerts", async () => {
     text:"Fake moderation alert",read:false,createdAt:serverTimestamp()
   }));
 });
+
+test("participants may check for a missing chat before creating it", async () => {
+  const cid=ALICE+"_"+MALLORY+"_new";
+  const missing=await assertSucceeds(getDoc(ref(ALICE,"chats",cid)));
+  assert.equal(missing.exists(),false);
+  await assertFails(getDoc(ref(BOB,"chats",cid)));
+});
+
+test("a valid missing-chat probe does not reveal an existing private chat", async () => {
+  const cid=ALICE+"_"+BOB;
+  await assertSucceeds(getDoc(ref(ALICE,"chats",cid)));
+  await assertFails(getDoc(ref(MALLORY,"chats",cid)));
+});
