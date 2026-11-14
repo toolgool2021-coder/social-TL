@@ -148,7 +148,7 @@ function harness(initialProfiles = {}) {
   return {
     context, evaluate, elements, writes, profiles, listeners, authTasks, sentEmails,
     async authenticate(user) {
-      const signedIn = {emailVerified:true,...user};
+      const signedIn = user ? {emailVerified:true,...user} : null;
       auth.currentUser = signedIn;
       await authListener(signedIn);
     },
