@@ -105,7 +105,8 @@ function harness(initialProfiles = {}) {
       addEventListener(){},
       createElement:tag => new Element(tag)
     },
-    window:{addEventListener(name,callback){windowEvents.set(name,callback);}},
+    CustomEvent:class {constructor(type,options={}){this.type=type;this.detail=options.detail;}},
+    window:{addEventListener(name,callback){windowEvents.set(name,callback);},dispatchEvent(event){return windowEvents.get(event.type)?.(event)??true;}},
     getApps:() => [{}], initializeApp:() => ({}),
     getAuth:() => auth, getFirestore:() => ({}),
     doc, collection:doc, query:(path, ...constraints) => ({path, constraints}),
@@ -270,4 +271,19 @@ test('comment completion preserves a newer draft and blocks duplicate in-flight 
   await submission;
   assert.equal(input.value, 'My next draft');
   assert.equal(form.querySelector('button').disabled, false);
+});
+
+test('post markup respects image position and exposes edit only to author', async () => {
+  const app=harness({ 'users/alice':{name:'Alice'} });
+  await app.authenticate({uid:'alice',email:'alice@example.test'});
+  const post={id:'post1234567890',uid:'alice',text:'Hello',imageUrl:'https://example.com/p.png',imagePosition:'top'};
+  const top=app.evaluate('postHTML('+JSON.stringify(post)+')');
+  assert.ok(top.indexOf('class="postimage"')<top.indexOf('class="posttext"'));
+  assert.match(top,/data-action="edit-post"/);
+  post.imagePosition='bottom';
+  const bottom=app.evaluate('postHTML('+JSON.stringify(post)+')');
+  assert.ok(bottom.indexOf('class="postimage"')>bottom.indexOf('class="posttext"'));
+  post.uid='other';
+  const other=app.evaluate('postHTML('+JSON.stringify(post)+')');
+  assert.doesNotMatch(other,/data-action="edit-post"/);
 });
