@@ -75,6 +75,30 @@ test("only author can create posts under their UID", async () => {
   }));
 });
 
+test("authors can choose image placement and edit posts, others cannot", async () => {
+  const id = "image-position-test";
+  await assertSucceeds(setDoc(ref(ALICE,"posts",id),{
+    uid:ALICE,text:"Before",imagePosition:"top",
+    imageUrl:"https://example.com/image.png",createdAt:serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(ref(ALICE,"posts",id),{
+    text:"After",imagePosition:"bottom",editedAt:serverTimestamp()
+  }));
+  await assertFails(updateDoc(ref(BOB,"posts",id),{text:"Hijacked"}));
+  await assertFails(updateDoc(ref(ALICE,"posts",id),{imagePosition:"sideways"}));
+});
+
+test("post likes are counted by post and cannot be forged", async () => {
+  const like = ref(ALICE,"posts","p1","likes",ALICE);
+  await assertSucceeds(setDoc(like,{createdAt:serverTimestamp()}));
+  await assertSucceeds(getDocs(collection(db(BOB),"posts","p1","likes")));
+  await assertFails(setDoc(ref(BOB,"posts","p1","likes",ALICE),{
+    createdAt:serverTimestamp()
+  }));
+  await assertFails(updateDoc(like,{createdAt:serverTimestamp()}));
+  await assertSucceeds(deleteDoc(like));
+});
+
 test("outsiders cannot read private chats or messages", async () => {
   const cid=ALICE+"_"+BOB;
   await assertSucceeds(getDoc(ref(ALICE,"chats",cid)));
