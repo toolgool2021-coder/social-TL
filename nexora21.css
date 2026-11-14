@@ -1,69 +1,210 @@
 
+/* NEXORA 2.1 · Glassmorphism extension */
+
+:root {
+  --nx-accent: #82a9ff;
+  --nx-accent2: #967dff;
+  --nx-panel: rgba(20, 29, 49, .82);
+  --nx-border: rgba(180, 205, 255, .14);
+}
+
+.owner-nav {
+  color: #b6caff !important;
+  border: 1px solid rgba(118, 156, 255, .25) !important;
+  background: rgba(118, 156, 255, .09) !important;
+}
+
+#nx21panel {
+  animation: nxAppear .25s ease both;
+}
+
+#nx21panel .panel {
+  min-height: 240px;
+}
+
+#nx21panel h2 {
+  margin: 0;
+}
+
+#nx21panel .between {
+  margin-bottom: 22px;
+}
+
+#nx21panel .nx21item {
+  border: 1px solid var(--nx-border);
+  background: rgba(255, 255, 255, .035);
+  border-radius: 15px;
+  padding: 17px;
+  margin-bottom: 12px;
+  animation: nxAppear .25s ease both;
+}
+
+#nx21panel .nx21item p {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+#nx21panel select {
+  width: 100%;
+  display: block;
+  margin-top: 9px;
+  background: #0b1424;
+  color: #edf3ff;
+  border: 1px solid #394861;
+  border-radius: 12px;
+  padding: 13px;
+  font: inherit;
+  outline: none;
+}
+
+#nx21panel select:focus {
+  border-color: var(--nx-accent);
+}
+
+#nx21panel textarea {
+  min-height: 130px;
+}
+
+.nx21actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.nx21actions button {
+  padding: 9px 12px;
+  border: 1px solid #40506d;
+  border-radius: 11px;
+  background: rgba(40, 59, 91, .6);
+  color: #dce7ff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease;
+}
+
+.nx21actions button:hover {
+  background: rgba(75, 105, 165, .35);
+  border-color: #7497db;
+  transform: translateY(-1px);
+}
+
+.nx21actions button:active {
+  transform: scale(.97);
+}
+
+.nx21actions button:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+.nx21status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #a0afc9;
+  padding: 7px 11px;
+  border: 1px solid var(--nx-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .04);
+}
+
+.nx21status.nx21online {
+  color: #78e6b0;
+  border-color: rgba(120, 230, 176, .25);
+  background: rgba(120, 230, 176, .07);
+}
+
 #nx21notice {
   position: fixed;
   z-index: 200;
   bottom: 24px;
   left: 50%;
-  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(440px, 90vw);
   padding: 14px 20px;
+  transform: translateX(-50%);
+  background: rgba(32, 49, 80, .97);
+  border: 1px solid rgba(150, 181, 255, .3);
+  box-shadow: 0 15px 50px #0009;
   border-radius: 14px;
-  background: #273b60;
-  color: #fff;
-  box-shadow: 0 10px 35px #0008;
-  max-width: 90vw;
+  color: #edf3ff;
+  text-align: center;
+  line-height: 1.5;
+  backdrop-filter: blur(18px);
+  animation: nxNotice .2s ease both;
 }
 
-#nx21panel .nx21item {
-  padding: 14px 0;
-  border-bottom: 1px solid #ffffff24;
-  overflow-wrap: anywhere;
+#nx21notice[hidden] {
+  display: none !important;
 }
 
-#nx21panel h2 {
-  margin-top: 20px;
+@keyframes nxAppear {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-#nx21panel label {
-  display: block;
-  margin: 12px 0;
+@keyframes nxNotice {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
-#nx21panel select,
-#nx21panel textarea {
-  width: 100%;
-  background: #0b1424;
-  color: #fff;
-  border: 1px solid #394861;
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 8px;
+@media (max-width: 650px) {
+  .nav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 4px;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav button,
+  .nav a {
+    min-width: 64px;
+    flex-shrink: 0;
+  }
+
+  #nx21panel .panel {
+    padding: 15px;
+  }
+
+  #nx21notice {
+    bottom: 85px;
+  }
+
+  .nx21actions button {
+    flex: 1 1 auto;
+  }
 }
 
-#nx21panel textarea {
-  min-height: 110px;
-}
-
-.nx21actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.nx21actions button {
-  border: 1px solid #40506d;
-  background: #1b2940;
-  color: #dbe6ff;
-  border-radius: 10px;
-  padding: 8px 11px;
-  cursor: pointer;
-}
-
-.nx21actions button:hover {
-  background: #304566;
-}
-
-.nx21status {
-  font-size: 12px;
-  color: #9baac5;
+@media (prefers-reduced-motion: reduce) {
+  #nx21panel,
+  #nx21panel .nx21item,
+  #nx21notice,
+  .nx21actions button {
+    animation: none;
+    transition: none;
+  }
 }
