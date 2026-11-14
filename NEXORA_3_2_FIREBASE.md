@@ -62,3 +62,10 @@ Status: incremental migration. Do not deploy new Firestore rules until they have
 - The chat client subscribes to the reactions collection in realtime and unsubscribes on chat change.
 - Existing legacy `messages/{messageId}.reactions` maps are not migrated and will no longer display; migrate legacy data separately if retention is required.
 - Important: these rules have NOT been validated in Firebase Emulator, and the migration has NOT been deployed to Firebase. Do not claim production completion.
+
+## 3.2 timestamp and chat ID hardening
+
+- Newly created posts, comments and messages require Firestore server timestamps (`createdAt == request.time`).
+- New chat documents require a canonical ID: lexicographically sorted participant UIDs joined by `_`, with `updatedAt == request.time`.
+- The current `chats.html` client uses the same sorted UID scheme and server timestamps.
+- These checks are only a source-level review. Firebase Emulator and two-account integration tests are still required before deploying.
