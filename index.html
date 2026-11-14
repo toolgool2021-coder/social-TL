@@ -1,645 +1,171 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080d19">
-<title>NEXORA | Твоё пространство</title>
-<style>
-:root{
- --bg:#080d19;--panel:#111a2b;--panel2:#172238;
- --line:#293650;--text:#edf3ff;--muted:#93a3bd;
- --blue:#719bff;--red:#ff6d91
-}
-*{box-sizing:border-box}
-body{
- margin:0;background:var(--bg);color:var(--text);
- font:15px system-ui,Arial,sans-serif
-}
-body:before{
- content:"";position:fixed;inset:0;pointer-events:none;
- background:radial-gradient(ellipse at 15% 0%,#294d8c38,transparent 55%)
-}
-button,input,textarea{font:inherit}
-button{cursor:pointer}
-button:disabled{opacity:.5;cursor:wait}
-input,textarea{
- width:100%;background:#0c1424;border:1px solid var(--line);
- color:white;padding:13px;border-radius:12px;outline:none
-}
-input:focus,textarea:focus{border-color:var(--blue)}
-textarea{resize:vertical;min-height:95px}
-button.primary{
- background:linear-gradient(120deg,#4775e9,#8a75ff);
- color:white;border:0;border-radius:12px;
- padding:12px 18px;font-weight:700
-}
-button.ghost{
- background:#1c2942;color:#dbe6ff;
- border:1px solid #354562;border-radius:11px;padding:9px 12px
-}
-button.small{padding:7px 11px;font-size:12px}
-button.danger{color:#ff9aad}
-.hidden{display:none!important}
-header{
- position:sticky;top:0;z-index:10;
- background:#0b1220ef;backdrop-filter:blur(18px);
- border-bottom:1px solid var(--line)
-}
-.top{
- max-width:1120px;margin:auto;display:flex;align-items:center;
- justify-content:space-between;padding:14px 18px;gap:12px
-}
-.logo{
- font-size:22px;font-weight:900;letter-spacing:-1px;
- background:linear-gradient(90deg,#fff,#719bff);
- color:transparent;background-clip:text
-}
-.logo span{color:#719bff}
-.shell{
- max-width:1120px;margin:25px auto;padding:0 15px;
- display:grid;grid-template-columns:220px minmax(0,1fr) 250px;
- gap:20px;position:relative
-}
-.card{
- background:linear-gradient(145deg,#131e31,#101827);
- border:1px solid var(--line);border-radius:19px;
- padding:18px;margin-bottom:16px;
- box-shadow:0 10px 35px #0002;
- animation:appear .35s ease both
-}
-@keyframes appear{
- from{opacity:0;transform:translateY(10px)}
- to{opacity:1;transform:translateY(0)}
-}
-.nav button{
- display:block;width:100%;text-align:left;
- border:0;background:transparent;color:#b8c8e5;
- padding:13px;border-radius:12px;margin:3px 0
-}
-.nav button.active,.nav button:hover{
- background:#24365a;color:white
-}
-h2,h3,p{margin-top:0}
-h2{font-size:21px}
-h3{font-size:16px}
-.muted{color:var(--muted);font-size:13px}
-.row{display:flex;align-items:center;gap:11px}
-.between{justify-content:space-between}
-.avatar{
- width:43px;height:43px;flex-shrink:0;
- border-radius:15px;background:linear-gradient(135deg,#5077f3,#9d6bde);
- display:grid;place-items:center;font-weight:800;color:white
-}
-.avatar.big{width:74px;height:74px;font-size:27px;border-radius:23px}
-.name{font-weight:700;overflow-wrap:anywhere}
-.handle{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
-.posttext{
- white-space:pre-wrap;overflow-wrap:anywhere;
- line-height:1.65;margin:16px 0
-}
-.actions{display:flex;gap:9px;flex-wrap:wrap}
-.actions button{
- border:1px solid var(--line);background:#17243b;
- color:#b8c8e5;padding:8px 11px;border-radius:11px
-}
-.actions button.liked{color:#ff729b;border-color:#a54a71}
-.comment{
- border-top:1px solid var(--line);padding:11px 0;
- overflow-wrap:anywhere
-}
-.comment strong{font-size:13px}
-.comment p{margin:5px 0;font-size:13px}
-.form{display:grid;gap:12px}
-.auth{
- max-width:440px;margin:7vh auto;padding:24px;
- position:relative
-}
-.auth h1{font-size:30px;margin-bottom:7px}
-.auth .logo{font-size:27px;margin-bottom:20px}
-.auth .switch{
- background:none;border:0;color:#93b5ff;padding:10px
-}
-.banner{
- height:115px;border-radius:14px;
- background:linear-gradient(120deg,#1c3d75,#493d88,#19365e);
- margin-bottom:-25px
-}
-.profiletop{position:relative;padding:0 12px}
-.profiletop .avatar{border:4px solid var(--panel)}
-.stats{display:flex;gap:25px;margin:15px 0;color:var(--muted)}
-.stats b{color:white}
-.toast{
- position:fixed;bottom:25px;left:50%;transform:translateX(-50%);
- background:#273a5e;color:white;padding:13px 20px;
- border:1px solid #4b6694;border-radius:13px;z-index:99;
- max-width:90%;box-shadow:0 12px 35px #0008
-}
-.empty{text-align:center;padding:35px;color:var(--muted)}
-.sideinfo{font-size:13px;line-height:1.8;color:var(--muted)}
-#userMenu{display:flex;align-items:center;gap:10px}
-#userMenu .avatar{width:34px;height:34px;border-radius:11px}
-#profileControls{display:flex;gap:10px;flex-wrap:wrap}
-@media(max-width:950px){
- .shell{grid-template-columns:190px minmax(0,1fr)}
- .right{display:none}
-}
-@media(max-width:650px){
- .shell{display:block;margin:14px auto;padding:0 11px 75px}
- .left{
-  position:fixed;bottom:0;left:0;right:0;z-index:20;
-  background:#101a2bf5;border-top:1px solid var(--line)
- }
- .left .card{padding:5px;margin:0;border:0;background:none}
- .nav{display:flex;justify-content:space-around}
- .nav button{text-align:center;font-size:11px;padding:12px 4px}
- .top{padding:12px}
- .logo{font-size:20px}
- .card{padding:15px;border-radius:16px}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080d19">
+  <title>NEXORA · Социальная сеть</title>
+  <link rel="icon" href="image/icon.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
- <div class="top">
-  <div class="logo">TL <span>Social</span></div>
-  <div id="userMenu" class="hidden">
-   <span id="topName" class="muted"></span>
-   <button class="ghost small" id="logout">Выйти</button>
+<div class="ambient"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="image/icon.png" alt="" onerror="this.hidden=true">
+    <b>NEXORA</b>
+    <small>BETA 2.0</small>
   </div>
- </div>
+  <div id="topUser" class="topuser hidden">
+    <span id="topName"></span>
+    <button id="logout" class="quiet">Выйти</button>
+  </div>
 </header>
 
-<section id="authPage" class="auth card">
- <div class="logo">NEXORA</div>
- <h1 id="authTitle">С возвращением</h1>
- <p class="muted">Твоё пространство для общения</p>
- <form id="authForm" class="form">
-  <input id="username" placeholder="Имя пользователя" class="hidden" maxlength="20">
-  <input id="email" type="email" placeholder="Электронная почта" required>
-  <input id="password" type="password" placeholder="Пароль (от 6 символов)" minlength="6" required>
-  <button class="primary" id="authSubmit">Войти</button>
- </form>
- <button id="authSwitch" class="switch">Создать аккаунт</button>
- <p id="configWarning" class="muted"></p>
+<section id="authPage" class="auth glass">
+  <div class="heroicon">
+    <img src="image/icon.png" alt="Nexora" onerror="this.hidden=true">
+  </div>
+  <h1 id="authTitle">С возвращением</h1>
+  <p class="muted">Твоё пространство для общения</p>
+  <form id="authForm" class="stack">
+    <input id="username" class="hidden" placeholder="Имя пользователя (3–20 символов)" maxlength="20">
+    <input id="email" type="email" placeholder="Электронная почта" required>
+    <input id="password" type="password" placeholder="Пароль" minlength="6" required>
+    <button class="primary" id="authSubmit">Войти</button>
+  </form>
+  <button class="linkbutton" id="authSwitch">Создать аккаунт</button>
 </section>
 
-<div id="app" class="shell hidden">
- <aside class="left">
-  <div class="card nav">
-   <button data-page="feed" class="active">⌂ Главная</button>
-   <button data-page="search">⌕ Поиск</button>
-   <button id="messagesNav" type="button">✉ Сообщения</button>
-   <button data-page="profile">♙ Профиль</button>
-  </div>
- </aside>
+<div id="app" class="layout hidden">
+  <aside class="sidebar glass">
+    <nav class="nav">
+      <button data-page="feed" class="active">⌂ <span>Главная</span></button>
+      <button data-page="search">⌕ <span>Поиск</span></button>
+      <a href="chats.html">✉ <span>Сообщения</span></a>
+      <button data-page="profile">♙ <span>Профиль</span></button>
+      <button data-page="settings">⚙ <span>Настройки</span></button>
+    </nav>
+  </aside>
 
- <main>
-  <section id="feedPage">
-   <div class="card">
-    <h2>Главная лента</h2>
-    <form id="postForm" class="form">
-     <textarea id="postInput" maxlength="1000"
-      placeholder="Что нового? Поделись мыслями..." required></textarea>
-     <div class="row between">
-      <span class="muted"><span id="postCount">0</span> / 1000</span>
-      <button class="primary">Опубликовать</button>
-     </div>
-    </form>
-   </div>
-   <div id="feedList"></div>
-  </section>
+  <main>
+    <section id="feedPage">
+      <div class="glass panel">
+        <div class="sectionhead">
+          <h2>Лента</h2>
+          <span class="muted">Nexora</span>
+        </div>
+        <form id="postForm" class="stack">
+          <textarea id="postInput" maxlength="1000" required placeholder="Что нового?"></textarea>
+          <label class="fieldlabel" for="postImage">Изображение (необязательно, прямая HTTPS-ссылка)</label>
+          <input id="postImage" placeholder="https://example.com/photo.png" type="url">
+          <div class="between">
+            <small class="muted"><span id="postCount">0</span> / 1000</small>
+            <button class="primary">Опубликовать</button>
+          </div>
+        </form>
+      </div>
+      <div id="feedList"></div>
+    </section>
 
-  <section id="searchPage" class="hidden">
-   <div class="card">
-    <h2>Поиск людей</h2>
-    <input id="searchInput" placeholder="Найти по имени или нику">
-    <p class="muted">Поиск по зарегистрированным пользователям</p>
-   </div>
-   <div id="searchResults"></div>
-  </section>
+    <section id="searchPage" class="hidden">
+      <div class="glass panel">
+        <h2>Поиск людей</h2>
+        <input id="searchInput" placeholder="Найти пользователя">
+        <p class="muted">Поиск среди загруженных профилей</p>
+      </div>
+      <div id="searchResults"></div>
+    </section>
 
-  <section id="profilePage" class="hidden">
-   <div class="card">
-    <div class="banner"></div>
-    <div class="profiletop">
-     <div id="profileAvatar" class="avatar big">TL</div>
-     <h2 id="profileName" style="margin:12px 0 4px"></h2>
-     <div id="profileHandle" class="handle"></div>
-     <p id="profileBio" style="margin-top:14px"></p>
-     <div class="stats">
-      <span><b id="followersCount">0</b> подписчиков</span>
-      <span><b id="followingCount">0</b> подписок</span>
-     </div>
-     <div id="profileControls"></div>
+    <section id="profilePage" class="hidden">
+      <div class="glass panel profile">
+        <div id="profileBanner" class="cover"></div>
+        <div class="profilebody">
+          <div id="profileAvatar" class="avatar large">N</div>
+          <div id="profileName" class="profilename"></div>
+          <div id="profileHandle" class="muted"></div>
+          <p id="profileBio"></p>
+          <div class="stats">
+            <span><b id="followersCount">0</b> подписчиков</span>
+            <span><b id="followingCount">0</b> подписок</span>
+          </div>
+          <div id="profileLinks"></div>
+          <div id="profileControls" class="buttons"></div>
+        </div>
+      </div>
+      <div id="profilePosts"></div>
+    </section>
+
+    <section id="settingsPage" class="hidden">
+      <div class="glass panel">
+        <h2>Настройки профиля</h2>
+        <p class="muted">Изображения хранятся на стороннем фотохостинге. Nexora сохраняет только ссылки.</p>
+        <form id="settingsForm" class="stack">
+          <label>Описание профиля
+            <textarea id="settingsBio" maxlength="160" placeholder="О себе"></textarea>
+          </label>
+          <label>Прямая ссылка на аватар
+            <input id="settingsAvatar" type="url" placeholder="https://example.com/avatar.png">
+          </label>
+          <label>Прямая ссылка на обложку
+            <input id="settingsBanner" type="url" placeholder="https://example.com/banner.png">
+          </label>
+          <label>Ссылка на ваш сайт (необязательно)
+            <input id="settingsWebsite" type="url" placeholder="https://example.com">
+          </label>
+          <button class="primary">Сохранить профиль</button>
+        </form>
+
+        <details class="help">
+          <summary>Как получить прямую ссылку на изображение?</summary>
+          <p>1. Откройте <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" data-external>Postimages</a> и загрузите изображение.</p>
+          <p>2. Скопируйте именно «Прямую ссылку» на файл PNG, JPG или WebP.</p>
+          <p>3. Вставьте ссылку выше и сохраните профиль.</p>
+          <p class="muted">Не загружайте личные или конфиденциальные фотографии на публичный фотохостинг.</p>
+        </details>
+      </div>
+
+      <div class="glass panel">
+        <h2>Мы в социальных сетях</h2>
+        <p class="muted">Официальные ресурсы Nexora</p>
+        <div class="socials">
+          <a id="tgChannel" href="#" class="social" target="_blank" rel="noopener noreferrer">✈ Telegram-канал ↗</a>
+          <a id="tgBot" href="#" class="social" target="_blank" rel="noopener noreferrer">✈ Telegram-бот ↗</a>
+        </div>
+        <p id="socialHint" class="muted"></p>
+      </div>
+    </section>
+  </main>
+
+  <aside class="right">
+    <div class="glass panel">
+      <h3>✦ NEXORA</h3>
+      <p class="muted">Независимая социальная сеть. Публикации, профили и общение.</p>
     </div>
-   </div>
-   <div id="profilePosts"></div>
-  </section>
- </main>
-
- <aside class="right">
-  <div class="card">
-   <h3>✦ N E X O R A 1.0</h3>
-   <p class="sideinfo">Добро пожаловать в новое социальное пространство.</p>
-  </div>
-  <div class="card">
-   <h3>О платформе</h3>
-   <p class="sideinfo">
-    Публикуй записи, находи людей, общайся в комментариях
-    и создавай собственное сообщество.
-   </p>
-   <p class="muted">Разработчик: @Toolgool</p>
-  </div>
- </aside>
+    <div class="glass panel">
+      <h3>Безопасность</h3>
+      <p class="muted">Переходы на сторонние сайты сопровождаются предупреждением.</p>
+    </div>
+  </aside>
 </div>
 
-<div id="toast" class="toast hidden"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-<script type="module">
-import {initializeApp} from
- "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {
- getAuth,onAuthStateChanged,createUserWithEmailAndPassword,
- signInWithEmailAndPassword,signOut
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {
- getFirestore,collection,doc,setDoc,getDoc,getDocs,
- addDoc,deleteDoc,query,orderBy,limit,onSnapshot,
- serverTimestamp,runTransaction
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-const firebaseConfig = {
- apiKey:"AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",
- authDomain:"toolchat-bfac8.firebaseapp.com",
- projectId:"toolchat-bfac8",
- storageBucket:"toolchat-bfac8.firebasestorage.app",
- messagingSenderId:"52396840735",
- appId:"1:52396840735:web:a608b9c037c8481f2dc22a",
- measurementId:"G-WSR0SZ40M7"
-};
-
-const $=id=>document.getElementById(id);
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-
-let me=null,myProfile=null,viewUid=null;
-let users={},posts=[],likes={};
-let unsubPosts=null,unsubLikes=null;
-let unsubProfile=null,unsubFollowers=null,unsubFollowing=null;
-let authMode="login",currentPage="feed";
-let profileToken=0;
-
-function toast(message){
- $("toast").textContent=message;
- $("toast").classList.remove("hidden");
- setTimeout(()=>$("toast").classList.add("hidden"),3500);
-}
-function escapeHTML(s){
- return String(s??"").replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",
-  '"':"&quot;","'":"&#39;"
- }[c]));
-}
-function displayName(uid){
- return users[uid]?.name||"Пользователь";
-}
-function avatar(name,big=false){
- return `<div class="avatar ${big?"big":""}">${
- escapeHTML((name||"T").slice(0,2).toUpperCase())
- }</div>`;
-}
-function formatDate(t){
- if(!t?.toDate)return "Только что";
- return t.toDate().toLocaleString("ru-RU",{
-  day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"
- });
-}
-function showPage(page){
- currentPage=page;
- ["feed","search","profile"].forEach(p=>{
-  $(p+"Page").classList.toggle("hidden",p!==page);
- });
- document.querySelectorAll("[data-page]").forEach(b=>{
-  b.classList.toggle("active",b.dataset.page===page);
- });
- if(page==="search")renderSearch();
- if(page==="profile")openProfile(me.uid);
-}
-document.querySelectorAll("[data-page]").forEach(b=>{
- b.onclick=()=>showPage(b.dataset.page);
-});
-
-$("messagesNav").onclick=()=>{
- window.location.href="./chats.html";
-};
-
-$("authSwitch").onclick=()=>{
- authMode=authMode==="login"?"register":"login";
- const register=authMode==="register";
- $("username").classList.toggle("hidden",!register);
- $("username").required=register;
- $("authTitle").textContent=register?"Создать аккаунт":"С возвращением";
- $("authSubmit").textContent=register?"Зарегистрироваться":"Войти";
- $("authSwitch").textContent=register?"Уже есть аккаунт? Войти":"Создать аккаунт";
-};
-
-$("authForm").onsubmit=async e=>{
- e.preventDefault();
- const btn=$("authSubmit");
- btn.disabled=true;
- const email=$("email").value.trim();
- const password=$("password").value;
- try{
-  if(authMode==="register"){
-   const name=$("username").value.trim();
-   if(name.length<3||name.length>20)throw Error("Имя: от 3 до 20 символов");
-   const result=await createUserWithEmailAndPassword(auth,email,password);
-   await setDoc(doc(db,"users",result.user.uid),{
-    name,bio:"Привет! Я в TL Social.",
-    createdAt:serverTimestamp()
-   });
-  }else{
-   await signInWithEmailAndPassword(auth,email,password);
-  }
- }catch(err){
-  toast(err.message||"Ошибка входа");
- }finally{btn.disabled=false}
-};
-$("logout").onclick=()=>signOut(auth);
-
-onAuthStateChanged(auth,async user=>{
- if(unsubPosts)unsubPosts();
- if(unsubLikes)unsubLikes();
- stopProfile();
- me=user;
- $("authPage").classList.toggle("hidden",!!user);
- $("app").classList.toggle("hidden",!user);
- $("userMenu").classList.toggle("hidden",!user);
- if(!user)return;
- try{
-  const snap=await getDoc(doc(db,"users",user.uid));
-  if(!snap.exists()){
-   toast("Профиль не найден. Попробуй зарегистрироваться заново.");
-   return;
-  }
-  myProfile=snap.data();
-  $("topName").textContent=myProfile.name;
-  await loadUsers();
-  listenFeed();
-  showPage("feed");
- }catch(err){toast("Ошибка загрузки: "+err.message)}
-});
-
-async function loadUsers(){
- const snap=await getDocs(query(collection(db,"users"),limit(100)));
- users={};
- snap.forEach(d=>users[d.id]=d.data());
-}
-
-$("postInput").oninput=()=>{
- $("postCount").textContent=$("postInput").value.length;
-};
-$("postForm").onsubmit=async e=>{
- e.preventDefault();
- const text=$("postInput").value.trim();
- if(!text||text.length>1000||!me)return;
- const btn=e.target.querySelector("button");
- btn.disabled=true;
- try{
-  await addDoc(collection(db,"posts"),{
-   uid:me.uid,text,createdAt:serverTimestamp()
-  });
-  $("postInput").value="";
-  $("postCount").textContent="0";
-  toast("Публикация создана");
- }catch(err){toast(err.message)}
- finally{btn.disabled=false}
-};
-
-function listenFeed(){
- if(unsubPosts)unsubPosts();
- unsubPosts=onSnapshot(
-  query(collection(db,"posts"),orderBy("createdAt","desc"),limit(50)),
-  snap=>{
-   posts=snap.docs.map(d=>({id:d.id,...d.data()}));
-   renderFeed();
-   if(currentPage==="profile")renderProfilePosts();
-  },
-  err=>toast("Ошибка ленты: "+err.message)
- );
- if(unsubLikes)unsubLikes();
- unsubLikes=onSnapshot(
-  collection(db,"users",me.uid,"likes"),
-  snap=>{
-   likes={};
-   snap.forEach(d=>likes[d.id]=true);
-   renderFeed();
-   if(currentPage==="profile")renderProfilePosts();
-  },
-  err=>toast("Ошибка лайков: "+err.message)
- );
-}
-function postHTML(p){
- const mine=p.uid===me?.uid;
- const liked=!!likes[p.id];
- return `<article class="card" data-post="${escapeHTML(p.id)}">
-  <div class="row">
-   ${avatar(displayName(p.uid))}
-   <div style="flex:1;min-width:0">
-    <div class="name">${escapeHTML(displayName(p.uid))}</div>
-    <div class="handle">${formatDate(p.createdAt)}</div>
-   </div>
-   ${mine?`<button class="ghost small danger" data-action="delete-post"
-    data-id="${escapeHTML(p.id)}">Удалить</button>`:""}
+<div id="linkDialog" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="linkTitle">
+  <div class="glass dialog">
+    <div class="warning">⚠</div>
+    <h2 id="linkTitle">Вы покидаете Nexora</h2>
+    <p>Эта ссылка не подтверждена администрацией. Проверьте адрес и не вводите пароли на подозрительных сайтах.</p>
+    <div id="linkTarget" class="urlbox"></div>
+    <div class="buttons">
+      <button id="cancelLink" class="quiet">Отмена</button>
+      <button id="confirmLink" class="primary">Продолжить</button>
+    </div>
   </div>
-  <div class="posttext">${escapeHTML(p.text)}</div>
-  <div class="actions">
-   <button class="${liked?"liked":""}" data-action="like"
-    data-id="${escapeHTML(p.id)}">${liked?"♥":"♡"} Нравится</button>
-   <button data-action="comments" data-id="${escapeHTML(p.id)}">☏ Комментарии</button>
-   <button data-action="author" data-id="${escapeHTML(p.uid)}">Профиль</button>
-  </div>
-  <div id="comments-${escapeHTML(p.id)}" class="hidden" style="margin-top:15px"></div>
- </article>`;
-}
-function renderFeed(){
- $("feedList").innerHTML=posts.length
-  ?posts.map(postHTML).join("")
-  :'<div class="card empty">Пока нет публикаций. Создай первую!</div>';
-}
-document.addEventListener("click",async e=>{
- const b=e.target.closest("[data-action]");
- if(!b)return;
- const id=b.dataset.id;
- try{
-  if(b.dataset.action==="like"){
-   const ref=doc(db,"users",me.uid,"likes",id);
-   if(likes[id])await deleteDoc(ref);
-   else await setDoc(ref,{createdAt:serverTimestamp()});
-  }
-  if(b.dataset.action==="delete-post"){
-   if(!confirm("Удалить публикацию?"))return;
-   await deleteDoc(doc(db,"posts",id));
-  }
-  if(b.dataset.action==="comments")await openComments(id);
-  if(b.dataset.action==="author")openProfile(id);
-  if(b.dataset.action==="follow")await toggleFollow(id);
- }catch(err){toast(err.message)}
-});
+</div>
 
-async function openComments(postId){
- const box=$("comments-"+postId);
- if(!box)return;
- if(!box.classList.contains("hidden")){
-  box.classList.add("hidden");return;
- }
- box.classList.remove("hidden");
- box.textContent="Загрузка...";
- const snap=await getDocs(query(
-  collection(db,"posts",postId,"comments"),
-  orderBy("createdAt","desc"),limit(30)
- ));
- box.innerHTML=snap.docs.map(d=>{
-  const c=d.data();
-  return `<div class="comment">
-   <strong>${escapeHTML(displayName(c.uid))}</strong>
-   <p>${escapeHTML(c.text)}</p>
-  </div>`;
- }).join("")||'<p class="muted">Комментариев пока нет</p>';
- const form=document.createElement("form");
- form.className="form";
- form.innerHTML=`<input maxlength="300" required placeholder="Написать комментарий">
- <button class="primary small">Отправить</button>`;
- form.onsubmit=async e=>{
-  e.preventDefault();
-  const text=form.querySelector("input").value.trim();
-  if(!text)return;
-  const btn=form.querySelector("button");
-  btn.disabled=true;
-  try{
-   await addDoc(collection(db,"posts",postId,"comments"),{
-    uid:me.uid,text,createdAt:serverTimestamp()
-   });
-   box.classList.add("hidden");
-   await openComments(postId);
-  }catch(err){toast(err.message)}
-  finally{btn.disabled=false}
- };
- box.append(form);
-}
-
-$("searchInput").oninput=renderSearch;
-function renderSearch(){
- const q=$("searchInput").value.toLowerCase().trim();
- const results=Object.entries(users)
-  .filter(([uid,u])=>!q||u.name.toLowerCase().includes(q))
-  .slice(0,30);
- $("searchResults").innerHTML=results.map(([uid,u])=>`
-  <div class="card row">
-   ${avatar(u.name)}
-   <div style="flex:1;min-width:0">
-    <div class="name">${escapeHTML(u.name)}</div>
-    <div class="muted">${escapeHTML(u.bio||"")}</div>
-   </div>
-   <button class="ghost small" data-action="author"
-    data-id="${escapeHTML(uid)}">Открыть</button>
-  </div>
- `).join("")||'<div class="empty">Никого не найдено</div>';
-}
-function stopProfile(){
- profileToken++;
- [unsubProfile,unsubFollowers,unsubFollowing].forEach(fn=>fn?.());
- unsubProfile=unsubFollowers=unsubFollowing=null;
-}
-async function openProfile(uid){
- stopProfile();
- const token=profileToken;
- viewUid=uid;
- currentPage="profile";
- ["feed","search","profile"].forEach(p=>
-  $(p+"Page").classList.toggle("hidden",p!=="profile")
- );
- document.querySelectorAll("[data-page]").forEach(b=>
-  b.classList.toggle("active",b.dataset.page==="profile")
- );
- $("profileName").textContent="Загрузка...";
- $("profileControls").innerHTML="";
- $("profilePosts").innerHTML="";
- try{
-  const snap=await getDoc(doc(db,"users",uid));
-  if(token!==profileToken)return;
-  if(!snap.exists())throw Error("Пользователь не найден");
-  const u=snap.data();
-  users[uid]=u;
-  $("profileName").textContent=u.name;
-  $("profileHandle").textContent="Участник TL Social";
-  $("profileAvatar").textContent=u.name.slice(0,2).toUpperCase();
-  $("profileBio").textContent=u.bio||"Без описания";
-  $("profileControls").innerHTML=uid===me.uid
-   ?`<button class="ghost" id="editBio">Изменить описание</button>`
-   :`<button class="primary" id="followButton">Подписаться</button>
-     <button class="ghost" id="messageProfileButton" type="button">✉ Написать</button>`;
-  if(uid===me.uid){
-   $("editBio").onclick=editBio;
-  }else{
-   $("followButton").onclick=()=>toggleFollow(uid);
-   $("messageProfileButton").onclick=()=>{
-    window.location.href="./chats.html?user="+encodeURIComponent(uid);
-   };
-  }
-  unsubFollowers=onSnapshot(
-   collection(db,"users",uid,"followers"),
-   s=>{
-    if(token!==profileToken)return;
-    $("followersCount").textContent=s.size;
-    const b=$("followButton");
-    if(b)b.textContent=s.docs.some(d=>d.id===me.uid)
-     ?"Отписаться":"Подписаться";
-   }
-  );
-  unsubFollowing=onSnapshot(
-   collection(db,"users",uid,"following"),
-   s=>{
-    if(token===profileToken)$("followingCount").textContent=s.size;
-   }
-  );
-  renderProfilePosts();
- }catch(err){toast(err.message)}
-}
-function renderProfilePosts(){
- $("profilePosts").innerHTML=posts.filter(p=>p.uid===viewUid)
-  .map(postHTML).join("")
-  ||'<div class="card empty">Публикаций в загруженной ленте нет</div>';
-}
-async function editBio(){
- const bio=prompt("Новое описание (до 160 символов):",
-  users[me.uid]?.bio||"");
- if(bio===null)return;
- if(bio.length>160)return toast("Максимум 160 символов");
- await setDoc(doc(db,"users",me.uid),{bio},{merge:true});
- users[me.uid].bio=bio;
- $("profileBio").textContent=bio;
- toast("Описание обновлено");
-}
-async function toggleFollow(uid){
- if(uid===me.uid)return;
- const myRef=doc(db,"users",me.uid,"following",uid);
- const theirRef=doc(db,"users",uid,"followers",me.uid);
- await runTransaction(db,async tx=>{
-  const snap=await tx.get(myRef);
-  if(snap.exists()){
-   tx.delete(myRef);
-   tx.delete(theirRef);
-  }else{
-   tx.set(myRef,{createdAt:serverTimestamp()});
-   tx.set(theirRef,{createdAt:serverTimestamp()});
-  }
- });
- toast("Подписки обновлены");
-}
-</script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
