@@ -110,3 +110,11 @@ The test command starts a local Firestore emulator and runs `tests/firestore.rul
 - Presence updates require `lastSeen == request.time`, and typing updates require `updatedAt == request.time`.
 - These checks match the currently inspected client calls using `serverTimestamp()`. The local security tests include forged historical timestamps and valid server timestamps.
 - **Tests still require actual execution in the Firebase Emulator.** Do not deploy these rules without testing existing workflows and checking legacy data compatibility.
+
+## Moderation inbox alerts
+
+- New report documents trigger `onNewReport`: the fixed owner UID receives a notification referring to the report document ID. The report reason and target ID are not interpolated into privileged Firestore document paths.
+- New verification request documents trigger `onNewVerificationRequest`: the owner receives a notification referring to the applicant UID.
+- Both handlers ignore non-pending records, suppress self-notifications, and use deterministic notification IDs to avoid duplicate alerts on event retries.
+- Firebase Rules regression tests now cover report creation/review permissions, verification review permissions, owner-only audit logs, and the prohibition on client-created moderation alerts.
+- All Cloud Functions remain **committed but not deployed**. Rules tests remain **unexecuted** until dependencies and a Firebase emulator are available.
