@@ -256,7 +256,7 @@ async function savePost(id){
   const post=await getDoc(doc(db,"posts",id));
   if(!post.exists())throw Error("Публикация удалена.");
   await setDoc(doc(db,"users",me.uid,"saved",id),{
-    postId:id,createdAt:serverTimestamp()
+    createdAt:serverTimestamp()
   });
   notice("Публикация сохранена.");
 }
