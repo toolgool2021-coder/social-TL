@@ -1,7 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function authd() { return request.auth != null; }
+    // Verified Firebase Auth ID token is required for all social features.
+    function signedIn() { return request.auth != null; }
+    function authd() { return signedIn() && request.auth.token.email_verified == true; }
     function self(uid) { return authd() && request.auth.uid == uid; }
     function ownerUid() { return "FXtmMsn8JYfx04zpxiSaXZ0iHWg2"; }
     function profile(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
@@ -40,8 +42,10 @@ service cloud.firestore {
         request.auth.uid in p && p[0] < p[1] && existsUser(p[0]) && existsUser(p[1]);
     }
     match /users/{uid} {
-      allow get,list: if authd();
-      allow create: if self(uid) && request.resource.data.keys().hasOnly([
+      // Registration may create/read ONLY its own limited profile before email verification.
+      allow get: if authd() || (signedIn() && request.auth.uid == uid);
+      allow list: if authd();
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.keys().hasOnly([
         'name','username','bio','avatarUrl','bannerUrl','websiteUrl','status','privacy','createdAt'
       ]) && txt(request.resource.data.name,3,20) && profileFields(request.resource.data) &&
         request.resource.data.createdAt == request.time;
