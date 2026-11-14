@@ -568,9 +568,18 @@ const MESSAGE_COOLDOWN_MS=900;
 
 const EMOJIS=["❤️","👍","😂","😮","😢","🔥"];
 
-const STICKER_PACKS=[
-  {id:"kemomimiori",title:"Kemomimiori",files:[]}
-];
+let STICKER_PACKS=[];
+async function loadStickerPacks(){
+  try{
+    const response=await fetch("./image/sticker/packs.json",{cache:"no-store"});
+    if(!response.ok)throw Error("Manifest unavailable");
+    const packs=await response.json();
+    STICKER_PACKS=packs.filter(p=>/^[a-zA-Z0-9_-]+$/.test(p.id)&&Array.isArray(p.files)).map(p=>({
+      id:p.id,title:String(p.title||p.id),files:p.files.filter(f=>/^[a-zA-Z0-9_.-]+\\.(png|webp|gif|jpg|jpeg)$/i.test(f))
+    }));
+  }catch(error){console.warn("Sticker packs:",error);STICKER_PACKS=[];}
+  renderStickerPacks();
+}
 
 const esc=value=>String(value??"").replace(
   /[&<>"']/g,
@@ -912,7 +921,7 @@ function stickerSource(key){
   const pack=STICKER_PACKS.find(p=>p.id===parts[0]);
   if(!pack||!pack.files.includes(parts[1]))return "";
 
-  return "./image/stic/"+parts[0]+"/"+parts[1];
+  return "./image/sticker/"+encodeURIComponent(parts[0])+"/"+encodeURIComponent(parts[1]);
 }
 
 function renderMessages(forceBottom=false){
@@ -1569,7 +1578,7 @@ $("stickerGrid").onclick=async event=>{
   }
 };
 
-renderStickerPacks();
+loadStickerPacks();
 
 onAuthStateChanged(auth,async user=>{
   const session=++authGeneration;
