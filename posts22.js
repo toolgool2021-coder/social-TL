@@ -156,57 +156,60 @@ function applyCard(article){
 }
 
 const counterCache=new Map();
-const pending=new Set();
+const pending=new Map();
 let counterObserver=null;
+const COUNTER_TTL=15000;
 
-async function loadCounters(article){
+async function loadCounters(article,force=false){
   const id=article.dataset.post;
-
-  if(!validId(id)||pending.has(id))return;
-
+  if(!validId(id))return;
   const el=article.querySelector('.nx31-counters');
   if(!el)return;
 
-  if(counterCache.has(id)){
-    el.textContent=counterCache.get(id);
+  const cached=counterCache.get(id);
+  if(!force&&cached&&Date.now()-cached.at<COUNTER_TTL){
+    el.textContent=cached.text;
     return;
   }
-
-  pending.add(id);
+  if(!pending.has(id)){
+    const request=Promise.all([
+      getCountFromServer(collection(db,'posts',id,'likes')),
+      getCountFromServer(collection(db,'posts',id,'comments'))
+    ]).then(([likes,comments])=>{
+      const likeCount=likes.data().count;
+      const commentCount=comments.data().count;
+      const text=`♥ ${likeCount} · 💬 ${commentCount}`;
+      counterCache.set(id,{at:Date.now(),text});
+      return text;
+    }).finally(()=>pending.delete(id));
+    pending.set(id,request);
+  }
   el.textContent='Счётчики загружаются…';
-
   try{
-    const c=await getCountFromServer(
-      collection(db,'posts',id,'comments')
-    );
-
-    const result=
-      `${c.data().count} комментариев · Лайки: нет общего счётчика`;
-
-    counterCache.set(id,result);
-
-    if(article.isConnected){
-      el.textContent=result;
+    const result=await pending.get(id);
+    // Article might be re-rendered while the count request is pending.
+    for(const card of document.querySelectorAll('article[data-post]')){
+      if(card.dataset.post===id){
+        const counter=card.querySelector('.nx31-counters');
+        if(counter)counter.textContent=result;
+      }
     }
   }catch(e){
     console.warn('[NEXORA] counters:',id,e);
-
-    if(article.isConnected){
-      el.replaceChildren();
-
+    for(const card of document.querySelectorAll('article[data-post]')){
+      if(card.dataset.post!==id)continue;
+      const counter=card.querySelector('.nx31-counters');
+      if(!counter)continue;
+      counter.replaceChildren();
       const label=document.createElement('span');
       label.textContent='Счётчики недоступны';
-
       const retry=document.createElement('button');
       retry.type='button';
       retry.className='nx31-count-retry';
       retry.textContent='Повторить';
       retry.dataset.nx31CountRetry=id;
-
-      el.append(label,retry);
+      counter.append(label,retry);
     }
-  }finally{
-    pending.delete(id);
   }
 }
 
@@ -457,7 +460,7 @@ document.addEventListener('click',async event=>{
       'article[data-post]'
     );
 
-    if(article)loadCounters(article);
+    if(article)loadCounters(article,true);
     return;
   }
 
@@ -523,3 +526,29 @@ for(const id of ['feedList','profilePosts']){
 }
 
 decorate();
+
+window.addEventListener('nexora:post-counts-changed',event=>{
+  const id=event.detail?.id;
+  if(!validId(id))return;
+  counterCache.delete(id);
+  for(const article of document.querySelectorAll('article[data-post]')){
+    if(article.dataset.post===id)void loadCounters(article,true);
+  }
+});
+// Refresh visible counters periodically to include actions by other users.
+const counterRefresh=setInterval(()=>{
+  if(!me||document.hidden)return;
+  for(const article of document.querySelectorAll('article[data-post]')){
+    const rect=article.getBoundingClientRect();
+    if(rect.bottom>=0&&rect.top<=window.innerHeight)
+      void loadCounters(article);
+  }
+},30000);
+window.addEventListener('focus',()=>{
+  if(!me)return;
+  for(const article of document.querySelectorAll('article[data-post]')){
+    const rect=article.getBoundingClientRect();
+    if(rect.bottom>=0&&rect.top<=window.innerHeight)
+      void loadCounters(article,true);
+  }
+});
