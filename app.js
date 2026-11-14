@@ -21,19 +21,21 @@ const firebaseConfig = {
   measurementId:'G-WSR0SZ40M7'
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const $ = id => document.getElementById(id);
+const OWNER_UID='FXtmMsn8JYfx04zpxiSaXZ0iHWg2';
 
-let me=null, myProfile=null, viewUid=null;
-let users={}, posts=[], likes={};
-let currentPage='feed', authMode='login', profileToken=0;
-let unsubPosts=null, unsubLikes=null;
-let unsubFollowers=null, unsubFollowing=null;
-let toastTimer=null, pendingURL=null;
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
 
-const badges = {
+let me=null,myProfile=null,viewUid=null;
+let users={},posts=[],likes={};
+let currentPage='feed',authMode='login',profileToken=0;
+let unsubPosts=null,unsubLikes=null;
+let unsubFollowers=null,unsubFollowing=null;
+let toastTimer=null,pendingURL=null;
+
+const badges={
   1:'Этот пользователь прошёл стандартную верификацию Nexora.',
   2:'Это официальный подтверждённый бренд в Nexora.',
   3:'Это создатель и главный разработчик Nexora.',
@@ -41,14 +43,14 @@ const badges = {
   5:'Этот пользователь поддержал развитие Nexora. Спасибо за вклад в проект!'
 };
 
-function toast(message) {
+function toast(message){
   clearTimeout(toastTimer);
   $('toast').textContent=message;
   $('toast').classList.remove('hidden');
   toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),3800);
 }
 
-function esc(s) {
+function esc(s){
   return String(s??'').replace(/[&<>"']/g,c=>({
     '&':'&amp;',
     '<':'&lt;',
@@ -58,17 +60,17 @@ function esc(s) {
   }[c]));
 }
 
-function validURL(s) {
-  try {
+function validURL(s){
+  try{
     const u=new URL(s);
     return u.protocol==='https:' &&
       !!u.hostname && u.username==='' && u.password==='';
-  } catch {
+  }catch{
     return false;
   }
 }
 
-function imageURL(s) {
+function imageURL(s){
   if(!s)return '';
   if(!validURL(s))throw Error('Изображение должно иметь прямую HTTPS-ссылку');
   const u=new URL(s);
@@ -77,7 +79,7 @@ function imageURL(s) {
   return u.href;
 }
 
-function avatar(uid,big=false) {
+function avatar(uid,big=false){
   const u=users[uid]||{};
   const name=u.name||'N';
   const url=u.avatarUrl;
@@ -88,24 +90,22 @@ function avatar(uid,big=false) {
   }</div>`;
 }
 
-function displayName(uid) {
+function displayName(uid){
   return users[uid]?.name||'Пользователь';
 }
 
-// Значки предназначены только для отображения.
-// Они не дают административных прав.
-function badgeHTML(uid) {
+function badgeHTML(uid){
   const v=Number(users[uid]?.verification||0);
   return v>=1&&v<=5
     ? `<button type="button" class="badgeicon" data-badge="${v}" aria-label="Информация о верификации"><img src="image/Verified_${v}.png" alt="Верификация" onerror="this.parentElement.remove()"></button>`
     : '';
 }
 
-function nameHTML(uid) {
+function nameHTML(uid){
   return `<span class="namegroup"><span class="name">${esc(displayName(uid))}</span>${badgeHTML(uid)}</span>`;
 }
 
-function formatDate(t) {
+function formatDate(t){
   return t?.toDate
     ? t.toDate().toLocaleString('ru-RU',{
         day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'
@@ -113,27 +113,27 @@ function formatDate(t) {
     : 'Только что';
 }
 
-function isTrusted(raw) {
-  try {
+function isTrusted(raw){
+  try{
     const u=new URL(raw);
     return u.protocol==='https:' &&
       TRUSTED_HOSTS.some(host=>
         u.hostname===host || u.hostname.endsWith('.'+host)
       );
-  } catch {
+  }catch{
     return false;
   }
 }
 
-function externalLink(raw,label) {
+function externalLink(raw,label){
   if(!validURL(raw))return '';
   return `<a href="${esc(raw)}" target="_blank" rel="noopener noreferrer" data-external>${esc(label)}</a>`;
 }
 
-function linkify(text) {
+function linkify(text){
   const rx=/https?:\/\/[^\s<>"']+/g;
   let out='',start=0;
-  for(const m of text.matchAll(rx)) {
+  for(const m of text.matchAll(rx)){
     out+=esc(text.slice(start,m.index));
     const raw=m[0].replace(/[.,!?;:)]+$/,'');
     out+=validURL(raw)?externalLink(raw,raw):esc(raw);
@@ -143,7 +143,19 @@ function linkify(text) {
   return out+esc(text.slice(start));
 }
 
-function showPage(page) {
+function updateOwnerButton(user,profile){
+  const button=$('ownerButton');
+  if(!button)return;
+  const allowed=Boolean(
+    user &&
+    profile &&
+    user.uid===OWNER_UID &&
+    profile.role==='owner'
+  );
+  button.classList.toggle('hidden',!allowed);
+}
+
+function showPage(page){
   if(!me)return;
   currentPage=page;
   ['feed','search','profile','settings'].forEach(p=>
@@ -176,10 +188,10 @@ $('authForm').onsubmit=async e=>{
   e.preventDefault();
   const btn=$('authSubmit');
   btn.disabled=true;
-  try {
+  try{
     const email=$('email').value.trim();
     const password=$('password').value;
-    if(authMode==='register') {
+    if(authMode==='register'){
       const name=$('username').value.trim();
       if(name.length<3||name.length>20)
         throw Error('Имя должно содержать 3–20 символов');
@@ -189,19 +201,19 @@ $('authForm').onsubmit=async e=>{
         bio:'Привет! Я в Nexora.',
         createdAt:serverTimestamp()
       });
-    } else {
+    }else{
       await signInWithEmailAndPassword(auth,email,password);
     }
-  } catch(err) {
+  }catch(err){
     toast(err.message||'Ошибка входа');
-  } finally {
+  }finally{
     btn.disabled=false;
   }
 };
 
 $('logout').onclick=()=>signOut(auth);
 
-function stopProfile() {
+function stopProfile(){
   profileToken++;
   unsubFollowers?.();
   unsubFollowing?.();
@@ -214,28 +226,36 @@ onAuthStateChanged(auth,async user=>{
   stopProfile();
   me=user;
   myProfile=null;
+  updateOwnerButton(null,null);
+
   $('authPage').classList.toggle('hidden',!!user);
   $('app').classList.toggle('hidden',!user);
   $('topUser').classList.toggle('hidden',!user);
+
   if(!user)return;
 
-  try {
+  try{
     const snap=await getDoc(doc(db,'users',user.uid));
-    if(!snap.exists()) {
+    if(auth.currentUser?.uid!==user.uid)return;
+    if(!snap.exists()){
       toast('Профиль не найден. Проверьте регистрацию.');
       return;
     }
+
     myProfile=snap.data();
     $('topName').textContent=myProfile.name;
+    updateOwnerButton(user,myProfile);
+
     await loadUsers();
+    if(auth.currentUser?.uid!==user.uid)return;
     listenFeed();
     showPage('feed');
-  } catch(err) {
+  }catch(err){
     toast('Ошибка загрузки: '+err.message);
   }
 });
 
-async function loadUsers() {
+async function loadUsers(){
   const snap=await getDocs(query(collection(db,'users'),limit(100)));
   users={};
   snap.forEach(d=>users[d.id]=d.data());
@@ -253,7 +273,7 @@ $('postForm').onsubmit=async e=>{
   const btn=e.target.querySelector('button');
   btn.disabled=true;
 
-  try {
+  try{
     const imageUrl=imageURL($('postImage').value.trim());
     const data={
       uid:me.uid,
@@ -266,14 +286,14 @@ $('postForm').onsubmit=async e=>{
     $('postImage').value='';
     $('postCount').textContent='0';
     toast('Публикация создана');
-  } catch(err) {
+  }catch(err){
     toast(err.message);
-  } finally {
+  }finally{
     btn.disabled=false;
   }
 };
 
-function listenFeed() {
+function listenFeed(){
   unsubPosts?.();
   unsubLikes?.();
 
@@ -299,7 +319,7 @@ function listenFeed() {
   );
 }
 
-function postHTML(p) {
+function postHTML(p){
   const mine=p.uid===me?.uid;
   const liked=!!likes[p.id];
 
@@ -327,25 +347,23 @@ function postHTML(p) {
   </article>`;
 }
 
-function renderFeed() {
+function renderFeed(){
   $('feedList').innerHTML=posts.length
     ?posts.map(postHTML).join('')
     :'<div class="glass panel empty">Пока нет публикаций</div>';
 }
 
 document.addEventListener('click',async e=>{
-  // Нажатие именно на значок верификации
   const badge=e.target.closest('[data-badge]');
-  if(badge) {
+  if(badge){
     e.preventDefault();
     e.stopPropagation();
     toast(badges[Number(badge.dataset.badge)]||'Верифицированный аккаунт');
     return;
   }
 
-  // Предупреждение о сторонних ссылках
   const link=e.target.closest('a[data-external]');
-  if(link&&!isTrusted(link.href)) {
+  if(link&&!isTrusted(link.href)){
     e.preventDefault();
     pendingURL=link.href;
     $('linkTarget').textContent=new URL(link.href).hostname;
@@ -357,20 +375,20 @@ document.addEventListener('click',async e=>{
   if(!b||!me)return;
   const id=b.dataset.id;
 
-  try {
-    if(b.dataset.action==='like') {
+  try{
+    if(b.dataset.action==='like'){
       const ref=doc(db,'users',me.uid,'likes',id);
       if(likes[id])await deleteDoc(ref);
       else await setDoc(ref,{createdAt:serverTimestamp()});
     }
-    if(b.dataset.action==='delete-post') {
+    if(b.dataset.action==='delete-post'){
       if(confirm('Удалить публикацию?'))
         await deleteDoc(doc(db,'posts',id));
     }
     if(b.dataset.action==='comments')await openComments(id);
     if(b.dataset.action==='author')await openProfile(id);
     if(b.dataset.action==='follow')await toggleFollow(id);
-  } catch(err) {
+  }catch(err){
     toast(err.message);
   }
 });
@@ -391,11 +409,11 @@ $('linkDialog').onclick=e=>{
   if(e.target===$('linkDialog'))$('cancelLink').click();
 };
 
-async function openComments(postId) {
+async function openComments(postId){
   const box=$('comments-'+postId);
   if(!box)return;
 
-  if(!box.classList.contains('hidden')) {
+  if(!box.classList.contains('hidden')){
     box.classList.add('hidden');
     return;
   }
@@ -403,7 +421,7 @@ async function openComments(postId) {
   box.classList.remove('hidden');
   box.textContent='Загрузка...';
 
-  try {
+  try{
     const snap=await getDocs(query(
       collection(db,'posts',postId,'comments'),
       orderBy('createdAt','desc'),
@@ -428,7 +446,7 @@ async function openComments(postId) {
       if(!text)return;
       const btn=form.querySelector('button');
       btn.disabled=true;
-      try {
+      try{
         await addDoc(collection(db,'posts',postId,'comments'),{
           uid:me.uid,
           text,
@@ -436,22 +454,22 @@ async function openComments(postId) {
         });
         box.classList.add('hidden');
         await openComments(postId);
-      } catch(err) {
+      }catch(err){
         toast(err.message);
-      } finally {
+      }finally{
         btn.disabled=false;
       }
     };
 
     box.append(form);
-  } catch(err) {
+  }catch(err){
     box.textContent='Ошибка: '+err.message;
   }
 }
 
 $('searchInput').oninput=renderSearch;
 
-function renderSearch() {
+function renderSearch(){
   const q=$('searchInput').value.toLowerCase().trim();
   const results=Object.entries(users)
     .filter(([,u])=>!q||u.name?.toLowerCase().includes(q))
@@ -469,7 +487,7 @@ function renderSearch() {
   ).join('')||'<div class="empty">Никого не найдено</div>';
 }
 
-async function openProfile(uid) {
+async function openProfile(uid){
   stopProfile();
   const token=profileToken;
   viewUid=uid;
@@ -486,7 +504,7 @@ async function openProfile(uid) {
   $('profileControls').innerHTML='';
   $('profilePosts').innerHTML='';
 
-  try {
+  try{
     const snap=await getDoc(doc(db,'users',uid));
     if(token!==profileToken)return;
     if(!snap.exists())throw Error('Пользователь не найден');
@@ -536,12 +554,12 @@ async function openProfile(uid) {
     );
 
     renderProfilePosts();
-  } catch(err) {
+  }catch(err){
     toast(err.message);
   }
 }
 
-function renderProfilePosts() {
+function renderProfilePosts(){
   $('profilePosts').innerHTML=posts
     .filter(p=>p.uid===viewUid)
     .map(postHTML)
@@ -549,7 +567,7 @@ function renderProfilePosts() {
     ||'<div class="glass panel empty">Публикаций в загруженной ленте нет</div>';
 }
 
-async function toggleFollow(uid) {
+async function toggleFollow(uid){
   if(uid===me.uid)return;
 
   const a=doc(db,'users',me.uid,'following',uid);
@@ -557,10 +575,10 @@ async function toggleFollow(uid) {
 
   await runTransaction(db,async tx=>{
     const snap=await tx.get(a);
-    if(snap.exists()) {
+    if(snap.exists()){
       tx.delete(a);
       tx.delete(b);
-    } else {
+    }else{
       tx.set(a,{createdAt:serverTimestamp()});
       tx.set(b,{createdAt:serverTimestamp()});
     }
@@ -568,7 +586,7 @@ async function toggleFollow(uid) {
   toast('Подписки обновлены');
 }
 
-function fillSettings() {
+function fillSettings(){
   if(!myProfile)return;
   $('settingsBio').value=myProfile.bio||'';
   $('settingsAvatar').value=myProfile.avatarUrl||'';
@@ -582,7 +600,7 @@ $('settingsForm').onsubmit=async e=>{
   const btn=e.target.querySelector('button');
   btn.disabled=true;
 
-  try {
+  try{
     const bio=$('settingsBio').value.trim();
     const avatarUrl=imageURL($('settingsAvatar').value.trim());
     const bannerUrl=imageURL($('settingsBanner').value.trim());
@@ -598,9 +616,9 @@ $('settingsForm').onsubmit=async e=>{
     myProfile={...myProfile,...changes};
     users[me.uid]=myProfile;
     toast('Профиль сохранён');
-  } catch(err) {
+  }catch(err){
     toast(err.message);
-  } finally {
+  }finally{
     btn.disabled=false;
   }
 };
@@ -608,17 +626,17 @@ $('settingsForm').onsubmit=async e=>{
 for(const [id,url] of [
   ['tgChannel',SOCIAL.telegramChannel],
   ['tgBot',SOCIAL.telegramBot]
-]) {
+]){
   const a=$(id);
-  if(validURL(url)) {
+  if(validURL(url)){
     a.href=url;
     a.dataset.external='';
-  } else {
+  }else{
     a.classList.add('hidden');
   }
 }
 
-if(!validURL(SOCIAL.telegramChannel)&&!validURL(SOCIAL.telegramBot)) {
+if(!validURL(SOCIAL.telegramChannel)&&!validURL(SOCIAL.telegramBot)){
   $('socialHint').textContent=
     'Адреса Telegram-канала и бота можно указать в config.js.';
 }
