@@ -5,9 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#080d19">
-  <title>NEXORA · Социальная сеть</title>
+  <title>NEXORA 2.1 · Социальная сеть</title>
   <link rel="icon" href="image/icon.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="nexora21.css">
 </head>
 <body>
 <div class="ambient"></div>
@@ -16,7 +17,7 @@
   <div class="brand">
     <img src="image/icon.png" alt="" onerror="this.hidden=true">
     <b>NEXORA</b>
-    <small>BETA 2.0</small>
+    <small>BETA 2.1</small>
   </div>
   <div id="topUser" class="topuser hidden">
     <span id="topName"></span>
@@ -31,23 +32,49 @@
   <h1 id="authTitle">С возвращением</h1>
   <p class="muted">Твоё пространство для общения</p>
   <form id="authForm" class="stack">
-    <input id="username" class="hidden" placeholder="Имя пользователя (3–20 символов)" maxlength="20">
-    <input id="email" type="email" placeholder="Электронная почта" required>
-    <input id="password" type="password" placeholder="Пароль" minlength="6" required>
+    <input id="username" class="hidden"
+      placeholder="Имя пользователя (3–20 символов)"
+      maxlength="20">
+    <input id="email" type="email"
+      placeholder="Электронная почта" required>
+    <input id="password" type="password"
+      placeholder="Пароль" minlength="6" required>
     <button class="primary" id="authSubmit">Войти</button>
   </form>
-  <button class="linkbutton" id="authSwitch">Создать аккаунт</button>
+  <button class="linkbutton" id="authSwitch">
+    Создать аккаунт
+  </button>
 </section>
 
 <div id="app" class="layout hidden">
   <aside class="sidebar glass">
     <nav class="nav">
-      <button data-page="feed" class="active">⌂ <span>Главная</span></button>
-      <button data-page="search">⌕ <span>Поиск</span></button>
-      <a href="chats.html">✉ <span>Сообщения</span></a>
-      <button data-page="profile">♙ <span>Профиль</span></button>
-      <button data-page="settings">⚙ <span>Настройки</span></button>
-      <a id="ownerButton" href="./owner.html" class="hidden" style="color:#a9c1ff;border:1px solid rgba(118,156,255,.25);background:rgba(118,156,255,.09);border-radius:12px">
+      <button data-page="feed" class="active">
+        ⌂ <span>Главная</span>
+      </button>
+      <button data-page="search">
+        ⌕ <span>Поиск</span>
+      </button>
+      <a href="chats.html">
+        ✉ <span>Сообщения</span>
+      </a>
+      <button data-page="profile">
+        ♙ <span>Профиль</span>
+      </button>
+      <button data-nx-panel="saved">
+        ☆ <span>Сохранённое</span>
+      </button>
+      <button data-nx-panel="notifications">
+        ♢ <span>Уведомления</span>
+      </button>
+      <button data-nx-panel="verification">
+        ✓ <span>Верификация</span>
+      </button>
+      <button data-page="settings">
+        ⚙ <span>Настройки</span>
+      </button>
+      <a id="ownerButton" href="./owner.html"
+         class="hidden owner-nav">
         🛡 <span>Панель управления</span>
       </a>
     </nav>
@@ -58,14 +85,21 @@
       <div class="glass panel">
         <div class="sectionhead">
           <h2>Лента</h2>
-          <span class="muted">Nexora</span>
+          <span class="muted">NEXORA 2.1</span>
         </div>
         <form id="postForm" class="stack">
-          <textarea id="postInput" maxlength="1000" required placeholder="Что нового?"></textarea>
-          <label class="fieldlabel" for="postImage">Изображение (необязательно, прямая HTTPS-ссылка)</label>
-          <input id="postImage" placeholder="https://example.com/photo.png" type="url">
+          <textarea id="postInput"
+            maxlength="1000" required
+            placeholder="Что нового?"></textarea>
+          <label class="fieldlabel" for="postImage">
+            Изображение (прямая HTTPS-ссылка)
+          </label>
+          <input id="postImage" type="url"
+            placeholder="https://example.com/photo.png">
           <div class="between">
-            <small class="muted"><span id="postCount">0</span> / 1000</small>
+            <small class="muted">
+              <span id="postCount">0</span> / 1000
+            </small>
             <button class="primary">Опубликовать</button>
           </div>
         </form>
@@ -76,8 +110,11 @@
     <section id="searchPage" class="hidden">
       <div class="glass panel">
         <h2>Поиск людей</h2>
-        <input id="searchInput" placeholder="Найти пользователя">
-        <p class="muted">Поиск среди загруженных профилей</p>
+        <input id="searchInput"
+          placeholder="Найти пользователя">
+        <p class="muted">
+          Поиск среди загруженных профилей
+        </p>
       </div>
       <div id="searchResults"></div>
     </section>
@@ -86,13 +123,18 @@
       <div class="glass panel profile">
         <div id="profileBanner" class="cover"></div>
         <div class="profilebody">
-          <div id="profileAvatar" class="avatar large">N</div>
+          <div id="profileAvatar"
+            class="avatar large">N</div>
           <div id="profileName" class="profilename"></div>
           <div id="profileHandle" class="muted"></div>
           <p id="profileBio"></p>
           <div class="stats">
-            <span><b id="followersCount">0</b> подписчиков</span>
-            <span><b id="followingCount">0</b> подписок</span>
+            <span>
+              <b id="followersCount">0</b> подписчиков
+            </span>
+            <span>
+              <b id="followingCount">0</b> подписок
+            </span>
           </div>
           <div id="profileLinks"></div>
           <div id="profileControls" class="buttons"></div>
@@ -104,40 +146,72 @@
     <section id="settingsPage" class="hidden">
       <div class="glass panel">
         <h2>Настройки профиля</h2>
-        <p class="muted">Изображения хранятся на стороннем фотохостинге. Nexora сохраняет только ссылки.</p>
+        <p class="muted">
+          Изображения хранятся на стороннем
+          фотохостинге. Nexora сохраняет ссылки.
+        </p>
         <form id="settingsForm" class="stack">
           <label>Описание профиля
-            <textarea id="settingsBio" maxlength="160" placeholder="О себе"></textarea>
+            <textarea id="settingsBio"
+              maxlength="160"></textarea>
           </label>
           <label>Прямая ссылка на аватар
-            <input id="settingsAvatar" type="url" placeholder="https://example.com/avatar.png">
+            <input id="settingsAvatar" type="url"
+              placeholder="https://example.com/avatar.png">
           </label>
           <label>Прямая ссылка на обложку
-            <input id="settingsBanner" type="url" placeholder="https://example.com/banner.png">
+            <input id="settingsBanner" type="url"
+              placeholder="https://example.com/banner.png">
           </label>
-          <label>Ссылка на ваш сайт (необязательно)
-            <input id="settingsWebsite" type="url" placeholder="https://example.com">
+          <label>Ссылка на сайт
+            <input id="settingsWebsite" type="url"
+              placeholder="https://example.com">
           </label>
-          <button class="primary">Сохранить профиль</button>
+          <button class="primary">
+            Сохранить профиль
+          </button>
         </form>
-
         <details class="help">
-          <summary>Как получить прямую ссылку на изображение?</summary>
-          <p>1. Откройте <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" data-external>Postimages</a> и загрузите изображение.</p>
-          <p>2. Скопируйте именно «Прямую ссылку» на файл PNG, JPG или WebP.</p>
-          <p>3. Вставьте ссылку выше и сохраните профиль.</p>
-          <p class="muted">Не загружайте личные или конфиденциальные фотографии на публичный фотохостинг.</p>
+          <summary>Как загрузить изображение?</summary>
+          <p>
+            Откройте
+            <a href="https://postimages.org/"
+               target="_blank"
+               rel="noopener noreferrer"
+               data-external>Postimages</a>,
+            загрузите изображение и скопируйте
+            прямую ссылку PNG, JPG или WebP.
+          </p>
         </details>
       </div>
 
       <div class="glass panel">
         <h2>Мы в социальных сетях</h2>
-        <p class="muted">Официальные ресурсы Nexora</p>
         <div class="socials">
-          <a id="tgChannel" href="#" class="social" target="_blank" rel="noopener noreferrer">✈ Telegram-канал ↗</a>
-          <a id="tgBot" href="#" class="social" target="_blank" rel="noopener noreferrer">✈ Telegram-бот ↗</a>
+          <a id="tgChannel" href="#" class="social"
+             target="_blank"
+             rel="noopener noreferrer">
+            ✈ Telegram-канал
+          </a>
+          <a id="tgBot" href="#" class="social"
+             target="_blank"
+             rel="noopener noreferrer">
+            ✈ Telegram-бот
+          </a>
         </div>
         <p id="socialHint" class="muted"></p>
+      </div>
+    </section>
+
+    <section id="nx21panel" class="hidden">
+      <div class="glass panel">
+        <div class="between">
+          <h2 id="nx21title">NEXORA</h2>
+          <button id="nx21back" class="quiet">
+            ← Назад
+          </button>
+        </div>
+        <div id="nx21body"></div>
       </div>
     </section>
   </main>
@@ -145,30 +219,51 @@
   <aside class="right">
     <div class="glass panel">
       <h3>✦ NEXORA</h3>
-      <p class="muted">Независимая социальная сеть. Публикации, профили и общение.</p>
+      <p class="muted">
+        Независимая социальная сеть.
+        Публикации, профили и общение.
+      </p>
     </div>
     <div class="glass panel">
       <h3>Безопасность</h3>
-      <p class="muted">Переходы на сторонние сайты сопровождаются предупреждением.</p>
+      <p class="muted">
+        Не передавайте пароли и личную
+        информацию незнакомым пользователям.
+      </p>
     </div>
   </aside>
 </div>
 
-<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+<div id="toast" class="toast hidden"
+  role="status" aria-live="polite"></div>
 
-<div id="linkDialog" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="linkTitle">
+<div id="nx21notice" hidden
+  role="status" aria-live="polite"></div>
+
+<div id="linkDialog" class="modal hidden"
+  role="dialog" aria-modal="true"
+  aria-labelledby="linkTitle">
   <div class="glass dialog">
     <div class="warning">⚠</div>
     <h2 id="linkTitle">Вы покидаете Nexora</h2>
-    <p>Эта ссылка не подтверждена администрацией. Проверьте адрес и не вводите пароли на подозрительных сайтах.</p>
+    <p>
+      Эта ссылка не подтверждена администрацией.
+      Проверьте адрес и не вводите пароли
+      на подозрительных сайтах.
+    </p>
     <div id="linkTarget" class="urlbox"></div>
     <div class="buttons">
-      <button id="cancelLink" class="quiet">Отмена</button>
-      <button id="confirmLink" class="primary">Продолжить</button>
+      <button id="cancelLink" class="quiet">
+        Отмена
+      </button>
+      <button id="confirmLink" class="primary">
+        Продолжить
+      </button>
     </div>
   </div>
 </div>
 
 <script type="module" src="app.js"></script>
+<script type="module" src="nexora21.js"></script>
 </body>
 </html>
