@@ -1,6 +1,6 @@
 # NEXORA 3.2 — Firebase integration
 
-Status: incremental migration. Do not deploy new Firestore rules until they have been reconciled with the current production rules and tested in Firebase Emulator. The repository did not contain `firestore.rules` or `firestore.indexes.json` at the start of this migration.
+Status: incremental migration. Do not deploy new Firestore rules until they have been reconciled with the current production rules and tested in Firebase Emulator. The repository did not contain `firestore.rules` or `firestore.indexes.json` at the start of this migration. A candidate `firestore.rules` file has since been added. It is **NOT deployed or emulator-tested**.
 
 ## Current Firestore document paths (verified in source)
 
@@ -44,3 +44,13 @@ Status: incremental migration. Do not deploy new Firestore rules until they have
 - Chat direct-link fallback: if the global user directory fails to load, an authenticated user can still attempt to open the requested conversation via `chats.html?user=<uid>`.
 - Existing realtime messages, read receipts, typing, presence, stickers, replies, pins, saved posts, reporting and verification UI were already present in the inspected repository; these are **not newly implemented** by this change.
 - Full 3.2 functionality and security migration are not yet complete. Do not advertise this as a production-ready release.
+
+## Security review after candidate rules
+
+- Candidate rules are in `firestore.rules`. Do **not** deploy them without Firebase Emulator testing and comparison with production rules.
+- Message reactions using `reactions` maps of arrays are intentionally blocked by the candidate rules; the existing chat reaction button will fail until migrated to per-user reaction documents or a trusted backend.
+- Client-side notification creation remains denied. Implement notifications through a trusted backend.
+- Existing saved-post writes were aligned with the production rules (only `createdAt`).
+- Composite indexes are not necessary for the inspected basic queries, but preserve any existing production custom indexes.
+- Firebase Storage rules, media upload pipeline, and anti-spam server enforcement have not been implemented or tested.
+- Owner permissions rely on the existing owner UID and `users/{ownerUid}.role == 'owner'`. Do not change the owner profile without a recovery plan.
