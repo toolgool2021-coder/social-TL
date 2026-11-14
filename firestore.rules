@@ -331,7 +331,7 @@ service cloud.firestore {
     match /groups/{groupId} {
       allow get,list: if authd() && resource.data.status == 'active';
       allow create: if owner() &&
-        request.resource.data.keys().hasOnly(['ownerId','kind','name','tag','description','category','reason','status','createdAt']) &&
+        request.resource.data.keys().hasOnly(['ownerId','kind','name','tag','description','category','status','createdAt']) &&
         groupId == request.resource.data.ownerId + '_' + request.resource.data.kind &&
         request.resource.data.kind in ['clan','community'] &&
         request.resource.data.status == 'active' &&
