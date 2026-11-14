@@ -187,11 +187,12 @@ test("a valid missing-chat probe does not reveal an existing private chat", asyn
 
 test("opening an existing conversation does not overwrite its preview", async () => {
   const cid=ALICE+"_"+BOB;
-  const chat=ref(ALICE,"chats",cid);
+  const firestore=db(ALICE);
+  const chat=doc(firestore,"chats",cid);
   await assertSucceeds(updateDoc(chat,{
     lastText:"Existing message preview",updatedAt:serverTimestamp()
   }));
-  await assertSucceeds(runTransaction(db(ALICE),async tx=>{
+  await assertSucceeds(runTransaction(firestore,async tx=>{
     const existing=await tx.get(chat);
     if(!existing.exists()){
       tx.set(chat,{participants:[ALICE,BOB],lastText:"",updatedAt:serverTimestamp()});
