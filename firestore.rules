@@ -102,7 +102,246 @@ service cloud.firestore {
       }
     }
     match /chats/{chatId} {
-      allow get,list: if authd() && request.auth.uid in resource.data.participants;
+      // Allow an authenticated participant to probe a missing canonical chat.
+      // An existing chat remains readable only by its actual members.
+      allow get: if authd() && (
+        (resource != null && request.auth.uid in resource.data.participants) ||
+        (resource == null && (
+          chatId.matches('^' + request.auth.uid + '_[^/]+
+      allow create: if validMembers(request.resource.data.participants) &&
+        chatId == request.resource.data.participants[0] + '_' + request.resource.data.participants[1] &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.keys().hasOnly(['participants','updatedAt','lastText']) &&
+        txt(request.resource.data.get('lastText',''),0,100);
+      allow update: if authd() && request.auth.uid in resource.data.participants &&
+        request.resource.data.participants == resource.data.participants &&
+        changed(['updatedAt','lastText','pinnedMessageId','pinnedText']) &&
+        txt(request.resource.data.get('lastText',''),0,2000) &&
+        txt(request.resource.data.get('pinnedText',''),0,160);
+      allow delete: if false;
+      match /messages/{messageId} {
+        allow get,list: if chatMember(chatId);
+        allow create: if chatMember(chatId) && request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.keys().hasOnly(['senderId','type','text','sticker','createdAt','replyTo','replyText']) &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.type in ['text','sticker'] &&
+          txt(request.resource.data.text,request.resource.data.type == 'text' ? 1 : 0,2000) &&
+          txt(request.resource.data.get('sticker',''),0,500) &&
+          txt(request.resource.data.get('replyText',''),0,160);
+        allow update: if chatMember(chatId) &&
+          request.resource.data.senderId == resource.data.senderId &&
+          request.resource.data.type == resource.data.type &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          (
+            (self(resource.data.senderId) && changed(['text','editedAt']) &&
+              txt(request.resource.data.text,0,2000))
+            ||
+            (!self(resource.data.senderId) && changed(['readAt']) &&
+              !('readAt' in resource.data) && request.resource.data.readAt == request.time)
+          );
+        // Reaction arrays are intentionally not writable by clients: untrusted clients
+        // could forge another user's reactions. Migrate to per-user documents or backend.
+        allow delete: if chatMember(chatId) && self(resource.data.senderId);
+      }
+      match /reactions/{reactionId} {
+        allow get,list: if chatMember(chatId);
+        allow create: if chatMember(chatId) &&
+          request.resource.data.keys().hasOnly(['uid','messageId','emoji','createdAt']) &&
+          request.resource.data.uid == request.auth.uid &&
+          reactionId == request.resource.data.messageId + '_' + request.auth.uid &&
+          txt(request.resource.data.messageId,1,200) &&
+          request.resource.data.emoji in ['❤️','👍','😂','😮','😢','🔥'] &&
+          exists(/databases/$(database)/documents/chats/$(chatId)/messages/$(request.resource.data.messageId)) &&
+          request.resource.data.createdAt == request.time;
+        allow update: if chatMember(chatId) &&
+          resource.data.uid == request.auth.uid &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.messageId == resource.data.messageId &&
+          changed(['emoji','createdAt']) &&
+          request.resource.data.emoji in ['❤️','👍','😂','😮','😢','🔥'] &&
+          request.resource.data.createdAt == request.time;
+        allow delete: if chatMember(chatId) && resource.data.uid == request.auth.uid;
+      }
+      match /typing/{uid} {
+        allow get,list: if chatMember(chatId);
+        allow create,update: if chatMember(chatId) && self(uid) &&
+          request.resource.data.keys().hasOnly(['uid','typing','updatedAt']) &&
+          request.resource.data.uid == uid && request.resource.data.typing is bool &&
+          request.resource.data.updatedAt == request.time;
+        allow delete: if chatMember(chatId) && self(uid);
+      }
+    }
+    match /presence/{uid} {
+      allow get,list: if authd();
+      allow create,update: if self(uid) &&
+        request.resource.data.keys().hasOnly(['uid','lastSeen']) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.lastSeen == request.time;
+      allow delete: if false;
+    }
+    match /verificationRequests/{uid} {
+      allow get: if self(uid) || owner();
+      allow list: if owner();
+      allow create: if self(uid) && request.resource.data.keys().hasOnly([
+        'uid','type','reason','status','createdAt'
+      ]) && request.resource.data.uid == uid && request.resource.data.status == 'pending' &&
+        request.resource.data.type is int && request.resource.data.type >= 1 &&
+        request.resource.data.type <= 5 && txt(request.resource.data.reason,10,500) &&
+        request.resource.data.createdAt == request.time;
+      allow update: if owner() && resource.data.status == 'pending' &&
+        changed(['status','reviewedBy','reviewedAt']) &&
+        request.resource.data.status in ['approved','rejected'] &&
+        request.resource.data.reviewedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /reports/{reportId} {
+      allow get: if mod() || (authd() && resource.data.reporterId == request.auth.uid);
+      allow list: if mod();
+      allow create: if authd() && request.resource.data.keys().hasOnly([
+        'reporterId','kind','targetId','reason','status','createdAt'
+      ]) && request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.kind in ['post','user','comment','message'] &&
+        txt(request.resource.data.targetId,1,200) && txt(request.resource.data.reason,10,500) &&
+        request.resource.data.createdAt == request.time;
+      allow update: if owner() && resource.data.status == 'pending' &&
+        changed(['status','resolution','reviewedBy','reviewedAt']) &&
+        request.resource.data.status in ['resolved','dismissed'] &&
+        request.resource.data.reviewedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /auditLogs/{logId} {
+      allow get,list: if owner();
+      allow create: if owner() &&
+        request.resource.data.keys().hasOnly(['actorId','action','targetId','details','createdAt']) &&
+        request.resource.data.actorId == request.auth.uid &&
+        txt(request.resource.data.action,1,100) &&
+        txt(request.resource.data.targetId,1,200);
+      allow update,delete: if false;
+    }
+    match /{document=**} { allow read,write: if false; }
+  }
+}
+) ||
+          chatId.matches('^[^/]+_' + request.auth.uid + '
+      allow create: if validMembers(request.resource.data.participants) &&
+        chatId == request.resource.data.participants[0] + '_' + request.resource.data.participants[1] &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.keys().hasOnly(['participants','updatedAt','lastText']) &&
+        txt(request.resource.data.get('lastText',''),0,100);
+      allow update: if authd() && request.auth.uid in resource.data.participants &&
+        request.resource.data.participants == resource.data.participants &&
+        changed(['updatedAt','lastText','pinnedMessageId','pinnedText']) &&
+        txt(request.resource.data.get('lastText',''),0,2000) &&
+        txt(request.resource.data.get('pinnedText',''),0,160);
+      allow delete: if false;
+      match /messages/{messageId} {
+        allow get,list: if chatMember(chatId);
+        allow create: if chatMember(chatId) && request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.keys().hasOnly(['senderId','type','text','sticker','createdAt','replyTo','replyText']) &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.type in ['text','sticker'] &&
+          txt(request.resource.data.text,request.resource.data.type == 'text' ? 1 : 0,2000) &&
+          txt(request.resource.data.get('sticker',''),0,500) &&
+          txt(request.resource.data.get('replyText',''),0,160);
+        allow update: if chatMember(chatId) &&
+          request.resource.data.senderId == resource.data.senderId &&
+          request.resource.data.type == resource.data.type &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          (
+            (self(resource.data.senderId) && changed(['text','editedAt']) &&
+              txt(request.resource.data.text,0,2000))
+            ||
+            (!self(resource.data.senderId) && changed(['readAt']) &&
+              !('readAt' in resource.data) && request.resource.data.readAt == request.time)
+          );
+        // Reaction arrays are intentionally not writable by clients: untrusted clients
+        // could forge another user's reactions. Migrate to per-user documents or backend.
+        allow delete: if chatMember(chatId) && self(resource.data.senderId);
+      }
+      match /reactions/{reactionId} {
+        allow get,list: if chatMember(chatId);
+        allow create: if chatMember(chatId) &&
+          request.resource.data.keys().hasOnly(['uid','messageId','emoji','createdAt']) &&
+          request.resource.data.uid == request.auth.uid &&
+          reactionId == request.resource.data.messageId + '_' + request.auth.uid &&
+          txt(request.resource.data.messageId,1,200) &&
+          request.resource.data.emoji in ['❤️','👍','😂','😮','😢','🔥'] &&
+          exists(/databases/$(database)/documents/chats/$(chatId)/messages/$(request.resource.data.messageId)) &&
+          request.resource.data.createdAt == request.time;
+        allow update: if chatMember(chatId) &&
+          resource.data.uid == request.auth.uid &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.messageId == resource.data.messageId &&
+          changed(['emoji','createdAt']) &&
+          request.resource.data.emoji in ['❤️','👍','😂','😮','😢','🔥'] &&
+          request.resource.data.createdAt == request.time;
+        allow delete: if chatMember(chatId) && resource.data.uid == request.auth.uid;
+      }
+      match /typing/{uid} {
+        allow get,list: if chatMember(chatId);
+        allow create,update: if chatMember(chatId) && self(uid) &&
+          request.resource.data.keys().hasOnly(['uid','typing','updatedAt']) &&
+          request.resource.data.uid == uid && request.resource.data.typing is bool &&
+          request.resource.data.updatedAt == request.time;
+        allow delete: if chatMember(chatId) && self(uid);
+      }
+    }
+    match /presence/{uid} {
+      allow get,list: if authd();
+      allow create,update: if self(uid) &&
+        request.resource.data.keys().hasOnly(['uid','lastSeen']) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.lastSeen == request.time;
+      allow delete: if false;
+    }
+    match /verificationRequests/{uid} {
+      allow get: if self(uid) || owner();
+      allow list: if owner();
+      allow create: if self(uid) && request.resource.data.keys().hasOnly([
+        'uid','type','reason','status','createdAt'
+      ]) && request.resource.data.uid == uid && request.resource.data.status == 'pending' &&
+        request.resource.data.type is int && request.resource.data.type >= 1 &&
+        request.resource.data.type <= 5 && txt(request.resource.data.reason,10,500) &&
+        request.resource.data.createdAt == request.time;
+      allow update: if owner() && resource.data.status == 'pending' &&
+        changed(['status','reviewedBy','reviewedAt']) &&
+        request.resource.data.status in ['approved','rejected'] &&
+        request.resource.data.reviewedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /reports/{reportId} {
+      allow get: if mod() || (authd() && resource.data.reporterId == request.auth.uid);
+      allow list: if mod();
+      allow create: if authd() && request.resource.data.keys().hasOnly([
+        'reporterId','kind','targetId','reason','status','createdAt'
+      ]) && request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.kind in ['post','user','comment','message'] &&
+        txt(request.resource.data.targetId,1,200) && txt(request.resource.data.reason,10,500) &&
+        request.resource.data.createdAt == request.time;
+      allow update: if owner() && resource.data.status == 'pending' &&
+        changed(['status','resolution','reviewedBy','reviewedAt']) &&
+        request.resource.data.status in ['resolved','dismissed'] &&
+        request.resource.data.reviewedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /auditLogs/{logId} {
+      allow get,list: if owner();
+      allow create: if owner() &&
+        request.resource.data.keys().hasOnly(['actorId','action','targetId','details','createdAt']) &&
+        request.resource.data.actorId == request.auth.uid &&
+        txt(request.resource.data.action,1,100) &&
+        txt(request.resource.data.targetId,1,200);
+      allow update,delete: if false;
+    }
+    match /{document=**} { allow read,write: if false; }
+  }
+}
+)
+        ))
+      );
+      allow list: if authd() && request.auth.uid in resource.data.participants;
       allow create: if validMembers(request.resource.data.participants) &&
         chatId == request.resource.data.participants[0] + '_' + request.resource.data.participants[1] &&
         request.resource.data.updatedAt == request.time &&
