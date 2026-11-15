@@ -58,7 +58,7 @@ async function animateCase(data,replay=false){
    const target=box/2-width/2-72*width;
    const slow=reduced();
    const duration=6900+rand(2200),pause=180+rand(360),settle=950+rand(650);
-   const overshoot=width*(.36+rand(28)/100);
+   const overshoot=width*(.12+rand(16)/100); // Keep the marker inside the winning tile throughout the final rebound
    $("rxCaseStatus").textContent=(replay?"↻ Повтор":"🔴 LIVE")+" · "+(i+1)+"/"+wins.length;
    // First rush across the strip, then slow unevenly and briefly hover near the marker.
    reel.style.transition=slow?"none":"transform "+(duration*.73/1000)+"s cubic-bezier(.1,.38,.23,.95)";
