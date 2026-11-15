@@ -656,7 +656,7 @@ async function applyAuthState(user) {
     !verified
   );
 
-  if (verified) $("app").classList.add("nx-loading");
+  if (verified) { document.documentElement.classList.add("nx-booting"); $("app").classList.add("nx-loading"); }
   else { await minimumSplash; if(token===authToken){ document.documentElement.classList.remove("nx-booting"); $("app").classList.remove("nx-loading"); } }
   // Unverified accounts may only complete registration and verify email.
   // Never start feed, notifications, or user queries for them.
