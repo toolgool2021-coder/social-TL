@@ -37,13 +37,17 @@ service cloud.firestore {
     function badge(v) { return v is int && v >= 0 && v <= 6; }
     function chatPath(id) { return /databases/$(database)/documents/chats/$(id); }
     function chatMember(id) { return authd() && exists(chatPath(id)) && request.auth.uid in get(chatPath(id)).data.participants; }
+    function allowsMessages(recipient) {
+      let path = /databases/$(database)/documents/users/$(recipient)/settings/privacy;
+      return !exists(path) || get(path).data.get('messagesFrom','everyone') == 'everyone';
+    }
     function blockedBy(recipient, sender) {
       return exists(/databases/$(database)/documents/users/$(recipient)/blockedUsers/$(sender));
     }
     function chatAllowsSender(id, sender) {
       let members = get(chatPath(id)).data.participants;
       let recipient = members[0] == sender ? members[1] : members[0];
-      return !blockedBy(recipient, sender);
+      return !blockedBy(recipient, sender) && allowsMessages(recipient);
     }
     function membersAllowSender(members, sender) {
       let recipient = members[0] == sender ? members[1] : members[0];
@@ -94,6 +98,14 @@ service cloud.firestore {
                : request.resource.data.hiddenAt >= resource.data.hiddenAt &&
                  (request.resource.data.hiddenAt == resource.data.hiddenAt ||
                   request.resource.data.hiddenAt == request.time))))
+        allow delete: if false;
+      }
+      match /settings/{settingId} {
+        allow get,list: if self(uid);
+        allow create,update: if self(uid) && settingId == 'privacy' &&
+          request.resource.data.keys().hasOnly(['messagesFrom']) &&
+          request.resource.data.keys().hasAll(['messagesFrom']) &&
+          request.resource.data.messagesFrom in ['everyone','nobody'];
         allow delete: if false;
       }
       match /blockedUsers/{targetUid} {
