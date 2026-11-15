@@ -449,7 +449,9 @@ test("blocklist is private and blocks new incoming messages",async()=>{
   const cid=ALICE+"_"+BOB;
   const block=ref(BOB,"users",BOB,"blockedUsers",ALICE);
   await assertSucceeds(setDoc(block,{createdAt:serverTimestamp()}));
-  await assertFails(getDoc(ref(ALICE,"users",BOB,"blockedUsers",ALICE)));
+  await assertSucceeds(getDoc(ref(ALICE,"users",BOB,"blockedUsers",ALICE)));
+  await assertFails(getDoc(ref(MALLORY,"users",BOB,"blockedUsers",ALICE)));
+  await assertFails(getDocs(collection(db(ALICE),"users",BOB,"blockedUsers")));
   await assertFails(setDoc(ref(ALICE,"chats",cid,"messages","blocked-message"),{
     senderId:ALICE,type:"text",text:"Blocked",sticker:"",createdAt:serverTimestamp()
   }));
