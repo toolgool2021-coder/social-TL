@@ -591,6 +591,8 @@ let chatRecords=[];
 let hiddenChats=new Map();
 let chatPreferences=new Map();
 let unreadAlerts=new Map();
+let unreadMessages=new Map();
+let stopUnreadMessages=new Map();
 let pendingMessageAlerts=new Map();
 let stopMessageAlerts=null;
 let peerBlocked=false;
@@ -702,8 +704,8 @@ function personRow(uid,preview="",unread=0){
           ${badge(user)}
         </span>
         <div class="preview">${esc(preview)}</div>
-        ${unread?`<span class="unread-dot" role="img" aria-label="Есть непрочитанные сообщения" title="Непрочитанные сообщения"></span>`:""}
       </span>
+      ${unread?`<span class="unread-dot" role="img" aria-label="Есть непрочитанные сообщения" title="Непрочитанные сообщения"></span>`:""}
     </button>`;
 }
 
@@ -861,6 +863,27 @@ $("pinConversation").onclick=()=>{
 $("archiveConversation").onclick=()=>changeChatPreference("archived",!(chatPreferences.get(activeChat())?.archived));
 $("muteConversation").onclick=()=>changeChatPreference("muted",!(chatPreferences.get(activeChat())?.muted));
 
+function syncUnreadMessageListeners(){
+  if(!me)return;
+  const visible=new Set(chatRecords.slice(0,60).map(d=>d.id));
+  for(const [cid,stop] of stopUnreadMessages){
+    if(!visible.has(cid)){stop();stopUnreadMessages.delete(cid);unreadMessages.delete(cid)}
+  }
+  for(const chat of chatRecords.slice(0,60)){
+    if(stopUnreadMessages.has(chat.id))continue;
+    const peer=chat.data().participants?.find(uid=>uid!==me.uid);
+    if(!peer)continue;
+    const cid=chat.id,session=authGeneration;
+    const stop=onSnapshot(query(collection(db,"chats",cid,"messages"),orderBy("createdAt","desc"),limit(100)),snap=>{
+      if(session!==authGeneration)return;
+      const unread=snap.docs.some(d=>d.data().senderId===peer&&!d.data().readAt);
+      unreadMessages.set(cid,unread);
+      renderChats();
+    },err=>console.warn("Unread messages:",cid,err.message));
+    stopUnreadMessages.set(cid,stop);
+  }
+}
+
 function renderChats(){
   if(!me)return;
   $("showArchive").textContent=archiveVisible?"Диалоги":"Архив";
@@ -881,7 +904,7 @@ function renderChats(){
       uid=>uid!==me.uid
     );
     return other
-      ?personRow(other,(chatPreferences.get(item.id)?.pinnedAt?"📌 ":"")+(chatPreferences.get(item.id)?.muted?"🔕 ":"")+(data.lastText||"Диалог"),unreadAlerts.get(item.id)||0)
+      ?personRow(other,(chatPreferences.get(item.id)?.pinnedAt?"📌 ":"")+(chatPreferences.get(item.id)?.muted?"🔕 ":"")+(data.lastText||"Диалог"),(unreadMessages.get(item.id)||unreadAlerts.get(item.id))?1:0)
       :"";
   }).join("")||
     (archiveVisible?'<div class="empty">Архив пуст</div>':'<div class="empty">Диалогов пока нет</div>');
@@ -1943,6 +1966,7 @@ onAuthStateChanged(auth,async user=>{
         (a.data().updatedAt?.seconds||0)
       );
 
+      syncUnreadMessageListeners();
       renderChats();
     },
     err=>{if(session===authGeneration)showError("Диалоги: "+err.message);}
