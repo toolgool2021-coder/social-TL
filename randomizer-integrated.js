@@ -18,44 +18,44 @@ $("nxRandomizerNav").onclick=()=>{const section=$("nxRandomizer");for(const el o
 document.querySelectorAll('[data-page],[data-nx-panel]').forEach(b=>b.addEventListener("click",()=>{$("nxRandomizer").hidden=true},true));
 function renderPeople(){$("rxPeopleCount").textContent=users.length;$("rxPeople").innerHTML=users.map(u=>'<button type="button" data-rx-id="'+esc(u.id)+'" aria-pressed="'+selected.has(u.id)+'">'+esc(label(u))+'</button>').join("");$("rxPeople").querySelectorAll("button").forEach(b=>b.onclick=()=>{selected.has(b.dataset.rxId)?selected.delete(b.dataset.rxId):selected.add(b.dataset.rxId);renderPeople()})}
 function caseResult(data){const map=new Map(users.map(u=>[u.id,u]));$("rxWinners").innerHTML='<h3>Победители</h3>'+data.winners.map((id,i)=>'<p>✦ '+(i+1)+'. '+esc(label(map.get(id)))+'</p>').join("")}
+// A case result is the card at the fixed pointer, not a separate visual override.
 async function animateCase(data,replay=false){
  const seq=++caseSeq;caseBusy=true;$("rxRoll").disabled=true;$("rxCaseReplay").disabled=true;$("rxWinners").innerHTML="";
- const map=new Map(users.map(u=>[u.id,u]));const source=data.participants.map(id=>map.get(id)).filter(Boolean);
- const wins=data.winners.map(id=>map.get(id)).filter(Boolean);
- if(!wins.length){$("rxCaseStatus").textContent="Нет данных участников";caseBusy=false;$("rxRoll").disabled=false;return}
+ const people=new Map(users.map(u=>[u.id,u]));
+ const strips=(data.reels||[]).map(r=>Array.isArray(r)?r:r.ids||[]);
+ const easing=t=>1-Math.pow(1-t,4.2);
  try{
-  for(let i=0;i<wins.length;i++){
+  for(let i=0;i<strips.length;i++){
    if(seq!==caseSeq)return;
-   const entries=(Array.isArray(data.reels?.[i])?data.reels[i]:(data.reels?.[i]?.ids||[])).map(id=>map.get(id)).filter(Boolean);
-   const winner=wins[i];
-   // Render the exact server-published sequence; never fabricate a second visual outcome.
-   const stripIds=Array.isArray(data.reels?.[i])?data.reels[i]:(data.reels?.[i]?.ids||[]);
-   const cards=stripIds.map(id=>map.get(id)).filter(Boolean);
-   if(cards.length<73){$("rxCaseStatus").textContent="Старый формат розыгрыша · повтор недоступен";continue}
-   const reel=$("rxReel");reel.style.transition="none";reel.style.transform="translateX(0)";
-   reel.innerHTML=cards.map(u=>'<div class="rx-tile">'+esc(label(u))+'</div>').join("");
-   reel.getBoundingClientRect();
-   const width=reel.firstElementChild.getBoundingClientRect().width+10,box=reel.parentElement.clientWidth;
-   const target=box/2-width/2-72*width;
-   const slow=reduced();
-   const duration=6900+rand(2200),pause=180+rand(360),settle=950+rand(650);
-   const overshoot=width*(.08+rand(12)/100);
-   $("rxCaseStatus").textContent=(replay?"↻ Повтор":"🔴 LIVE")+" · "+(i+1)+"/"+wins.length;
-   // First rush across the strip, then slow unevenly and briefly hover near the marker.
-   reel.style.transition=slow?"none":"transform "+(duration*.73/1000)+"s cubic-bezier(.1,.38,.23,.95)";
-   reel.style.transform="translateX("+(target+width*3.2)+"px)";
-   await sleep(slow?50:duration*.73);
+   const ids=strips[i],stop=72;
+   if(ids.length<=stop||ids[stop]!==data.winners[i])throw Error("Некорректная лента розыгрыша");
+   const reel=$("rxReel"),viewport=reel.parentElement;
+   reel.style.transition="none";reel.style.transform="translate3d(0,0,0)";
+   reel.innerHTML=ids.map(id=>'<div class="rx-tile">'+esc(label(people.get(id)))+'</div>').join("");
+   const tiles=reel.children;
+   const destination=viewport.clientWidth/2-(tiles[stop].offsetLeft+tiles[stop].offsetWidth/2);
+   const initial=viewport.clientWidth/2-(tiles[0].offsetLeft+tiles[0].offsetWidth/2);
+   const travel=destination-initial;
+   const slow=reduced(),duration=slow?80:7800+rand(2200);
+   const start=performance.now();
+   $("rxCaseStatus").textContent=(replay?"↻ ПОВТОР":"🔴 LIVE")+" · "+(i+1)+"/"+strips.length;
+   await new Promise(resolve=>{
+    function frame(now){
+     if(seq!==caseSeq){resolve();return}
+     const t=Math.min(1,(now-start)/duration);
+     // Single continuous monotonic motion: no fake backward jump across another card.
+     const pos=initial+travel*easing(t);
+     reel.style.transform="translate3d("+pos+"px,0,0)";
+     if(t<1)requestAnimationFrame(frame);else resolve();
+    }
+    requestAnimationFrame(frame);
+   });
    if(seq!==caseSeq)return;
-   reel.style.transition=slow?"none":"transform "+(duration*.27/1000)+"s cubic-bezier(.22,.75,.2,1)";
-   reel.style.transform="translateX("+(target-overshoot)+"px)";
-   await sleep(slow?50:duration*.27);
-   if(seq!==caseSeq)return;
-   $("rxCaseStatus").textContent="✦ Почти остановилось…";
-   await sleep(slow?20:pause);
-   if(seq!==caseSeq)return;
-   reel.style.transition=slow?"none":"transform "+(settle/1000)+"s cubic-bezier(.16,.78,.24,1)";
-   reel.style.transform="translateX("+target+"px)";
-   await sleep(slow?40:settle+80);
+   // The pointer is precisely centered on the winning card.
+   reel.style.transform="translate3d("+destination+"px,0,0)";
+   tiles[stop].classList.add("rx-winning-tile");
+   $("rxCaseStatus").textContent="✦ Победитель "+(i+1)+": "+label(people.get(ids[stop]));
+   if(!slow)await sleep(950);
   }
   if(seq===caseSeq){caseResult(data);$("rxCaseStatus").textContent="Розыгрыш завершён";$("rxCaseReplay").hidden=false}
  }finally{if(seq===caseSeq){caseBusy=false;$("rxRoll").disabled=false;$("rxCaseReplay").disabled=false}}
@@ -63,17 +63,13 @@ async function animateCase(data,replay=false){
 $("rxCaseReplay").onclick=()=>{if(lastCase&&!caseBusy)animateCase(lastCase,true).catch(e=>note("Ошибка повтора: "+e.message))};
 $("rxRoll").onclick=async()=>{if(!owner){note("CASE ROLL доступен только подтверждённому аккаунту владельца");return}if(caseBusy)return;const pool=$("rxSelectedOnly").checked?users.filter(u=>selected.has(u.id)):users,n=Number($("rxCount").value);if(!Number.isInteger(n)||n<1||n>10){note("Выбери от 1 до 10 победителей");return}if(pool.length<n){note("Недостаточно участников: "+pool.length);return}if(pool.length>2000){note("Лимит: 2000 участников");return}caseBusy=true;$("rxRoll").disabled=true;$("rxCaseStatus").textContent="Публикация в Firebase…";const available=[...pool],wins=[],reels=[];
 for(let i=0;i<n;i++){
-  // The stopping position is sampled from a uniformly shuffled cycle.
-  // The winning ID comes from that position, not from an animation override.
-  const cycle=shufflePick(available,available.length);
-  const stopIndex=rand(cycle.length);
-  const picked=cycle[stopIndex];wins.push(picked);
-  const ids=[];
-  while(ids.length<72){ids.push(...shufflePick(available,available.length).map(u=>u.id))}
-  ids.length=72;ids.push(picked.id);
-  for(let k=0;k<8;k++){const prev=ids[ids.length-1];const opts=available.filter(u=>u.id!==prev);ids.push((opts.length?opts:available)[rand((opts.length?opts:available).length)].id)}
-  reels.push({ids});
-  available.splice(available.findIndex(u=>u.id===picked.id),1);
+ // Every visible tile is sampled independently; the tile under the pointer wins.
+ // Exclude previous winners from subsequent rounds.
+ const ids=Array.from({length:81},()=>available[rand(available.length)].id);
+ const winningId=ids[72];
+ wins.push(available.find(u=>u.id===winningId));
+ reels.push({ids});
+ available.splice(available.findIndex(u=>u.id===winningId),1);
 }
 const payload={status:"running",mode:$("rxSelectedOnly").checked?"selected":"all",participants:pool.map(u=>u.id),winners:wins.map(u=>u.id),reels,durationMs:Math.min(60000,n*9000),startedAt:serverTimestamp(),updatedAt:serverTimestamp()};try{await getIdToken(auth.currentUser,true);await setDoc(caseRef,payload);note("CASE ROLL опубликован");if(!lastCase||!caseBusy){lastCase={...payload,startedAt:{toMillis:()=>Date.now()}}}if(!document.hidden)animateCase({...payload,startedAt:{toMillis:()=>Date.now()}}).catch(e=>note("Анимация: "+e.message))}catch(e){caseBusy=false;$("rxRoll").disabled=false;$("rxCaseStatus").textContent="Ошибка записи: "+(e.code||e.message);note("Firestore отклонил CASE ROLL: "+(e.code||e.message)+" · UID: "+auth.currentUser?.uid+" · verified: "+auth.currentUser?.emailVerified)}};
 function setChance(c){$("rxChance").value=c;$("rxChanceText").textContent=c+"%";$("rxWheel").style.setProperty("--rx-chance",c+"%")}
