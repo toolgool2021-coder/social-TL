@@ -1045,6 +1045,15 @@ function renderMessages(forceBottom=false){
       </div>`;
   }
 
+  // Minimal test/non-DOM adapters do not support DOM reconciliation.
+  // Real browsers always use the incremental path below.
+  if(typeof document.createElement!=="function"){
+    box.innerHTML=html||
+      '<div class="empty"><b>Пока пусто</b>Напиши первое сообщение.</div>';
+    if(!term&&(forceBottom||nearBottom))box.scrollTop=box.scrollHeight;
+    else box.scrollTop=oldTop;
+    return;
+  }
   // Reconcile by message ID: read receipts, edits and reactions must NOT
   // recreate existing bubbles or replay their entrance animation.
   const template=document.createElement("template");
