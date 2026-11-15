@@ -18,10 +18,51 @@ $("nxRandomizerNav").onclick=()=>{const section=$("nxRandomizer");for(const el o
 document.querySelectorAll('[data-page],[data-nx-panel]').forEach(b=>b.addEventListener("click",()=>{$("nxRandomizer").hidden=true},true));
 function renderPeople(){$("rxPeopleCount").textContent=users.length;$("rxPeople").innerHTML=users.map(u=>'<button type="button" data-rx-id="'+esc(u.id)+'" aria-pressed="'+selected.has(u.id)+'">'+esc(label(u))+'</button>').join("");$("rxPeople").querySelectorAll("button").forEach(b=>b.onclick=()=>{selected.has(b.dataset.rxId)?selected.delete(b.dataset.rxId):selected.add(b.dataset.rxId);renderPeople()})}
 function caseResult(data){const map=new Map(users.map(u=>[u.id,u]));$("rxWinners").innerHTML='<h3>Победители</h3>'+data.winners.map((id,i)=>'<p>✦ '+(i+1)+'. '+esc(label(map.get(id)))+'</p>').join("")}
-async function animateCase(data,replay=false){const seq=++caseSeq;caseBusy=true;$("rxRoll").disabled=true;$("rxCaseReplay").disabled=true;$("rxWinners").innerHTML="";const map=new Map(users.map(u=>[u.id,u]));const source=data.participants.map(id=>map.get(id)).filter(Boolean);const wins=data.winners.map(id=>map.get(id)).filter(Boolean);if(!wins.length){$("rxCaseStatus").textContent="Нет данных участников";caseBusy=false;$("rxRoll").disabled=false;return}
-try{for(let i=0;i<wins.length;i++){if(seq!==caseSeq)return;const entries=(Array.isArray(data.reels?.[i])?data.reels[i]:(data.reels?.[i]?.ids||[])).map(id=>map.get(id)).filter(Boolean);const reel=$("rxReel");const cards=[...(entries.length?entries:Array.from({length:65},()=>source[rand(source.length)])),wins[i],...Array.from({length:9},()=>source[rand(source.length)])];reel.style.transition="none";reel.style.transform="translateX(0)";reel.innerHTML=cards.map(u=>'<div class="rx-tile">'+esc(label(u))+'</div>').join("");reel.getBoundingClientRect();const width=reel.firstElementChild.getBoundingClientRect().width+10,box=reel.parentElement.clientWidth;const shift=box/2-width/2-(cards.length-10)*width;reel.style.transition=reduced()?"none":"transform 5.6s cubic-bezier(.08,.64,.07,1)";reel.style.transform="translateX("+shift+"px)";$("rxCaseStatus").textContent=(replay?"↻ Повтор":"🔴 LIVE")+" · "+(i+1)+"/"+wins.length;await sleep(reduced()?100:5800)}if(seq===caseSeq){caseResult(data);$("rxCaseStatus").textContent="Розыгрыш завершён";$("rxCaseReplay").hidden=false}}finally{caseBusy=false;$("rxRoll").disabled=false;$("rxCaseReplay").disabled=false}}
+async function animateCase(data,replay=false){
+ const seq=++caseSeq;caseBusy=true;$("rxRoll").disabled=true;$("rxCaseReplay").disabled=true;$("rxWinners").innerHTML="";
+ const map=new Map(users.map(u=>[u.id,u]));const source=data.participants.map(id=>map.get(id)).filter(Boolean);
+ const wins=data.winners.map(id=>map.get(id)).filter(Boolean);
+ if(!wins.length){$("rxCaseStatus").textContent="Нет данных участников";caseBusy=false;$("rxRoll").disabled=false;return}
+ try{
+  for(let i=0;i<wins.length;i++){
+   if(seq!==caseSeq)return;
+   const entries=(Array.isArray(data.reels?.[i])?data.reels[i]:(data.reels?.[i]?.ids||[])).map(id=>map.get(id)).filter(Boolean);
+   const winner=wins[i];
+   // No consecutive identical cards and no early preview of the winner near the finish.
+   const available=source.filter(u=>u.id!==winner.id);
+   const raw=entries.length?entries:source;
+   const cards=[];
+   for(let k=0;k<72;k++){
+    let choices=(k>=54&&available.length?available:raw).filter(u=>u&&u.id!==cards[cards.length-1]?.id);
+    if(!choices.length)choices=(k>=54&&available.length?available:raw).filter(Boolean);
+    if(!choices.length)choices=[winner];
+    cards.push(choices[rand(choices.length)]);
+   }
+   // Winner is shown only at the stopping position, not in the preceding tiles.
+   cards.push(winner);
+   const tail=available.length?available:source;
+   for(let k=0;k<8;k++){let choices=tail.filter(u=>u.id!==cards[cards.length-1]?.id);if(!choices.length)choices=tail;cards.push(choices[rand(choices.length)])}
+   const reel=$("rxReel");reel.style.transition="none";reel.style.transform="translateX(0)";
+   reel.innerHTML=cards.map(u=>'<div class="rx-tile">'+esc(label(u))+'</div>').join("");
+   reel.getBoundingClientRect();
+   const width=reel.firstElementChild.getBoundingClientRect().width+10,box=reel.parentElement.clientWidth;
+   const target=box/2-width/2-72*width;
+   const slow=reduced();
+   $("rxCaseStatus").textContent=(replay?"↻ Повтор":"🔴 LIVE")+" · "+(i+1)+"/"+wins.length;
+   // Long deceleration, a small overshoot, then a gentle backward settling motion.
+   reel.style.transition=slow?"none":"transform 7.4s cubic-bezier(.09,.65,.16,1)";
+   reel.style.transform="translateX("+(target-width*.36)+"px)";
+   await sleep(slow?80:7450);
+   if(seq!==caseSeq)return;
+   reel.style.transition=slow?"none":"transform 1.5s cubic-bezier(.2,.8,.2,1)";
+   reel.style.transform="translateX("+target+"px)";
+   await sleep(slow?80:1550);
+  }
+  if(seq===caseSeq){caseResult(data);$("rxCaseStatus").textContent="Розыгрыш завершён";$("rxCaseReplay").hidden=false}
+ }finally{if(seq===caseSeq){caseBusy=false;$("rxRoll").disabled=false;$("rxCaseReplay").disabled=false}}
+}
 $("rxCaseReplay").onclick=()=>{if(lastCase&&!caseBusy)animateCase(lastCase,true).catch(e=>note("Ошибка повтора: "+e.message))};
-$("rxRoll").onclick=async()=>{if(!owner){note("CASE ROLL доступен только подтверждённому аккаунту владельца");return}if(caseBusy)return;const pool=$("rxSelectedOnly").checked?users.filter(u=>selected.has(u.id)):users,n=Number($("rxCount").value);if(!Number.isInteger(n)||n<1||n>10){note("Выбери от 1 до 10 победителей");return}if(pool.length<n){note("Недостаточно участников: "+pool.length);return}if(pool.length>2000){note("Лимит: 2000 участников");return}caseBusy=true;$("rxRoll").disabled=true;$("rxCaseStatus").textContent="Публикация в Firebase…";const wins=shufflePick(pool,n);const payload={status:"running",mode:$("rxSelectedOnly").checked?"selected":"all",participants:pool.map(u=>u.id),winners:wins.map(u=>u.id),reels:wins.map(()=>({ids:Array.from({length:65},()=>pool[rand(pool.length)].id)})),durationMs:n*5800,startedAt:serverTimestamp(),updatedAt:serverTimestamp()};try{await getIdToken(auth.currentUser,true);await setDoc(caseRef,payload);note("CASE ROLL опубликован");if(!lastCase||!caseBusy){lastCase={...payload,startedAt:{toMillis:()=>Date.now()}}}if(!document.hidden)animateCase({...payload,startedAt:{toMillis:()=>Date.now()}}).catch(e=>note("Анимация: "+e.message))}catch(e){caseBusy=false;$("rxRoll").disabled=false;$("rxCaseStatus").textContent="Ошибка записи: "+(e.code||e.message);note("Firestore отклонил CASE ROLL: "+(e.code||e.message)+" · UID: "+auth.currentUser?.uid+" · verified: "+auth.currentUser?.emailVerified)}};
+$("rxRoll").onclick=async()=>{if(!owner){note("CASE ROLL доступен только подтверждённому аккаунту владельца");return}if(caseBusy)return;const pool=$("rxSelectedOnly").checked?users.filter(u=>selected.has(u.id)):users,n=Number($("rxCount").value);if(!Number.isInteger(n)||n<1||n>10){note("Выбери от 1 до 10 победителей");return}if(pool.length<n){note("Недостаточно участников: "+pool.length);return}if(pool.length>2000){note("Лимит: 2000 участников");return}caseBusy=true;$("rxRoll").disabled=true;$("rxCaseStatus").textContent="Публикация в Firebase…";const wins=shufflePick(pool,n);const payload={status:"running",mode:$("rxSelectedOnly").checked?"selected":"all",participants:pool.map(u=>u.id),winners:wins.map(u=>u.id),reels:wins.map(()=>({ids:Array.from({length:65},()=>pool[rand(pool.length)].id)})),durationMs:Math.min(60000,n*9000),startedAt:serverTimestamp(),updatedAt:serverTimestamp()};try{await getIdToken(auth.currentUser,true);await setDoc(caseRef,payload);note("CASE ROLL опубликован");if(!lastCase||!caseBusy){lastCase={...payload,startedAt:{toMillis:()=>Date.now()}}}if(!document.hidden)animateCase({...payload,startedAt:{toMillis:()=>Date.now()}}).catch(e=>note("Анимация: "+e.message))}catch(e){caseBusy=false;$("rxRoll").disabled=false;$("rxCaseStatus").textContent="Ошибка записи: "+(e.code||e.message);note("Firestore отклонил CASE ROLL: "+(e.code||e.message)+" · UID: "+auth.currentUser?.uid+" · verified: "+auth.currentUser?.emailVerified)}};
 function setChance(c){$("rxChance").value=c;$("rxChanceText").textContent=c+"%";$("rxWheel").style.setProperty("--rx-chance",c+"%")}
 $("rxChance").oninput=()=>setChance(Number($("rxChance").value));
 function finishLuck(data){const ok=data.angle<data.chance*3.6;$("rxLuckResult").textContent=ok?"✓ УСПЕХ":"✕ НЕУДАЧА";$("rxLuckResult").className="rx-result "+(ok?"rx-success":"rx-fail");$("rxLuckReplay").hidden=false}
