@@ -413,6 +413,11 @@ input:focus,textarea:focus{border-color:var(--accent)}
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;scroll-behavior:auto!important}
 }
+.block-notice{margin:auto 16px;align-self:center;max-width:440px;padding:32px 25px;text-align:center;border-radius:24px;border:1px solid #aabaff32;background:linear-gradient(140deg,#202c48ee,#121b2ded);box-shadow:0 22px 60px #0006}
+.block-notice-icon{font-size:36px;margin-bottom:10px}
+.block-notice h2{font-size:21px;margin:0 0 10px}
+.block-notice p{color:#b6c4df;line-height:1.6}
+.block-notice button{margin-top:12px}
 .chat-help{margin:9px 14px 5px;padding:10px 13px;border:1px solid #ffffff24;border-radius:12px;background:#121e32cc;color:#dbe5ff;font-size:12px}
 .chat-help summary{cursor:pointer;font-weight:700;list-style:revert;user-select:none}
 .chat-help-grid{display:grid;grid-template-columns:48px 1fr;gap:10px 12px;margin-top:14px;line-height:1.5}
@@ -488,6 +493,12 @@ input:focus,textarea:focus{border-color:var(--accent)}
         placeholder="Поиск в переписке">
     </div>
 
+    <div id="blockNotice" class="block-notice" hidden>
+      <div class="block-notice-icon" id="blockNoticeIcon">⛔</div>
+      <h2 id="blockNoticeTitle"></h2>
+      <p id="blockNoticeText"></p>
+      <button id="unblockCenter" type="button" class="btn primary" hidden>Разблокировать пользователя</button>
+    </div>
     <div id="messages" class="messages">
       <div class="empty">
         <b>Твои сообщения</b>
@@ -582,6 +593,9 @@ let unreadAlerts=new Map();
 let pendingMessageAlerts=new Map();
 let stopMessageAlerts=null;
 let peerBlocked=false;
+let blockedByPeer=false;
+let stopOwnBlock=null;
+let stopPeerBlock=null;
 let archiveVisible=false;
 let stopHiddenChats=null;
 let currentMessages=[];
@@ -794,6 +808,8 @@ function updateChatControls(){
  $("muteConversation").textContent=pref.muted?"🔕":"♧";
  $("muteConversation").title=pref.muted?"Включить уведомления этого диалога":"Отключить уведомления этого диалога";
  for(const id of ["pinConversation","archiveConversation","muteConversation","blockConversation"]){$(id).ariaLabel=$(id).title}
+ updateBlockNotice();
+ syncComposer();
 }
 async function changeChatPreference(key,value){
  if(!me||!activeUid)return;
@@ -912,6 +928,12 @@ function stopActive(){
   stopPresence?.();
   stopTyping?.();
   stopPin?.();
+  stopOwnBlock?.();
+  stopPeerBlock?.();
+  stopOwnBlock=null;
+  stopPeerBlock=null;
+  peerBlocked=false;
+  blockedByPeer=false;
 
   stopMessages=null;
   stopReactions=null;
@@ -949,8 +971,21 @@ function stopActive(){
   $("chatSearch").value="";
 }
 
+function updateBlockNotice(){
+  const blocked=peerBlocked||blockedByPeer;
+  const notice=$("blockNotice");
+  notice.hidden=!blocked;
+  $("messages").hidden=blocked;
+  $("blockNoticeTitle").textContent=peerBlocked?"Пользователь заблокирован":"Пользователь вас заблокировал";
+  $("blockNoticeText").textContent=peerBlocked
+    ?"Вы заблокировали этого пользователя. Чтобы снова общаться, нажмите «Разблокировать»."
+    :"Этот пользователь ограничил переписку с вами. Отправка новых сообщений недоступна.";
+  $("unblockCenter").hidden=!peerBlocked;
+}
+$("unblockCenter").onclick=()=>$("blockConversation").click();
+
 function syncComposer(){
-  const ready=Boolean(me&&activeUid&&chatReady);
+  const ready=Boolean(me&&activeUid&&chatReady&&!peerBlocked&&!blockedByPeer);
   $("message").disabled=!ready;
   $("send").disabled=!ready||sending;
   $("stickers").disabled=!ready||sending;
@@ -967,6 +1002,7 @@ async function openChat(uid){
   activeUid=uid;
   $("deleteConversation").disabled=false;
   peerBlocked=false;
+  blockedByPeer=false;
   updateChatControls();
   $("message").value=drafts.get(activeChat())||"";
   resizeComposer();
@@ -989,12 +1025,16 @@ async function openChat(uid){
     }
 
     if(g!==generation)return;
-    try{
-      const blocked=await getDoc(doc(db,"users",me.uid,"blockedUsers",uid));
+    stopOwnBlock=onSnapshot(doc(db,"users",me.uid,"blockedUsers",uid),snap=>{
       if(g!==generation)return;
-      peerBlocked=blocked.exists();
+      peerBlocked=snap.exists();
       updateChatControls();
-    }catch(error){console.warn("Block state:",error.message)}
+    },err=>console.warn("Own block state:",err.message));
+    stopPeerBlock=onSnapshot(doc(db,"users",uid,"blockedUsers",me.uid),snap=>{
+      if(g!==generation)return;
+      blockedByPeer=snap.exists();
+      updateChatControls();
+    },err=>console.warn("Peer block state:",err.message));
     const user=users[uid];
 
     $("peer").innerHTML=
@@ -1583,6 +1623,7 @@ async function ensureChat(uid){
 
 async function sendMessage(payload){
   if(!me||!activeUid||!chatReady)throw Error("Диалог ещё загружается");
+  if(peerBlocked||blockedByPeer)throw Error("Отправка сообщений недоступна из-за блокировки");
   if(sending)throw Error("Сообщение ещё отправляется");
 
   const uid=activeUid;
