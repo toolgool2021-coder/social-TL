@@ -655,6 +655,7 @@ async function applyAuthState(user) {
     !verified
   );
 
+  if (verified) $("app").classList.add("nx-loading");
   // Unverified accounts may only complete registration and verify email.
   // Never start feed, notifications, or user queries for them.
   if (!user || !verified) return;
@@ -686,11 +687,16 @@ async function applyAuthState(user) {
 
     listenFeed();
     showPage("feed");
+    $("app").classList.remove("nx-loading");
+    window.dispatchEvent(new CustomEvent("nexora:app-ready"));
   } catch (error) {
     if (token === authToken) {
       toast(
         "Ошибка загрузки: " + friendlyError(error)
       );
+      $("nxLoadTitle") && ($("nxLoadTitle").textContent="Не удалось загрузить данные");
+      $("nxLoadMessage") && ($("nxLoadMessage").textContent="Проверь подключение и обнови страницу.");
+      $("nxLoadRetry")?.removeAttribute("hidden");
     }
   }
 }
