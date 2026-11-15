@@ -1452,9 +1452,9 @@ async function acknowledgeChatAlerts(cid){
  try{await batch.commit()}catch(err){console.warn("Notification receipts:",err.message)}
 }
 async function markRead(cid,peer,g=generation){
-  acknowledgeChatAlerts(cid);
   if(!me||g!==generation||activeUid!==peer||cid!==activeChat()||
      document.visibilityState==="hidden")return;
+  acknowledgeChatAlerts(cid);
   const state=readState;
   if(state.reading){
     state.pending=true;
