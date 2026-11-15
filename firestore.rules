@@ -68,9 +68,7 @@ service cloud.firestore {
         allow get,list: if self(uid);
         allow create,update: if self(uid) &&
           request.resource.data.keys().hasOnly(['hiddenAt']) &&
-          request.resource.data.hiddenAt is timestamp &&
-          request.resource.data.hiddenAt <= request.time &&
-          request.resource.data.hiddenAt > request.time - duration.value(5,'m') &&
+          request.resource.data.hiddenAt == request.time &&
           (!exists(/databases/$(database)/documents/users/$(uid)/chatPreferences/$(chatId)) ||
             request.resource.data.hiddenAt >= resource.data.hiddenAt);
         allow delete: if false;
