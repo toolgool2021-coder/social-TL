@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<script>document.documentElement.classList.add("nx-booting")</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#080c15">
@@ -309,7 +310,7 @@
 #nxRandomizer .rx-people button[aria-pressed=true]{background:#506dd3}
 @keyframes rx-pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){#nxRandomizer .rx-wheel,#nxRandomizer .rx-reel{transition-duration:.01ms}}
-</style>  <link rel="stylesheet" href="./visual-refresh.css?v=2">
+</style>  <link rel="stylesheet" href="./visual-refresh.css?v=3">
 </head>
 
 <body>
@@ -393,7 +394,8 @@
   </section>
 
   <!-- APPLICATION -->
-  <div id="app" class="layout hidden"><div id="nxLoadingScreen" role="status" aria-live="polite"><div class="nx-loader-mark">N</div><div class="nx-loader-spinner"></div><h2 id="nxLoadTitle">Загружаем NEXORA</h2><p id="nxLoadMessage">Подключаем аккаунт и загружаем данные…</p><div class="nx-loader-track"><span></span></div><button type="button" id="nxLoadRetry" hidden onclick="location.reload()">Повторить загрузку</button></div>
+  <div id="nxLoadingScreen" role="status" aria-live="polite"><div class="nx-loader-mark">N</div><div class="nx-loader-spinner"></div><h2 id="nxLoadTitle">Загружаем NEXORA</h2><p id="nxLoadMessage">Подключаем аккаунт и загружаем данные…</p><div class="nx-loader-track"><span></span></div><button type="button" id="nxLoadRetry" hidden onclick="location.reload()">Повторить загрузку</button></div>
+<div id="app" class="layout hidden">
 
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar glass">
@@ -916,7 +918,7 @@
 
   <script type="module" src="./maintenance.js?v=owner-recovery-2"></script>
   <!-- FIREBASE MODULES -->
-  <script type="module" src="./app.js?v=app-ready-loader-1"></script>
+  <script type="module" src="./app.js?v=boot-loader-2"></script>
   <script type="module" src="./nexora21.js?v=32-email-gate-1"></script>
   <script type="module" src="./posts22.js?v=counters-20261114-1"></script>
 
