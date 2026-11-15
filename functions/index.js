@@ -77,6 +77,9 @@ exports.onNewMessage = onDocumentCreated({
       !participants.every(documentId) || participants[0]===participants[1] ||
       !participants.includes(sender) || !["text","sticker"].includes(message.type)) return;
   const recipient=participants.find(uid=>uid!==sender);
+  // A muted conversation remains available but does not create message alerts.
+  const preferences=await db.doc(`users/${recipient}/chatPreferences/${event.params.chatId}`).get();
+  if(preferences.exists && preferences.data()?.muted===true)return;
   const preview=message.type==="sticker"?"Стикер":safeSnippet(message.text);
   await notify(recipient,sender,notificationId("message",event),
     `Новое сообщение: ${preview || "Открыть диалог"}`,
