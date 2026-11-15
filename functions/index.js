@@ -36,6 +36,8 @@ async function notify(recipient, sender, id, text, kind, targetId) {
   if (!documentId(recipient) || !documentId(sender) || recipient === sender) return;
   const user = await db.doc(`users/${recipient}`).get();
   if (!user.exists) return;
+  const block=await db.doc(`users/${recipient}/blockedUsers/${sender}`).get();
+  if(block.exists)return;
   await db.doc(`users/${recipient}/notifications/${id}`).create({
     text, kind, targetId, actorId:sender,
     read:false, createdAt:FieldValue.serverTimestamp()
