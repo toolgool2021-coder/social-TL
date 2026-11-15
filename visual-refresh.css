@@ -52,3 +52,17 @@ html.nx-booting #nxLoadingScreen{display:flex;position:fixed;inset:0;z-index:999
 html.nx-booting{overflow:hidden}
 html.nx-booting #nxLoadingScreen{pointer-events:auto}
 html.nx-booting #nxLoadingScreen[role=status]{isolation:isolate}
+
+/* Branded animated boot sequence */
+#nxLoadingScreen .nx-loader-mark{position:relative;width:94px;height:94px;padding:7px;border-radius:27px;animation:nxAvatarArrival 1.25s cubic-bezier(.18,.85,.22,1) both,nxAvatarBreath 2.7s ease-in-out 1.25s infinite}
+#nxLoadingScreen .nx-loader-mark::before{content:"";position:absolute;inset:-10px;border-radius:35px;border:1px solid rgba(160,177,255,.45);animation:nxAvatarRing 2.2s ease-out infinite;pointer-events:none}
+#nxLoadingScreen .nx-loader-avatar{display:block;width:100%;height:100%;object-fit:cover;border-radius:20px;box-shadow:0 0 28px rgba(136,153,255,.32)}
+#nxLoadingScreen h2{animation:nxLoaderReveal .7s .25s both}
+#nxLoadingScreen p{animation:nxLoaderReveal .7s .42s both}
+#nxLoadingScreen .nx-loader-track{animation:nxLoaderReveal .7s .55s both}
+#nxLoadingScreen .nx-loader-spinner{animation:nxLoaderSpin .85s linear infinite,nxLoaderReveal .65s .3s both}
+@keyframes nxAvatarArrival{0%{opacity:0;transform:translateY(30px) scale(.64) rotate(-14deg);filter:blur(10px)}65%{opacity:1;transform:translateY(-7px) scale(1.06) rotate(2deg);filter:blur(0)}100%{transform:translateY(0) scale(1) rotate(0)}}
+@keyframes nxAvatarBreath{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.035)}}
+@keyframes nxAvatarRing{0%{opacity:.75;transform:scale(.82)}100%{opacity:0;transform:scale(1.45)}}
+@keyframes nxLoaderReveal{from{opacity:0;transform:translateY(14px);filter:blur(5px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){#nxLoadingScreen .nx-loader-mark,#nxLoadingScreen .nx-loader-mark::before,#nxLoadingScreen .nx-loader-avatar{animation:none!important}}
