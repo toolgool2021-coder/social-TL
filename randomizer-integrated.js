@@ -28,23 +28,26 @@ async function animateCase(data,replay=false){
    if(seq!==caseSeq)return;
    const entries=(Array.isArray(data.reels?.[i])?data.reels[i]:(data.reels?.[i]?.ids||[])).map(id=>map.get(id)).filter(Boolean);
    const winner=wins[i];
-   // Balanced visual sequence: never force one participant to fill the finish area.
-   // With exactly two entrants the sequence alternates naturally, without clusters.
+   // Shuffle the visible strip independently from the random winner selection.
+   // Limit consecutive duplicates to two, rather than forcing predictable alternation.
    const cards=[];
    const visualPool=source.length?source:[winner];
    for(let k=0;k<72;k++){
-    let choices=visualPool.filter(u=>u.id!==cards[cards.length-1]?.id);
-    if(!choices.length)choices=visualPool;
-    cards.push(choices[rand(choices.length)]);
+     const last=cards[cards.length-1]?.id;
+     const prev=cards[cards.length-2]?.id;
+     let choices=visualPool.filter(u=>!(u.id===last&&last===prev));
+     if(!choices.length)choices=visualPool;
+     cards.push(choices[rand(choices.length)]);
    }
-   // The stopping tile is the actual selected winner; avoid duplicate neighbors.
+   // Avoid a repeated winning name immediately beside the stopping tile.
    if(cards.length&&cards[cards.length-1].id===winner.id&&visualPool.length>1){
-     const alternatives=visualPool.filter(u=>u.id!==winner.id);
-     cards[cards.length-1]=alternatives[rand(alternatives.length)];
+     const others=visualPool.filter(u=>u.id!==winner.id);
+     cards[cards.length-1]=others[rand(others.length)];
    }
    cards.push(winner);
    for(let k=0;k<8;k++){
-     let choices=visualPool.filter(u=>u.id!==cards[cards.length-1]?.id);
+     const last=cards[cards.length-1]?.id,prev=cards[cards.length-2]?.id;
+     let choices=visualPool.filter(u=>!(u.id===last&&last===prev));
      if(!choices.length)choices=visualPool;
      cards.push(choices[rand(choices.length)]);
    }
@@ -54,15 +57,24 @@ async function animateCase(data,replay=false){
    const width=reel.firstElementChild.getBoundingClientRect().width+10,box=reel.parentElement.clientWidth;
    const target=box/2-width/2-72*width;
    const slow=reduced();
+   const duration=6900+rand(2200),pause=180+rand(360),settle=950+rand(650);
+   const overshoot=width*(.36+rand(28)/100);
    $("rxCaseStatus").textContent=(replay?"↻ Повтор":"🔴 LIVE")+" · "+(i+1)+"/"+wins.length;
-   // Long deceleration, a small overshoot, then a gentle backward settling motion.
-   reel.style.transition=slow?"none":"transform 7.4s cubic-bezier(.09,.65,.16,1)";
-   reel.style.transform="translateX("+(target-width*.36)+"px)";
-   await sleep(slow?80:7450);
+   // First rush across the strip, then slow unevenly and briefly hover near the marker.
+   reel.style.transition=slow?"none":"transform "+(duration*.73/1000)+"s cubic-bezier(.1,.38,.23,.95)";
+   reel.style.transform="translateX("+(target+width*3.2)+"px)";
+   await sleep(slow?50:duration*.73);
    if(seq!==caseSeq)return;
-   reel.style.transition=slow?"none":"transform 1.5s cubic-bezier(.2,.8,.2,1)";
+   reel.style.transition=slow?"none":"transform "+(duration*.27/1000)+"s cubic-bezier(.22,.75,.2,1)";
+   reel.style.transform="translateX("+(target-overshoot)+"px)";
+   await sleep(slow?50:duration*.27);
+   if(seq!==caseSeq)return;
+   $("rxCaseStatus").textContent="✦ Почти остановилось…";
+   await sleep(slow?20:pause);
+   if(seq!==caseSeq)return;
+   reel.style.transition=slow?"none":"transform "+(settle/1000)+"s cubic-bezier(.16,.78,.24,1)";
    reel.style.transform="translateX("+target+"px)";
-   await sleep(slow?80:1550);
+   await sleep(slow?40:settle+80);
   }
   if(seq===caseSeq){caseResult(data);$("rxCaseStatus").textContent="Розыгрыш завершён";$("rxCaseReplay").hidden=false}
  }finally{if(seq===caseSeq){caseBusy=false;$("rxRoll").disabled=false;$("rxCaseReplay").disabled=false}}
