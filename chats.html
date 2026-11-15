@@ -1055,7 +1055,13 @@ function renderMessages(forceBottom=false){
   const nodes=[];
   for(const incoming of Array.from(template.content.children)){
     if(!incoming.classList.contains("message-row")){
-      nodes.push(incoming);
+      const previous=Array.from(box.children).find(el=>
+        !el.classList.contains("message-row") &&
+        el.className===incoming.className &&
+        el.textContent===incoming.textContent &&
+        !nodes.includes(el)
+      );
+      nodes.push(previous||incoming);
       continue;
     }
     const old=existing.get(incoming.dataset.message);
