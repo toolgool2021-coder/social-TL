@@ -246,6 +246,7 @@ label input,label select{margin-top:7px}
         Роль Owner нельзя назначить через эту панель.
       </p>
 
+      <div class="form-grid"><label>Блокировка аккаунта<select id="banDuration"><option value="0">Нет блокировки / разблокировать</option><option value="1">1 час</option><option value="24">24 часа</option><option value="168">7 дней</option><option value="720">30 дней</option><option value="876000">Бессрочно (100 лет)</option></select></label><label>Причина блокировки<input id="banReason" maxlength="300" placeholder="Например: спам или нарушение правил"></label></div><p class="muted">Блокировка вступает в силу после публикации обновлённых правил Firestore. Блокировка Firebase Auth не удаляет аккаунт.</p><div class="actions"><button id="saveBan" class="danger">Применить блокировку</button></div>
       <div class="actions">
         <button id="saveUser" class="primary">Сохранить</button>
         <button id="cancelEditor">Отмена</button>
@@ -466,7 +467,7 @@ function renderUsers(){
         <strong>${userAvatar(u)} ${esc(u.name||"Без имени")} ${badge}</strong>
         <p class="uid">${esc(u.uid)}</p>
         ${u.username?`<p class="uid">@${esc(u.username)}</p>`:""}
-        <span class="pill">${esc(roleName(u.role))}</span>
+        <span class="pill">${esc(roleName(u.role))}</span>${u.bannedUntil?.toMillis?.()>Date.now()?` <span class="pill" style="color:#ffb4bd;background:#80374b55">Заблокирован до ${esc(date(u.bannedUntil))}</span>`:""}
       </div>
       <button data-edit="${esc(u.uid)}">Управлять</button>
     </div>`;
@@ -494,6 +495,11 @@ $("usersList").onclick=event=>{
   $("role").disabled=protectedAccount;
   $("verification").disabled=protectedAccount;
   $("saveUser").disabled=protectedAccount;
+  $("saveBan").disabled=protectedAccount;
+  $("banDuration").disabled=protectedAccount;
+  $("banReason").disabled=protectedAccount;
+  $("banDuration").value="0";
+  $("banReason").value=user.bannedReason||"";
 
   $("editor").classList.remove("hidden");
   $("editor").scrollIntoView({behavior:"smooth"});
@@ -501,6 +507,22 @@ $("usersList").onclick=event=>{
   if(protectedAccount)toast("Аккаунт владельца защищён.");
 };
 
+$("saveBan").onclick=()=>execute(async()=>{
+ if(!canManage()||!selected||selected===OWNER_UID)return;
+ const user=users.find(u=>u.uid===selected);
+ if(!user||user.role==="owner")throw Error("Аккаунт владельца защищён.");
+ const hours=Number($("banDuration").value);
+ if(![0,1,24,168,720,876000].includes(hours))throw Error("Неверный срок блокировки");
+ const reason=$("banReason").value.trim().slice(0,300);
+ if(hours>0&&!reason)throw Error("Укажи причину блокировки");
+ if(!confirm(hours?"Заблокировать "+(user.name||user.uid)+"?":"Разблокировать "+(user.name||user.uid)+"?"))return;
+ const until=hours?Timestamp.fromMillis(Date.now()+hours*3600000):null;
+ await commit(hours?"user.ban":"user.unban",selected,{hours,reason},batch=>{
+  batch.update(doc(db,"users",selected),{bannedUntil:until,bannedReason:hours?reason:""});
+ });
+ toast(hours?"Пользователь заблокирован":"Пользователь разблокирован");
+ closeEditor();await loadUsers();
+});
 function closeEditor(){
   selected=null;
   $("editor").classList.add("hidden");
