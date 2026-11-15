@@ -426,6 +426,8 @@ input:focus,textarea:focus{border-color:var(--accent)}
         placeholder="Поиск пользователей">
     </div>
     <div id="people" class="scroll"></div>
+    <div class="section">Приватность сообщений</div>
+    <div style="padding:8px 14px 14px"><select id="messagePrivacy" aria-label="Кто может писать мне" style="width:100%;padding:10px;border-radius:10px;background:#202633;color:#fff;border:1px solid #475569" disabled><option value="everyone">Все пользователи</option><option value="nobody">Никто</option></select></div>
     <div class="section">Мои диалоги <button id="showArchive" type="button" style="float:right;background:transparent;color:inherit;border:0;cursor:pointer">Архив</button></div>
     <div id="chats" class="scroll">
       <div class="empty">Загрузка...</div>
@@ -755,6 +757,17 @@ $("blockConversation").onclick=async()=>{
    else await deleteDoc(ref);
    if(uid===activeUid){peerBlocked=next;updateChatControls()}
  }catch(err){showError("Блокировка: "+err.message);updateChatControls()}
+};
+$("messagePrivacy").onchange=async()=>{
+ if(!me)return;
+ const select=$("messagePrivacy"),value=select.value;
+ select.disabled=true;
+ try{
+   await setDoc(doc(db,"users",me.uid,"settings","privacy"),{messagesFrom:value});
+ }catch(err){
+   showError("Приватность: "+err.message);
+   select.value=value==="everyone"?"nobody":"everyone";
+ }finally{select.disabled=false}
 };
 $("showArchive").onclick=()=>{archiveVisible=!archiveVisible;renderChats()};
 $("pinConversation").onclick=()=>{
@@ -1773,6 +1786,11 @@ onAuthStateChanged(auth,async user=>{
     renderChats();
     if(activeUid&&currentMessages.length)renderMessages();
   },err=>showError("Настройки диалогов: "+err.message));
+  $("messagePrivacy").disabled=false;
+  getDoc(doc(db,"users",user.uid,"settings","privacy")).then(snap=>{
+    if(session!==authGeneration)return;
+    $("messagePrivacy").value=snap.data()?.messagesFrom==="nobody"?"nobody":"everyone";
+  }).catch(err=>{if(session===authGeneration)showError("Приватность: "+err.message)});
   heartbeat();
   presenceTimer=setInterval(heartbeat,60000);
 
