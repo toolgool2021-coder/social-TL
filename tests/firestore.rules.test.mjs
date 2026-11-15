@@ -444,3 +444,46 @@ test("legacy null read receipts can be completed once by the recipient", async (
   await assertSucceeds(updateDoc(ref(BOB,"chats",cid,"messages",mid),{readAt:serverTimestamp()}));
   await assertFails(updateDoc(ref(BOB,"chats",cid,"messages",mid),{readAt:serverTimestamp()}));
 });
+
+test("blocklist is private and blocks new incoming messages",async()=>{
+  const cid=ALICE+"_"+BOB;
+  const block=ref(BOB,"users",BOB,"blockedUsers",ALICE);
+  await assertSucceeds(setDoc(block,{createdAt:serverTimestamp()}));
+  await assertFails(getDoc(ref(ALICE,"users",BOB,"blockedUsers",ALICE)));
+  await assertFails(setDoc(ref(ALICE,"chats",cid,"messages","blocked-message"),{
+    senderId:ALICE,type:"text",text:"Blocked",sticker:"",createdAt:serverTimestamp()
+  }));
+  await assertSucceeds(deleteDoc(block));
+  await assertSucceeds(setDoc(ref(ALICE,"chats",cid,"messages","unblocked-message"),{
+    senderId:ALICE,type:"text",text:"Allowed",sticker:"",createdAt:serverTimestamp()
+  }));
+});
+
+test("messaging privacy is private and enforced server-side",async()=>{
+  const cid=ALICE+"_"+BOB;
+  const privacy=ref(BOB,"users",BOB,"settings","privacy");
+  await assertSucceeds(setDoc(privacy,{messagesFrom:"nobody"}));
+  await assertFails(getDoc(ref(ALICE,"users",BOB,"settings","privacy")));
+  await assertFails(setDoc(ref(ALICE,"chats",cid,"messages","privacy-denied"),{
+    senderId:ALICE,type:"text",text:"Hello",sticker:"",createdAt:serverTimestamp()
+  }));
+  await assertSucceeds(setDoc(privacy,{messagesFrom:"everyone"}));
+  await assertSucceeds(setDoc(ref(ALICE,"chats",cid,"messages","privacy-allowed"),{
+    senderId:ALICE,type:"text",text:"Hello",sticker:"",createdAt:serverTimestamp()
+  }));
+  await assertFails(setDoc(privacy,{messagesFrom:"invalid"}));
+});
+
+test("post galleries permit up to four HTTPS images and reject unsafe data",async()=>{
+  const create=(id,images)=>setDoc(ref(ALICE,"posts",id),{
+    uid:ALICE,text:"Gallery",images,createdAt:serverTimestamp()
+  });
+  await assertSucceeds(create("gallery-valid",[
+    "https://example.com/1.jpg","https://example.com/2.jpg",
+    "https://example.com/3.jpg","https://example.com/4.jpg"
+  ]));
+  await assertFails(create("gallery-five",Array.from({length:5},(_,i)=>"https://example.com/"+i)));
+  await assertFails(create("gallery-http",["http://example.com/a.jpg"]));
+  await assertFails(create("gallery-empty",[]));
+  await assertFails(create("gallery-blank",[""]));
+});
