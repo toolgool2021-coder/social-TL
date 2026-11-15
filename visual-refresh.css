@@ -32,3 +32,18 @@ img{max-width:100%}
 @media(hover:hover) and (pointer:fine){button:not(:disabled):hover,.btn:not(:disabled):hover{filter:brightness(1.075)}}
 @media(max-width:720px){body{background-attachment:scroll}.panel,.card,.post,.post-card{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}button,.btn{min-height:36px}#nxRandomizer .rx-tile{box-shadow:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;scroll-behavior:auto!important}body::before{display:none}}
+
+/* Initial loading gate. Covers the app until account data is ready. */
+#nxLoadingScreen{display:none}
+#app.nx-loading #nxLoadingScreen{display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:25px;text-align:center;background:radial-gradient(circle at 50% 35%,#20284b 0%,#0b1020 45%,#070a13 100%);backdrop-filter:blur(24px)}
+#nxLoadingScreen .nx-loader-mark{width:76px;height:76px;display:grid;place-items:center;border-radius:22px;border:1px solid #aabaff66;background:linear-gradient(135deg,#647bff44,#9e6cff25);font-size:40px;font-weight:950;color:#e6eaff;box-shadow:0 15px 55px #586cf633;animation:nxLoaderFloat 2.2s ease-in-out infinite}
+#nxLoadingScreen .nx-loader-spinner{width:29px;height:29px;border-radius:50%;border:3px solid #8699ef33;border-top-color:#a8b8ff;animation:nxLoaderSpin .85s linear infinite}
+#nxLoadingScreen h2{margin:0;font-size:clamp(21px,4vw,28px);letter-spacing:-.025em}
+#nxLoadingScreen p{margin:0;color:#a4b0ce;font-size:13px}
+#nxLoadingScreen .nx-loader-track{width:min(270px,75vw);height:4px;overflow:hidden;border-radius:8px;background:#ffffff13;margin-top:12px}
+#nxLoadingScreen .nx-loader-track span{display:block;width:35%;height:100%;border-radius:8px;background:linear-gradient(90deg,#8095ff,#bc8bff);animation:nxLoaderTrack 1.7s ease-in-out infinite}
+#nxLoadRetry:not([hidden]){margin-top:8px;padding:12px 22px;background:#6579cf;border:1px solid #a5b8ff;border-radius:12px;color:white}
+@keyframes nxLoaderSpin{to{transform:rotate(360deg)}}
+@keyframes nxLoaderTrack{0%{transform:translateX(-110%)}100%{transform:translateX(400%)}}
+@keyframes nxLoaderFloat{50%{transform:translateY(-6px);box-shadow:0 20px 65px #586cf655}}
+@media(prefers-reduced-motion:reduce){#nxLoadingScreen *{animation:none!important}}
