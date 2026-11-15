@@ -1,0 +1,34 @@
+/* NEXORA Visual Refresh 1.0 — presentation only, no behavior changes */
+:root{--bg:#070b16;--surface:#10192b;--surface-2:#18243b;--surface-hover:#233354;--glass:rgba(17,26,45,.78);--line:rgba(171,193,255,.13);--line-strong:rgba(171,193,255,.27);--text:#f1f5ff;--muted:#9eacc9;--accent:#93a6ff;--accent-2:#b28bff;--radius:20px;--shadow:0 20px 65px rgba(0,0,0,.32)}
+html{scrollbar-color:#52658b #0b1120}
+body{background:radial-gradient(ellipse 55% 35% at 8% 4%,rgba(93,108,208,.16),transparent 78%),radial-gradient(ellipse 45% 40% at 94% 17%,rgba(129,72,183,.12),transparent 80%),#070b16;background-attachment:fixed;color:var(--text);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.25;background-image:linear-gradient(rgba(177,192,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(177,192,255,.035) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
+#app,.app,.layout,.shell,main{isolation:isolate}
+.panel,.card,.post,.post-card,.modal-content,.dialog-content,.sidebar,.sidepanel,.nx-welcome,.rx-card,.glass{border-color:rgba(182,202,255,.14)!important;box-shadow:0 12px 40px rgba(0,0,0,.19),inset 0 1px rgba(255,255,255,.035);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.panel,.card,.post,.post-card,.nx-welcome{transition:border-color .26s ease,box-shadow .3s ease,background-color .3s ease}
+.panel:hover,.card:hover,.post:hover,.post-card:hover{border-color:rgba(169,189,255,.25)!important;box-shadow:0 16px 45px rgba(0,0,0,.24),0 0 0 1px rgba(151,166,255,.035)}
+button,.btn,[role="button"],a{ -webkit-tap-highlight-color:transparent}
+button,.btn{transition:transform .18s ease,background-color .24s ease,border-color .24s ease,box-shadow .24s ease,opacity .2s ease}
+button:not(:disabled):active,.btn:not(:disabled):active{transform:scale(.975)}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #9caeff;outline-offset:3px}
+button:disabled{cursor:not-allowed;opacity:.58}
+input,textarea,select{transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease}
+input:focus,textarea:focus,select:focus{border-color:rgba(158,181,255,.65);box-shadow:0 0 0 3px rgba(126,151,255,.11)}
+::selection{background:rgba(139,155,255,.38);color:white}
+::-webkit-scrollbar{width:9px;height:8px}::-webkit-scrollbar-track{background:#0b1221}::-webkit-scrollbar-thumb{background:#344463;border-radius:20px;border:2px solid #0b1221}::-webkit-scrollbar-thumb:hover{background:#52658c}
+.nav button,.nav a,.sidebar button,.sidebar a{transition:background .25s ease,color .25s ease,box-shadow .25s ease,transform .2s ease}
+.nav button:hover,.sidebar button:hover{background:rgba(142,160,255,.105)}
+.nav button.active,.sidebar button.active{box-shadow:inset 3px 0 0 #a0afff,0 0 24px rgba(105,119,228,.09)}
+.brand{letter-spacing:.045em}
+.nx-version-dot{animation:nxPulse 3.8s ease-in-out infinite}
+.nx-welcome{background-image:radial-gradient(circle at 85% 5%,rgba(128,119,249,.13),transparent 58%)}
+.nx-compose-symbol{box-shadow:0 8px 25px rgba(114,108,223,.22)}
+.postimage,img{image-rendering:auto}
+img{max-width:100%}
+#nxRandomizer .rx-reelbox{box-shadow:inset 0 0 45px rgba(0,0,0,.27),0 14px 35px rgba(0,0,0,.16)}
+#nxRandomizer .rx-tile{background:linear-gradient(155deg,#27375c,#18233e);box-shadow:inset 0 1px rgba(255,255,255,.06)}
+#nxRandomizer .rx-winning-tile{box-shadow:0 0 0 2px rgba(193,207,255,.65),0 0 28px rgba(133,151,255,.38)!important}
+@keyframes nxPulse{0%,100%{box-shadow:0 0 7px rgba(130,223,180,.28)}50%{box-shadow:0 0 16px rgba(130,223,180,.72)}}
+@media(hover:hover) and (pointer:fine){button:not(:disabled):hover,.btn:not(:disabled):hover{filter:brightness(1.075)}}
+@media(max-width:720px){body{background-attachment:scroll}.panel,.card,.post,.post-card{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}button,.btn{min-height:36px}#nxRandomizer .rx-tile{box-shadow:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;scroll-behavior:auto!important}body::before{display:none}}
