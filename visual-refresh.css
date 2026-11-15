@@ -35,7 +35,7 @@ img{max-width:100%}
 
 /* Initial loading gate. Covers the app until account data is ready. */
 #nxLoadingScreen{display:none}
-#app.nx-loading #nxLoadingScreen{display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:25px;text-align:center;background:radial-gradient(circle at 50% 35%,#20284b 0%,#0b1020 45%,#070a13 100%);backdrop-filter:blur(24px)}
+html.nx-booting #nxLoadingScreen{display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:25px;text-align:center;background:radial-gradient(circle at 50% 35%,#20284b 0%,#0b1020 45%,#070a13 100%);backdrop-filter:blur(24px)}
 #nxLoadingScreen .nx-loader-mark{width:76px;height:76px;display:grid;place-items:center;border-radius:22px;border:1px solid #aabaff66;background:linear-gradient(135deg,#647bff44,#9e6cff25);font-size:40px;font-weight:950;color:#e6eaff;box-shadow:0 15px 55px #586cf633;animation:nxLoaderFloat 2.2s ease-in-out infinite}
 #nxLoadingScreen .nx-loader-spinner{width:29px;height:29px;border-radius:50%;border:3px solid #8699ef33;border-top-color:#a8b8ff;animation:nxLoaderSpin .85s linear infinite}
 #nxLoadingScreen h2{margin:0;font-size:clamp(21px,4vw,28px);letter-spacing:-.025em}
@@ -47,3 +47,8 @@ img{max-width:100%}
 @keyframes nxLoaderTrack{0%{transform:translateX(-110%)}100%{transform:translateX(400%)}}
 @keyframes nxLoaderFloat{50%{transform:translateY(-6px);box-shadow:0 20px 65px #586cf655}}
 @media(prefers-reduced-motion:reduce){#nxLoadingScreen *{animation:none!important}}
+
+/* Prevent any page from receiving clicks during initial auth resolution. */
+html.nx-booting{overflow:hidden}
+html.nx-booting #nxLoadingScreen{pointer-events:auto}
+html.nx-booting #nxLoadingScreen[role=status]{isolation:isolate}
