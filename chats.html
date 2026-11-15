@@ -930,7 +930,7 @@ async function openChat(uid){
         const cutoff=hiddenChats.get(cid)?.toMillis?.()||0;
         currentMessages=snap.docs.map(d=>({
           id:d.id,...d.data()
-        })).filter(m=>(m.createdAt?.toMillis?.()||0)>cutoff).reverse();
+        })).filter(m=>!cutoff||(m.createdAt?.toMillis?.()||0)>cutoff).reverse();
 
         renderMessages(first);
         markRead(cid,uid,g);
