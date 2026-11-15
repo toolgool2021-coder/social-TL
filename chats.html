@@ -209,8 +209,9 @@ input:focus,textarea:focus{border-color:var(--accent)}
   border-radius:17px 17px 17px 5px;
   background:#293750;
   overflow-wrap:anywhere;
-  animation:appear .2s ease;
+  animation:none;
 }
+.message-row.nx-new .bubble{animation:appear .22s ease both}
 .mine .bubble{
   border-radius:17px 17px 5px 17px;
   background:linear-gradient(135deg,#4b64b0,#7161ac);
@@ -1044,8 +1045,45 @@ function renderMessages(forceBottom=false){
       </div>`;
   }
 
-  box.innerHTML=html||
+  // Reconcile by message ID: read receipts, edits and reactions must NOT
+  // recreate existing bubbles or replay their entrance animation.
+  const template=document.createElement("template");
+  template.innerHTML=html||
     '<div class="empty"><b>Пока пусто</b>Напиши первое сообщение.</div>';
+  const existing=new Map(Array.from(box.querySelectorAll(".message-row[data-message]"))
+    .map(row=>[row.dataset.message,row]));
+  const nodes=[];
+  for(const incoming of Array.from(template.content.children)){
+    if(!incoming.classList.contains("message-row")){
+      nodes.push(incoming);
+      continue;
+    }
+    const old=existing.get(incoming.dataset.message);
+    if(!old){
+      incoming.classList.add("nx-new");
+      nodes.push(incoming);
+      continue;
+    }
+    // Update only the modified pieces; keep the original bubble mounted.
+    for(const selector of [".meta",".msgtext",".quote",".reactions"]){
+      const before=old.querySelector(selector);
+      const after=incoming.querySelector(selector);
+      if(before&&after&&before.innerHTML!==after.innerHTML)
+        before.innerHTML=after.innerHTML;
+      else if(before&&!after)before.remove();
+      else if(!before&&after){
+        const bubble=old.querySelector(".bubble");
+        if(bubble)bubble.appendChild(after.cloneNode(true));
+      }
+    }
+    nodes.push(old);
+  }
+  // Only insert/move nodes when order changed. Avoid wholesale innerHTML.
+  for(let i=0;i<nodes.length;i++){
+    const node=nodes[i];
+    if(box.children[i]!==node)box.insertBefore(node,box.children[i]||null);
+  }
+  while(box.children.length>nodes.length)box.lastElementChild.remove();
 
   if(!term&&(forceBottom||nearBottom)){
     box.scrollTop=box.scrollHeight;
