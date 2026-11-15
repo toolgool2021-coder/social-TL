@@ -447,6 +447,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
       <button id="pinConversation" class="iconbtn" title="Закрепить чат" disabled>☆</button>
       <button id="archiveConversation" class="iconbtn" title="В архив" disabled>▣</button>
       <button id="muteConversation" class="iconbtn" title="Отключить уведомления" disabled>♧</button>
+      <button id="blockConversation" class="iconbtn" title="Заблокировать пользователя" disabled>⛔</button>
       <button id="deleteConversation" class="iconbtn" title="Удалить чат только у себя" disabled>✕</button>
       <button id="toggleSearch" class="iconbtn"
         title="Поиск в переписке">⌕</button>
@@ -544,6 +545,7 @@ let activeUid=null;
 let chatRecords=[];
 let hiddenChats=new Map();
 let chatPreferences=new Map();
+let peerBlocked=false;
 let archiveVisible=false;
 let stopHiddenChats=null;
 let currentMessages=[];
@@ -718,9 +720,11 @@ $("deleteConversation").onclick=async()=>{
 function updateChatControls(){
  const cid=activeChat();
  const pref=chatPreferences.get(cid)||{};
- for(const id of ["pinConversation","archiveConversation","muteConversation"]){
+ for(const id of ["pinConversation","archiveConversation","muteConversation","blockConversation"]){
    const button=$(id);if(button)button.disabled=!me||!activeUid;
  }
+ $("blockConversation").textContent=peerBlocked?"✓":"⛔";
+ $("blockConversation").title=peerBlocked?"Разблокировать пользователя":"Заблокировать пользователя";
  $("pinConversation").textContent=pref.pinnedAt?"★":"☆";
  $("pinConversation").title=pref.pinnedAt?"Открепить чат":"Закрепить чат";
  $("archiveConversation").textContent=pref.archived?"↩":"▣";
@@ -740,6 +744,18 @@ async function changeChatPreference(key,value){
    updateChatControls();renderChats();
  }catch(err){showError("Настройки чата: "+err.message)}
 }
+$("blockConversation").onclick=async()=>{
+ if(!me||!activeUid)return;
+ const uid=activeUid,ref=doc(db,"users",me.uid,"blockedUsers",uid);
+ const next=!peerBlocked;
+ if(next&&!confirm("Заблокировать пользователя? Он не сможет отправлять тебе новые сообщения."))return;
+ try{
+   $("blockConversation").disabled=true;
+   if(next)await setDoc(ref,{createdAt:serverTimestamp()});
+   else await deleteDoc(ref);
+   if(uid===activeUid){peerBlocked=next;updateChatControls()}
+ }catch(err){showError("Блокировка: "+err.message);updateChatControls()}
+};
 $("showArchive").onclick=()=>{archiveVisible=!archiveVisible;renderChats()};
 $("pinConversation").onclick=()=>{
  const pref=chatPreferences.get(activeChat())||{};
@@ -872,6 +888,7 @@ async function openChat(uid){
   stopActive();
   activeUid=uid;
   $("deleteConversation").disabled=false;
+  peerBlocked=false;
   updateChatControls();
   $("message").value=drafts.get(activeChat())||"";
   resizeComposer();
@@ -894,7 +911,12 @@ async function openChat(uid){
     }
 
     if(g!==generation)return;
-
+    try{
+      const blocked=await getDoc(doc(db,"users",me.uid,"blockedUsers",uid));
+      if(g!==generation)return;
+      peerBlocked=blocked.exists();
+      updateChatControls();
+    }catch(error){console.warn("Block state:",error.message)}
     const user=users[uid];
 
     $("peer").innerHTML=
