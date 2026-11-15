@@ -37,6 +37,18 @@ service cloud.firestore {
     function badge(v) { return v is int && v >= 0 && v <= 6; }
     function chatPath(id) { return /databases/$(database)/documents/chats/$(id); }
     function chatMember(id) { return authd() && exists(chatPath(id)) && request.auth.uid in get(chatPath(id)).data.participants; }
+    function blockedBy(recipient, sender) {
+      return exists(/databases/$(database)/documents/users/$(recipient)/blockedUsers/$(sender));
+    }
+    function chatAllowsSender(id, sender) {
+      let members = get(chatPath(id)).data.participants;
+      let recipient = members[0] == sender ? members[1] : members[0];
+      return !blockedBy(recipient, sender);
+    }
+    function membersAllowSender(members, sender) {
+      let recipient = members[0] == sender ? members[1] : members[0];
+      return !blockedBy(recipient, sender);
+    }
     function validMembers(p) {
       return authd() && p is list && p.size() == 2 &&
         p[0] is string && p[1] is string && p[0] != p[1] &&
@@ -83,6 +95,14 @@ service cloud.firestore {
                  (request.resource.data.hiddenAt == resource.data.hiddenAt ||
                   request.resource.data.hiddenAt == request.time))))
         allow delete: if false;
+      }
+      match /blockedUsers/{targetUid} {
+        allow get,list: if self(uid);
+        allow create: if self(uid) && uid != targetUid && existsUser(targetUid) &&
+          request.resource.data.keys().hasOnly(['createdAt']) &&
+          request.resource.data.createdAt == request.time;
+        allow delete: if self(uid);
+        allow update: if false;
       }
       match /likes/{postId} {
         allow get,list: if self(uid);
@@ -182,7 +202,8 @@ service cloud.firestore {
         chatId == request.resource.data.participants[0] + '_' + request.resource.data.participants[1] &&
         request.resource.data.updatedAt == request.time &&
         request.resource.data.keys().hasOnly(['participants','updatedAt','lastText']) &&
-        txt(request.resource.data.get('lastText',''),0,100);
+        txt(request.resource.data.get('lastText',''),0,100) &&
+        membersAllowSender(request.resource.data.participants,request.auth.uid);
       allow update: if authd() && request.auth.uid in resource.data.participants &&
         request.resource.data.participants == resource.data.participants &&
         changed(['updatedAt','lastText','pinnedMessageId','pinnedText']) &&
@@ -193,6 +214,7 @@ service cloud.firestore {
       match /messages/{messageId} {
         allow get,list: if chatMember(chatId);
         allow create: if chatMember(chatId) && request.resource.data.senderId == request.auth.uid &&
+          chatAllowsSender(chatId,request.auth.uid) &&
           request.resource.data.keys().hasOnly(['senderId','type','text','sticker','createdAt','replyTo','replyText']) &&
           request.resource.data.createdAt == request.time &&
           request.resource.data.type in ['text','sticker'] &&
