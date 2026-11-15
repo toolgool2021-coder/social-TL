@@ -1891,6 +1891,9 @@ onAuthStateChanged(auth,async user=>{
   const session=++authGeneration;
   stopChats?.();
   stopChats=null;
+  for(const stop of stopUnreadMessages.values())stop();
+  stopUnreadMessages.clear();
+  unreadMessages.clear();
   stopMessageAlerts?.();stopMessageAlerts=null;
   unreadAlerts=new Map();pendingMessageAlerts=new Map();
   stopActive();
