@@ -157,13 +157,14 @@ service cloud.firestore {
         allow delete: if self(uid);
       }
     }
+    function validPostImage(v) { return txt(v,1,2048) && v.matches('^https://[^ ].*'); }
     function validPostImages(d) {
       return !('images' in d) || (
         d.images is list && d.images.size() >= 1 && d.images.size() <= 4 &&
-        optionalUrl(d.images[0]) &&
-        (d.images.size() < 2 || optionalUrl(d.images[1])) &&
-        (d.images.size() < 3 || optionalUrl(d.images[2])) &&
-        (d.images.size() < 4 || optionalUrl(d.images[3]))
+        validPostImage(d.images[0]) &&
+        (d.images.size() < 2 || validPostImage(d.images[1])) &&
+        (d.images.size() < 3 || validPostImage(d.images[2])) &&
+        (d.images.size() < 4 || validPostImage(d.images[3]))
       );
     }
     match /posts/{postId} {
