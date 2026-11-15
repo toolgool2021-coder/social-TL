@@ -413,6 +413,12 @@ input:focus,textarea:focus{border-color:var(--accent)}
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;scroll-behavior:auto!important}
 }
+.chat-help{margin:9px 14px 5px;padding:10px 13px;border:1px solid #ffffff24;border-radius:12px;background:#121e32cc;color:#dbe5ff;font-size:12px}
+.chat-help summary{cursor:pointer;font-weight:700;list-style:revert;user-select:none}
+.chat-help-grid{display:grid;grid-template-columns:48px 1fr;gap:10px 12px;margin-top:14px;line-height:1.5}
+.chat-help-grid span:nth-child(odd){font-size:17px;text-align:center;color:#a9c4ff}
+#confirmDescription{color:#c0cde6;line-height:1.65}
+#confirmYes{min-width:132px}
   .unread-count{margin-left:auto;min-width:23px;height:23px;padding:2px 6px;border-radius:14px;background:#4f8fff;color:white;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 </style>
 <link rel="stylesheet" href="./nexora-unified.css?v=1">
@@ -430,7 +436,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
     <div id="people" class="scroll"></div>
     <div class="section">Приватность сообщений</div>
     <div style="padding:8px 14px 14px"><select id="messagePrivacy" aria-label="Кто может писать мне" style="width:100%;padding:10px;border-radius:10px;background:#202633;color:#fff;border:1px solid #475569" disabled><option value="everyone">Все пользователи</option><option value="nobody">Никто</option></select></div>
-    <div class="section">Мои диалоги <button id="showArchive" type="button" style="float:right;background:transparent;color:inherit;border:0;cursor:pointer">Архив</button></div>
+    <div class="section">Мои диалоги <button id="showArchive" type="button" style="float:right;background:transparent;color:inherit;border:0;cursor:pointer" title="Показать архивированные диалоги" aria-label="Показать архивированные диалоги">Архив</button></div>
     <div id="chats" class="scroll">
       <div class="empty">Загрузка...</div>
     </div>
@@ -442,7 +448,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
 
   <section class="panel" id="conversation">
     <div class="chathead">
-      <button id="back" class="iconbtn">←</button>
+      <button id="back" class="iconbtn" title="Назад к списку диалогов" aria-label="Назад к списку диалогов">←</button>
       <div id="peerAvatar" class="avatar">N</div>
       <div class="peerinfo">
         <div id="peer">Выбери диалог</div>
@@ -458,10 +464,23 @@ input:focus,textarea:focus{border-color:var(--accent)}
     </div>
 
     <div id="error" hidden></div>
+    <details class="chat-help"><summary>ⓘ Что означают кнопки?</summary>
+      <div class="chat-help-grid">
+        <span>☆ / ★</span><span>Закрепить или открепить диалог в списке (до 5)</span>
+        <span>▣ / ↩</span><span>Переместить чат в архив или вернуть обратно. Сообщения сохраняются</span>
+        <span>♧ / 🔕</span><span>Выключить или включить уведомления от этого чата</span>
+        <span>⛔ / ✓</span><span>Заблокировать или разблокировать собеседника</span>
+        <span>✕</span><span>Скрыть историю только у себя. У собеседника она останется</span>
+        <span>⌕</span><span>Найти сообщение в текущем диалоге</span>
+        <span>☺</span><span>Выбрать стикер</span>
+        <span>➤</span><span>Отправить написанное сообщение</span>
+        <span>⋯</span><span>Ответить, отреагировать, закрепить, изменить или удалить сообщение</span>
+      </div>
+    </details>
 
     <div id="pinned" hidden>
       📌 <span id="pinnedText"></span>
-      <button id="unpin" class="iconbtn">×</button>
+      <button id="unpin" class="iconbtn" title="Открепить сообщение" aria-label="Открепить сообщение">×</button>
     </div>
 
     <div id="chatSearchWrap" hidden>
@@ -479,7 +498,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
     <div class="composer-area">
       <div id="replyBar" hidden>
         <span id="replyText"></span>
-        <button id="cancelReply" class="iconbtn">×</button>
+        <button id="cancelReply" class="iconbtn" title="Отменить ответ" aria-label="Отменить ответ">×</button>
       </div>
 
       <div id="stickerPanel" class="popup" hidden>
@@ -489,12 +508,12 @@ input:focus,textarea:focus{border-color:var(--accent)}
 
       <form id="form" class="composer">
         <button type="button" id="stickers"
-          class="iconbtn" disabled>☺</button>
+          class="iconbtn" disabled title="Открыть панель стикеров" aria-label="Открыть панель стикеров">☺</button>
         <textarea id="message" rows="1"
           maxlength="2000"
           placeholder="Написать сообщение..."
           disabled></textarea>
-        <button id="send" class="send" disabled>➤</button>
+        <button id="send" class="send" disabled title="Отправить сообщение" aria-label="Отправить сообщение">➤</button>
       </form>
     </div>
   </section>
@@ -503,13 +522,23 @@ input:focus,textarea:focus{border-color:var(--accent)}
 <div id="menu" class="popup" hidden></div>
 <div id="emojiPicker" class="popup" hidden></div>
 
+<div id="confirmOverlay" class="overlay" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmHeading" aria-describedby="confirmDescription">
+    <h2 id="confirmHeading">Подтверждение действия</h2>
+    <p id="confirmDescription"></p>
+    <div class="dialog-actions">
+      <button type="button" id="confirmNo" class="btn">Отмена</button>
+      <button type="button" id="confirmYes" class="btn primary">Подтвердить</button>
+    </div>
+  </div>
+</div>
 <div id="editOverlay" class="overlay" hidden>
   <div class="dialog">
     <h2>Редактировать сообщение</h2>
     <textarea id="editText" maxlength="2000"></textarea>
     <div class="dialog-actions">
-      <button id="editCancel" class="btn">Отмена</button>
-      <button id="editSave" class="btn primary">Сохранить</button>
+      <button id="editCancel" class="btn" title="Отменить редактирование" aria-label="Отменить редактирование">Отмена</button>
+      <button id="editSave" class="btn primary" title="Сохранить изменения сообщения" aria-label="Сохранить изменения сообщения">Сохранить</button>
     </div>
   </div>
 </div>
@@ -706,10 +735,35 @@ document.addEventListener("click",event=>{
   }
 });
 
+function askConfirmation(heading,description,accept="Подтвердить"){
+  return new Promise(resolve=>{
+    const overlay=$("confirmOverlay");
+    const yes=$("confirmYes"),no=$("confirmNo");
+    $("confirmHeading").textContent=heading;
+    $("confirmDescription").textContent=description;
+    yes.textContent=accept;
+    overlay.hidden=false;
+    const previous=document.activeElement;
+    const done=answer=>{
+      overlay.hidden=true;
+      yes.onclick=null;no.onclick=null;overlay.onclick=null;
+      document.removeEventListener("keydown",onKey);
+      previous?.focus?.();
+      resolve(answer);
+    };
+    const onKey=e=>{if(e.key==="Escape"){e.preventDefault();done(false)}
+      if(e.key==="Tab"){const target=e.shiftKey?no:yes;if(document.activeElement===target){e.preventDefault();(e.shiftKey?yes:no).focus()}}};
+    yes.onclick=()=>done(true);
+    no.onclick=()=>done(false);
+    overlay.onclick=e=>{if(e.target===overlay)done(false)};
+    document.addEventListener("keydown",onKey);
+    no.focus();
+  });
+}
 $("deleteConversation").onclick=async()=>{
  if(!me||!activeUid)return;
  const uid=activeUid,cid=activeChat();
- if(!confirm("Удалить этот чат только у себя? Старые сообщения больше не будут видны тебе. У собеседника переписка сохранится."))return;
+ if(!await askConfirmation("Скрыть переписку?","История исчезнет только у тебя. У собеседника сообщения останутся. Если придёт новое сообщение, диалог появится снова.","Скрыть чат"))return;
  const button=$("deleteConversation");button.disabled=true;
  try{
   const cutoff=Timestamp.now();
@@ -732,13 +786,14 @@ function updateChatControls(){
    const button=$(id);if(button)button.disabled=!me||!activeUid;
  }
  $("blockConversation").textContent=peerBlocked?"✓":"⛔";
- $("blockConversation").title=peerBlocked?"Разблокировать пользователя":"Заблокировать пользователя";
+ $("blockConversation").title=peerBlocked?"Разблокировать пользователя — снова разрешить ему писать":"Заблокировать пользователя — запретить ему писать";
  $("pinConversation").textContent=pref.pinnedAt?"★":"☆";
  $("pinConversation").title=pref.pinnedAt?"Открепить чат":"Закрепить чат";
  $("archiveConversation").textContent=pref.archived?"↩":"▣";
- $("archiveConversation").title=pref.archived?"Вернуть из архива":"В архив";
+ $("archiveConversation").title=pref.archived?"Вернуть диалог в основной список":"Переместить в архив — сообщения сохранятся";
  $("muteConversation").textContent=pref.muted?"🔕":"♧";
- $("muteConversation").title=pref.muted?"Включить уведомления":"Отключить уведомления";
+ $("muteConversation").title=pref.muted?"Включить уведомления этого диалога":"Отключить уведомления этого диалога";
+ for(const id of ["pinConversation","archiveConversation","muteConversation","blockConversation"]){$(id).setAttribute("aria-label",$(id).title)}
 }
 async function changeChatPreference(key,value){
  if(!me||!activeUid)return;
@@ -756,7 +811,7 @@ $("blockConversation").onclick=async()=>{
  if(!me||!activeUid)return;
  const uid=activeUid,ref=doc(db,"users",me.uid,"blockedUsers",uid);
  const next=!peerBlocked;
- if(next&&!confirm("Заблокировать пользователя? Он не сможет отправлять тебе новые сообщения."))return;
+ if(next&&!await askConfirmation("Заблокировать пользователя?","Этот пользователь больше не сможет отправлять тебе новые сообщения. Разблокировать его можно будет той же кнопкой.","Заблокировать"))return;
  try{
    $("blockConversation").disabled=true;
    if(next)await setDoc(ref,{createdAt:serverTimestamp()});
@@ -767,12 +822,16 @@ $("blockConversation").onclick=async()=>{
 $("messagePrivacy").onchange=async()=>{
  if(!me)return;
  const select=$("messagePrivacy"),value=select.value;
+ const previous=value==="everyone"?"nobody":"everyone";
+ if(value==="nobody"&&!await askConfirmation("Закрыть личные сообщения?","Никто не сможет отправлять тебе новые сообщения, пока ты снова не выберешь «Все пользователи».","Закрыть сообщения")){
+   select.value=previous;return;
+ }
  select.disabled=true;
  try{
    await setDoc(doc(db,"users",me.uid,"settings","privacy"),{messagesFrom:value});
  }catch(err){
    showError("Приватность: "+err.message);
-   select.value=value==="everyone"?"nobody":"everyone";
+   select.value=previous;
  }finally{select.disabled=false}
 };
 $("showArchive").onclick=()=>{archiveVisible=!archiveVisible;renderChats()};
@@ -1345,7 +1404,7 @@ async function toggleReaction(id,emoji){
 
 async function removeMessage(m){
   if(!me||m.senderId!==me.uid)return;
-  if(!confirm("Удалить сообщение?"))return;
+  if(!await askConfirmation("Удалить сообщение?","Сообщение будет удалено из переписки. Это действие нельзя отменить.","Удалить сообщение"))return;
 
   const cid=activeChat();
   const g=generation;
