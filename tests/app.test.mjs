@@ -89,7 +89,7 @@ function harness(initialProfiles = {}) {
   const snapshot = data => ({exists:() => data !== undefined, data:() => data});
   const context = vm.createContext({
     console: {info(){}, warn(){}, error(){}},
-    setTimeout:() => 1, clearTimeout(){}, URL, Date,
+    setTimeout:(callback,delay) => { if (delay === 1100) queueMicrotask(callback); return 1; }, clearTimeout(){}, URL, Date,
     SOCIAL:{}, TRUSTED_HOSTS:[], location:{origin:'https://tlnexora.duckdns.org'},
     document: {
       activeElement:null,
