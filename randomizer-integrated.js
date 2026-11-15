@@ -28,20 +28,26 @@ async function animateCase(data,replay=false){
    if(seq!==caseSeq)return;
    const entries=(Array.isArray(data.reels?.[i])?data.reels[i]:(data.reels?.[i]?.ids||[])).map(id=>map.get(id)).filter(Boolean);
    const winner=wins[i];
-   // No consecutive identical cards and no early preview of the winner near the finish.
-   const available=source.filter(u=>u.id!==winner.id);
-   const raw=entries.length?entries:source;
+   // Balanced visual sequence: never force one participant to fill the finish area.
+   // With exactly two entrants the sequence alternates naturally, without clusters.
    const cards=[];
+   const visualPool=source.length?source:[winner];
    for(let k=0;k<72;k++){
-    let choices=(k>=54&&available.length?available:raw).filter(u=>u&&u.id!==cards[cards.length-1]?.id);
-    if(!choices.length)choices=(k>=54&&available.length?available:raw).filter(Boolean);
-    if(!choices.length)choices=[winner];
+    let choices=visualPool.filter(u=>u.id!==cards[cards.length-1]?.id);
+    if(!choices.length)choices=visualPool;
     cards.push(choices[rand(choices.length)]);
    }
-   // Winner is shown only at the stopping position, not in the preceding tiles.
+   // The stopping tile is the actual selected winner; avoid duplicate neighbors.
+   if(cards.length&&cards[cards.length-1].id===winner.id&&visualPool.length>1){
+     const alternatives=visualPool.filter(u=>u.id!==winner.id);
+     cards[cards.length-1]=alternatives[rand(alternatives.length)];
+   }
    cards.push(winner);
-   const tail=available.length?available:source;
-   for(let k=0;k<8;k++){let choices=tail.filter(u=>u.id!==cards[cards.length-1]?.id);if(!choices.length)choices=tail;cards.push(choices[rand(choices.length)])}
+   for(let k=0;k<8;k++){
+     let choices=visualPool.filter(u=>u.id!==cards[cards.length-1]?.id);
+     if(!choices.length)choices=visualPool;
+     cards.push(choices[rand(choices.length)]);
+   }
    const reel=$("rxReel");reel.style.transition="none";reel.style.transform="translateX(0)";
    reel.innerHTML=cards.map(u=>'<div class="rx-tile">'+esc(label(u))+'</div>').join("");
    reel.getBoundingClientRect();
