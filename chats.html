@@ -413,6 +413,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;scroll-behavior:auto!important}
 }
+  .unread-count{margin-left:auto;min-width:23px;height:23px;padding:2px 6px;border-radius:14px;background:#4f8fff;color:white;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 </style>
 <link rel="stylesheet" href="./nexora-unified.css?v=1">
 </head>
@@ -547,6 +548,9 @@ let activeUid=null;
 let chatRecords=[];
 let hiddenChats=new Map();
 let chatPreferences=new Map();
+let unreadAlerts=new Map();
+let pendingMessageAlerts=new Map();
+let stopMessageAlerts=null;
 let peerBlocked=false;
 let archiveVisible=false;
 let stopHiddenChats=null;
@@ -641,7 +645,7 @@ function badge(user){
     :"";
 }
 
-function personRow(uid,preview=""){
+function personRow(uid,preview="",unread=0){
   const user=users[uid]||{};
   return `
     <button class="person ${uid===activeUid?"active":""}"
@@ -653,6 +657,7 @@ function personRow(uid,preview=""){
           ${badge(user)}
         </span>
         <div class="preview">${esc(preview)}</div>
+        ${unread?`<span class="unread-count" aria-label="${unread} непрочитанных уведомлений">${unread>99?"99+":unread}</span>`:""}
       </span>
     </button>`;
 }
@@ -799,7 +804,7 @@ function renderChats(){
       uid=>uid!==me.uid
     );
     return other
-      ?personRow(other,(chatPreferences.get(item.id)?.pinnedAt?"📌 ":"")+(chatPreferences.get(item.id)?.muted?"🔕 ":"")+(data.lastText||"Диалог"))
+      ?personRow(other,(chatPreferences.get(item.id)?.pinnedAt?"📌 ":"")+(chatPreferences.get(item.id)?.muted?"🔕 ":"")+(data.lastText||"Диалог"),unreadAlerts.get(item.id)||0)
       :"";
   }).join("")||
     (archiveVisible?'<div class="empty">Архив пуст</div>':'<div class="empty">Диалогов пока нет</div>');
@@ -944,6 +949,7 @@ async function openChat(uid){
     const cid=await ensureChat(uid);
     if(g!==generation)return;
     chatReady=true;
+    acknowledgeChatAlerts(cid);
     syncComposer();
     updateStatus();
     statusTimer=setInterval(updateStatus,1000);
@@ -1435,7 +1441,18 @@ $("editSave").onclick=async()=>{
 
 $("cancelReply").onclick=clearReply;
 
-async function markRead(cid,peer,g=generation){
+async async function acknowledgeChatAlerts(cid){
+ if(!me||!cid)return;
+ const alerts=pendingMessageAlerts.get(cid)||[];
+ if(!alerts.length)return;
+ const batch=writeBatch(db);
+ for(const id of alerts.slice(0,400)){
+   batch.update(doc(db,"users",me.uid,"notifications",id),{read:true});
+ }
+ try{await batch.commit()}catch(err){console.warn("Notification receipts:",err.message)}
+}
+function markRead(cid,peer,g=generation){
+  acknowledgeChatAlerts(cid);
   if(!me||g!==generation||activeUid!==peer||cid!==activeChat()||
      document.visibilityState==="hidden")return;
   const state=readState;
@@ -1749,6 +1766,8 @@ onAuthStateChanged(auth,async user=>{
   const session=++authGeneration;
   stopChats?.();
   stopChats=null;
+  stopMessageAlerts?.();stopMessageAlerts=null;
+  unreadAlerts=new Map();pendingMessageAlerts=new Map();
   stopActive();
   clearInterval(presenceTimer);
   presenceTimer=null;
@@ -1778,6 +1797,21 @@ onAuthStateChanged(auth,async user=>{
     return;
   }
   $("chats").innerHTML='<div class="empty">Загрузка...</div>';
+  stopMessageAlerts=onSnapshot(collection(db,"users",user.uid,"notifications"),snap=>{
+    if(session!==authGeneration)return;
+    const nextCounts=new Map(),nextIds=new Map();
+    snap.forEach(item=>{
+      const data=item.data();
+      if(data.kind!=="message"||data.read===true||typeof data.targetId!=="string")return;
+      const cid=data.targetId;
+      nextCounts.set(cid,(nextCounts.get(cid)||0)+1);
+      if(!nextIds.has(cid))nextIds.set(cid,[]);
+      nextIds.get(cid).push(item.id);
+    });
+    unreadAlerts=nextCounts;pendingMessageAlerts=nextIds;
+    renderChats();
+    if(activeUid&&document.visibilityState!=="hidden")acknowledgeChatAlerts(activeChat());
+  },err=>{if(session===authGeneration)showError("Непрочитанные: "+err.message)});
   stopHiddenChats=onSnapshot(collection(db,"users",user.uid,"chatPreferences"),snap=>{
     if(session!==authGeneration)return;
     chatPreferences=new Map(snap.docs.map(d=>[d.id,d.data()]));
