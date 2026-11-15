@@ -793,7 +793,7 @@ function updateChatControls(){
  $("archiveConversation").title=pref.archived?"Вернуть диалог в основной список":"Переместить в архив — сообщения сохранятся";
  $("muteConversation").textContent=pref.muted?"🔕":"♧";
  $("muteConversation").title=pref.muted?"Включить уведомления этого диалога":"Отключить уведомления этого диалога";
- for(const id of ["pinConversation","archiveConversation","muteConversation","blockConversation"]){$(id).setAttribute("aria-label",$(id).title)}
+ for(const id of ["pinConversation","archiveConversation","muteConversation","blockConversation"]){$(id).ariaLabel=$(id).title}
 }
 async function changeChatPreference(key,value){
  if(!me||!activeUid)return;
