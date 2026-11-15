@@ -851,6 +851,7 @@ $("postForm").addEventListener(
       $("postInput").value = "";
       $("postImage").value = "";
       $("postExtraImages").value = "";
+      updatePostImagePreview();
       $("postImageFile").value = "";
       $("postImagePosition").value = "bottom";
       $("postCount").textContent = "0";
@@ -864,6 +865,30 @@ $("postForm").addEventListener(
     }
   }
 );
+
+function updatePostImagePreview(){
+  const box=$("postImagePreview");
+  if(!box)return;
+  const primary=$("postImage")?.value.trim()||"";
+  const extras=($("postExtraImages")?.value||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const urls=[primary,...extras].filter(Boolean).slice(0,4)
+    .map(url=>imageURL(url)).filter(Boolean);
+  box.replaceChildren();
+  box.style.display=urls.length?"grid":"none";
+  for(const url of urls){
+    const img=document.createElement("img");
+    img.src=url;
+    img.alt="Предпросмотр изображения";
+    img.loading="lazy";
+    img.referrerPolicy="no-referrer";
+    img.style.cssText="width:100%;max-height:200px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.04)";
+    img.onerror=()=>img.remove();
+    box.append(img);
+  }
+}
+for(const id of ["postImage","postExtraImages"]){
+  $(id)?.addEventListener("input",updatePostImagePreview);
+}
 
 /* =========================================
    FEED LISTENERS
