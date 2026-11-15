@@ -67,10 +67,21 @@ service cloud.firestore {
       match /chatPreferences/{chatId} {
         allow get,list: if self(uid);
         allow create,update: if self(uid) &&
-          request.resource.data.keys().hasOnly(['hiddenAt']) &&
-          request.resource.data.hiddenAt == request.time &&
-          (!exists(/databases/$(database)/documents/users/$(uid)/chatPreferences/$(chatId)) ||
-            request.resource.data.hiddenAt >= resource.data.hiddenAt);
+          request.resource.data.keys().hasOnly(['hiddenAt','archived','pinnedAt','muted']) &&
+          request.resource.data.keys().hasAny(['hiddenAt','archived','pinnedAt','muted']) &&
+          (!('archived' in request.resource.data) || request.resource.data.archived is bool) &&
+          (!('muted' in request.resource.data) || request.resource.data.muted is bool) &&
+          (!('pinnedAt' in request.resource.data) ||
+            request.resource.data.pinnedAt == null ||
+            (request.resource.data.pinnedAt is timestamp &&
+             request.resource.data.pinnedAt <= request.time)) &&
+          (!('hiddenAt' in request.resource.data) ||
+            (request.resource.data.hiddenAt is timestamp &&
+             (resource == null || !('hiddenAt' in resource.data)
+               ? request.resource.data.hiddenAt == request.time
+               : request.resource.data.hiddenAt >= resource.data.hiddenAt &&
+                 (request.resource.data.hiddenAt == resource.data.hiddenAt ||
+                  request.resource.data.hiddenAt == request.time))))
         allow delete: if false;
       }
       match /likes/{postId} {
