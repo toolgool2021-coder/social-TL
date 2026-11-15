@@ -63,6 +63,18 @@ service cloud.firestore {
         badge(request.resource.data.get('verification',0))
       );
       allow delete: if false;
+      // Private per-user chat deletion marker. Never changes the shared chat.
+      match /chatPreferences/{chatId} {
+        allow get,list: if self(uid);
+        allow create,update: if self(uid) &&
+          request.resource.data.keys().hasOnly(['hiddenAt']) &&
+          request.resource.data.hiddenAt is timestamp &&
+          request.resource.data.hiddenAt <= request.time &&
+          request.resource.data.hiddenAt > request.time - duration.value(5,'m') &&
+          (!exists(/databases/$(database)/documents/users/$(uid)/chatPreferences/$(chatId)) ||
+            request.resource.data.hiddenAt >= resource.data.hiddenAt);
+        allow delete: if false;
+      }
       match /likes/{postId} {
         allow get,list: if self(uid);
         allow create: if self(uid) && exists(/databases/$(database)/documents/posts/$(postId)) &&
