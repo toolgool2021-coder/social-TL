@@ -904,7 +904,7 @@ function renderChats(){
       uid=>uid!==me.uid
     );
     return other
-      ?personRow(other,(chatPreferences.get(item.id)?.pinnedAt?"📌 ":"")+(chatPreferences.get(item.id)?.muted?"🔕 ":"")+(data.lastText||"Диалог"),(unreadMessages.get(item.id)||unreadAlerts.get(item.id))?1:0)
+      ?personRow(other,(chatPreferences.get(item.id)?.pinnedAt?"📌 ":"")+(chatPreferences.get(item.id)?.muted?"🔕 ":"")+(data.lastText||"Диалог"),(unreadMessages.has(item.id)?unreadMessages.get(item.id):Boolean(unreadAlerts.get(item.id)))?1:0)
       :"";
   }).join("")||
     (archiveVisible?'<div class="empty">Архив пуст</div>':'<div class="empty">Диалогов пока нет</div>');
@@ -1603,6 +1603,9 @@ async function markRead(cid,peer,g=generation){
     });
 
     await batch.commit();
+    unreadMessages.set(cid,false);
+    unreadAlerts.delete(cid);
+    renderChats();
   }catch(err){
     console.warn("Read receipts:",err.message);
   }finally{
@@ -1614,6 +1617,12 @@ async function markRead(cid,peer,g=generation){
     }
   }
 }
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible"&&me&&activeUid&&chatReady){
+    markRead(activeChat(),activeUid,generation);
+  }
+});
 
 async function ensureChat(uid){
   if(!me||!uid||uid===me.uid)throw Error("Недопустимый собеседник");
