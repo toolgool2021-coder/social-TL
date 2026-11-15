@@ -443,6 +443,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
         <div id="peer">Выбери диалог</div>
         <div id="status">Личные сообщения</div>
       </div>
+      <button id="deleteConversation" class="iconbtn" title="Удалить чат только у себя" disabled>✕</button>
       <button id="toggleSearch" class="iconbtn"
         title="Поиск в переписке">⌕</button>
     </div>
@@ -514,7 +515,7 @@ import {getAuth,onAuthStateChanged} from
 import {
   getFirestore,collection,doc,getDoc,getDocs,
   query,where,limit,orderBy,onSnapshot,
-  writeBatch,serverTimestamp,setDoc,updateDoc,
+  writeBatch,serverTimestamp,setDoc,updateDoc,Timestamp,
   deleteDoc,runTransaction
 } from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
@@ -537,6 +538,8 @@ let me=null;
 let users={};
 let activeUid=null;
 let chatRecords=[];
+let hiddenChats=new Map();
+let stopHiddenChats=null;
 let currentMessages=[];
 let stopChats=null;
 let stopMessages=null;
@@ -687,10 +690,32 @@ document.addEventListener("click",event=>{
   }
 });
 
+$("deleteConversation").onclick=async()=>{
+ if(!me||!activeUid)return;
+ const uid=activeUid,cid=activeChat();
+ if(!confirm("Удалить этот чат только у себя? Старые сообщения больше не будут видны тебе. У собеседника переписка сохранится."))return;
+ const button=$("deleteConversation");button.disabled=true;
+ try{
+  const cutoff=Timestamp.now();
+  await setDoc(doc(db,"users",me.uid,"chatPreferences",cid),{hiddenAt:cutoff});
+  hiddenChats.set(cid,cutoff);
+  stopActive();activeUid=null;
+  $("app").classList.remove("open");
+  $("peer").textContent="Выбери диалог";
+  $("peerAvatar").textContent="N";
+  $("messages").innerHTML='<div class="empty">Чат удалён у тебя. Новые сообщения снова откроют диалог.</div>';
+  renderChats();syncComposer();
+ }catch(err){showError("Не удалось удалить чат: "+err.message)}
+ finally{button.disabled=!activeUid}
+};
+
 function renderChats(){
   if(!me)return;
-
-  $("chats").innerHTML=chatRecords.map(item=>{
+  $("chats").innerHTML=chatRecords.filter(item=>{
+    const cutoff=hiddenChats.get(item.id)?.toMillis?.()||0;
+    const updated=item.data().updatedAt?.toMillis?.()||0;
+    return !cutoff||updated>cutoff;
+  }).map(item=>{
     const data=item.data();
     const other=data.participants?.find(
       uid=>uid!==me.uid
@@ -797,6 +822,7 @@ async function openChat(uid){
 
   stopActive();
   activeUid=uid;
+  $("deleteConversation").disabled=false;
   $("message").value=drafts.get(activeChat())||"";
   resizeComposer();
   const g=generation;
@@ -900,9 +926,10 @@ async function openChat(uid){
         if(g!==generation)return;
         const first=currentMessages.length===0;
 
+        const cutoff=hiddenChats.get(cid)?.toMillis?.()||0;
         currentMessages=snap.docs.map(d=>({
           id:d.id,...d.data()
-        })).reverse();
+        })).filter(m=>(m.createdAt?.toMillis?.()||0)>cutoff).reverse();
 
         renderMessages(first);
         markRead(cid,uid,g);
@@ -1590,6 +1617,8 @@ onAuthStateChanged(auth,async user=>{
   presenceTimer=null;
 
   activeUid=null;
+  $("deleteConversation").disabled=true;
+  stopHiddenChats?.();stopHiddenChats=null;hiddenChats=new Map();
   me=user;
   users={};
   chatRecords=[];
@@ -1611,6 +1640,12 @@ onAuthStateChanged(auth,async user=>{
     return;
   }
   $("chats").innerHTML='<div class="empty">Загрузка...</div>';
+  stopHiddenChats=onSnapshot(collection(db,"users",user.uid,"chatPreferences"),snap=>{
+    if(session!==authGeneration)return;
+    hiddenChats=new Map(snap.docs.map(d=>[d.id,d.data().hiddenAt]));
+    renderChats();
+    if(activeUid&&currentMessages.length)renderMessages();
+  },err=>showError("Настройки диалогов: "+err.message));
   heartbeat();
   presenceTimer=setInterval(heartbeat,60000);
 
