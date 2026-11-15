@@ -656,6 +656,7 @@ async function applyAuthState(user) {
   );
 
   if (verified) $("app").classList.add("nx-loading");
+  else { document.documentElement.classList.remove("nx-booting"); $("app").classList.remove("nx-loading"); }
   // Unverified accounts may only complete registration and verify email.
   // Never start feed, notifications, or user queries for them.
   if (!user || !verified) return;
@@ -688,6 +689,7 @@ async function applyAuthState(user) {
     listenFeed();
     showPage("feed");
     $("app").classList.remove("nx-loading");
+    document.documentElement.classList.remove("nx-booting");
     window.dispatchEvent(new CustomEvent("nexora:app-ready"));
   } catch (error) {
     if (token === authToken) {
