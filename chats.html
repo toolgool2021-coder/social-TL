@@ -703,7 +703,7 @@ $("deleteConversation").onclick=async()=>{
  const button=$("deleteConversation");button.disabled=true;
  try{
   const cutoff=Timestamp.now();
-  await setDoc(doc(db,"users",me.uid,"chatPreferences",cid),{hiddenAt:serverTimestamp()});
+  await setDoc(doc(db,"users",me.uid,"chatPreferences",cid),{hiddenAt:serverTimestamp()},{merge:true});
   hiddenChats.set(cid,cutoff);
   stopActive();activeUid=null;
   $("app").classList.remove("open");
