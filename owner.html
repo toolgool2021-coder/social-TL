@@ -177,6 +177,19 @@ label input,label select{margin-top:7px}
       <h2>Пользователи</h2>
       <div class="toolbar">
         <input id="search" placeholder="Поиск по имени, @username или UID">
+        <select id="userFilter" aria-label="Фильтр пользователей">
+          <option value="all">Все пользователи</option>
+          <option value="staff">Команда</option>
+          <option value="verified">Верифицированные</option>
+          <option value="banned">Заблокированные</option>
+          <option value="regular">Обычные</option>
+        </select>
+        <select id="userSort" aria-label="Сортировка пользователей">
+          <option value="name">По имени</option>
+          <option value="newest">Сначала новые</option>
+          <option value="oldest">Сначала старые</option>
+        </select>
+        <button id="exportUsers" type="button" title="Экспортировать только загруженные данные пользователей в CSV">↓ CSV</button>
         <button id="reloadUsers">Обновить</button>
       </div>
       <div id="usersList">Загрузка...</div>
@@ -455,7 +468,19 @@ function renderUsers(){
     String(u.name||"").toLowerCase().includes(term)||
     String(u.username||"").toLowerCase().includes(term)||
     u.uid.toLowerCase().includes(term)
-  );
+  ).filter(u=>{
+    const filter=$("userFilter").value;
+    if(filter==="staff")return ["owner","admin","moderator"].includes(u.role);
+    if(filter==="verified")return Number(u.verification||0)>0;
+    if(filter==="banned")return (u.bannedUntil?.toMillis?.()||0)>Date.now();
+    if(filter==="regular")return !["owner","admin","moderator"].includes(u.role);
+    return true;
+  }).sort((a,b)=>{
+    const sort=$("userSort").value;
+    if(sort==="name")return String(a.name||"").localeCompare(String(b.name||""),"ru");
+    const time=u=>u.createdAt?.toMillis?.()||0;
+    return sort==="oldest"?time(a)-time(b):time(b)-time(a);
+  });
 
   $("usersList").innerHTML=filtered.map(u=>{
     const v=Number(u.verification||0);
@@ -476,6 +501,22 @@ function renderUsers(){
 }
 
 $("search").oninput=renderUsers;
+$("userFilter").onchange=renderUsers;
+$("userSort").onchange=renderUsers;
+$("exportUsers").onclick=()=>{
+  if(!canManage())return;
+  const quote=value=>'"'+String(value??"").replace(/"/g,'""')+'"';
+  const lines=[["UID","Имя","Username","Роль","Верификация","Создан"].map(quote).join(",")];
+  for(const u of users){
+    lines.push([u.uid,u.name,u.username,u.role,u.verification||0,date(u.createdAt)].map(quote).join(","));
+  }
+  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="nexora-users-"+new Date().toISOString().slice(0,10)+".csv";
+  a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast("Экспортировано "+users.length+" загруженных аккаунтов");
+};
 $("reloadUsers").onclick=loadUsers;
 
 $("usersList").onclick=event=>{
