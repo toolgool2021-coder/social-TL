@@ -184,3 +184,20 @@ test("delivery errors propagate for retry except already-exists",async()=>{
   app.fail(Object.assign(Error("Already exists"),{code:"already-exists"}));
   await app.handlers.onNewFollower(change);
 });
+
+test("muted conversation suppresses only its message notifications",async()=>{
+  const app=backend({
+    "users/bob":{},
+    "chats/alice_bob":{participants:["alice","bob"]},
+    "users/bob/chatPreferences/alice_bob":{muted:true}
+  });
+  await app.handlers.onNewMessage(event({chatId:"alice_bob",messageId:"m1"},{
+    senderId:"alice",type:"text",text:"Hello"
+  }));
+  assert.equal(app.notifications().length,0);
+  app.documents.set("users/bob/chatPreferences/alice_bob",{muted:false});
+  await app.handlers.onNewMessage(event({chatId:"alice_bob",messageId:"m2"},{
+    senderId:"alice",type:"text",text:"Hello again"
+  },"event-2"));
+  assert.equal(app.notifications().length,1);
+});
