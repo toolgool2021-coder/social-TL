@@ -426,7 +426,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
         placeholder="Поиск пользователей">
     </div>
     <div id="people" class="scroll"></div>
-    <div class="section">Мои диалоги</div>
+    <div class="section">Мои диалоги <button id="showArchive" type="button" style="float:right;background:transparent;color:inherit;border:0;cursor:pointer">Архив</button></div>
     <div id="chats" class="scroll">
       <div class="empty">Загрузка...</div>
     </div>
@@ -444,6 +444,9 @@ input:focus,textarea:focus{border-color:var(--accent)}
         <div id="peer">Выбери диалог</div>
         <div id="status">Личные сообщения</div>
       </div>
+      <button id="pinConversation" class="iconbtn" title="Закрепить чат" disabled>☆</button>
+      <button id="archiveConversation" class="iconbtn" title="В архив" disabled>▣</button>
+      <button id="muteConversation" class="iconbtn" title="Отключить уведомления" disabled>♧</button>
       <button id="deleteConversation" class="iconbtn" title="Удалить чат только у себя" disabled>✕</button>
       <button id="toggleSearch" class="iconbtn"
         title="Поиск в переписке">⌕</button>
@@ -540,6 +543,8 @@ let users={};
 let activeUid=null;
 let chatRecords=[];
 let hiddenChats=new Map();
+let chatPreferences=new Map();
+let archiveVisible=false;
 let stopHiddenChats=null;
 let currentMessages=[];
 let stopChats=null;
@@ -710,22 +715,65 @@ $("deleteConversation").onclick=async()=>{
  finally{button.disabled=!activeUid}
 };
 
+function updateChatControls(){
+ const cid=activeChat();
+ const pref=chatPreferences.get(cid)||{};
+ for(const id of ["pinConversation","archiveConversation","muteConversation"]){
+   const button=$(id);if(button)button.disabled=!me||!activeUid;
+ }
+ $("pinConversation").textContent=pref.pinnedAt?"★":"☆";
+ $("pinConversation").title=pref.pinnedAt?"Открепить чат":"Закрепить чат";
+ $("archiveConversation").textContent=pref.archived?"↩":"▣";
+ $("archiveConversation").title=pref.archived?"Вернуть из архива":"В архив";
+ $("muteConversation").textContent=pref.muted?"🔕":"♧";
+ $("muteConversation").title=pref.muted?"Включить уведомления":"Отключить уведомления";
+}
+async function changeChatPreference(key,value){
+ if(!me||!activeUid)return;
+ const cid=activeChat(),pref=chatPreferences.get(cid)||{};
+ try{
+   const change={...pref,[key]:value};
+   // Preserve the deletion boundary when changing other preferences.
+   if(!change.hiddenAt)delete change.hiddenAt;
+   await setDoc(doc(db,"users",me.uid,"chatPreferences",cid),change);
+   chatPreferences.set(cid,change);
+   updateChatControls();renderChats();
+ }catch(err){showError("Настройки чата: "+err.message)}
+}
+$("showArchive").onclick=()=>{archiveVisible=!archiveVisible;renderChats()};
+$("pinConversation").onclick=()=>{
+ const pref=chatPreferences.get(activeChat())||{};
+ const count=[...chatPreferences.values()].filter(x=>x.pinnedAt).length;
+ if(!pref.pinnedAt&&count>=5){showError("Можно закрепить не больше 5 чатов");return}
+ changeChatPreference("pinnedAt",pref.pinnedAt?null:Timestamp.now());
+};
+$("archiveConversation").onclick=()=>changeChatPreference("archived",!(chatPreferences.get(activeChat())?.archived));
+$("muteConversation").onclick=()=>changeChatPreference("muted",!(chatPreferences.get(activeChat())?.muted));
+
 function renderChats(){
   if(!me)return;
+  $("showArchive").textContent=archiveVisible?"Диалоги":"Архив";
   $("chats").innerHTML=chatRecords.filter(item=>{
+    const pref=chatPreferences.get(item.id)||{};
+    if(Boolean(pref.archived)!==archiveVisible)return false;
     const cutoff=hiddenChats.get(item.id)?.toMillis?.()||0;
     const updated=item.data().updatedAt?.toMillis?.()||0;
     return !cutoff||updated>cutoff;
+  }).sort((a,b)=>{
+    const ap=chatPreferences.get(a.id)?.pinnedAt?.toMillis?.()||0;
+    const bp=chatPreferences.get(b.id)?.pinnedAt?.toMillis?.()||0;
+    return Number(bp>0)-Number(ap>0)||bp-ap||
+      (b.data().updatedAt?.toMillis?.()||0)-(a.data().updatedAt?.toMillis?.()||0);
   }).map(item=>{
     const data=item.data();
     const other=data.participants?.find(
       uid=>uid!==me.uid
     );
     return other
-      ?personRow(other,data.lastText||"Диалог")
+      ?personRow(other,(chatPreferences.get(item.id)?.pinnedAt?"📌 ":"")+(chatPreferences.get(item.id)?.muted?"🔕 ":"")+(data.lastText||"Диалог"))
       :"";
   }).join("")||
-    '<div class="empty">Диалогов пока нет</div>';
+    (archiveVisible?'<div class="empty">Архив пуст</div>':'<div class="empty">Диалогов пока нет</div>');
 }
 
 function updateStatus(){
@@ -824,6 +872,7 @@ async function openChat(uid){
   stopActive();
   activeUid=uid;
   $("deleteConversation").disabled=false;
+  updateChatControls();
   $("message").value=drafts.get(activeChat())||"";
   resizeComposer();
   const g=generation;
@@ -1671,7 +1720,8 @@ onAuthStateChanged(auth,async user=>{
 
   activeUid=null;
   $("deleteConversation").disabled=true;
-  stopHiddenChats?.();stopHiddenChats=null;hiddenChats=new Map();
+  updateChatControls();
+  stopHiddenChats?.();stopHiddenChats=null;hiddenChats=new Map();chatPreferences=new Map();archiveVisible=false;
   me=user;
   users={};
   chatRecords=[];
@@ -1695,7 +1745,9 @@ onAuthStateChanged(auth,async user=>{
   $("chats").innerHTML='<div class="empty">Загрузка...</div>';
   stopHiddenChats=onSnapshot(collection(db,"users",user.uid,"chatPreferences"),snap=>{
     if(session!==authGeneration)return;
+    chatPreferences=new Map(snap.docs.map(d=>[d.id,d.data()]));
     hiddenChats=new Map(snap.docs.map(d=>[d.id,d.data().hiddenAt]));
+    updateChatControls();
     renderChats();
     if(activeUid&&currentMessages.length)renderMessages();
   },err=>showError("Настройки диалогов: "+err.message));
