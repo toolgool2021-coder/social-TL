@@ -109,7 +109,8 @@ service cloud.firestore {
         allow delete: if false;
       }
       match /blockedUsers/{targetUid} {
-        allow get,list: if self(uid);
+        allow get: if self(uid) || self(targetUid);
+        allow list: if self(uid);
         allow create: if self(uid) && uid != targetUid && existsUser(targetUid) &&
           request.resource.data.keys().hasOnly(['createdAt']) &&
           request.resource.data.createdAt == request.time;
