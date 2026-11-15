@@ -1441,7 +1441,7 @@ $("editSave").onclick=async()=>{
 
 $("cancelReply").onclick=clearReply;
 
-async async function acknowledgeChatAlerts(cid){
+async function acknowledgeChatAlerts(cid){
  if(!me||!cid)return;
  const alerts=pendingMessageAlerts.get(cid)||[];
  if(!alerts.length)return;
@@ -1451,7 +1451,7 @@ async async function acknowledgeChatAlerts(cid){
  }
  try{await batch.commit()}catch(err){console.warn("Notification receipts:",err.message)}
 }
-function markRead(cid,peer,g=generation){
+async function markRead(cid,peer,g=generation){
   acknowledgeChatAlerts(cid);
   if(!me||g!==generation||activeUid!==peer||cid!==activeChat()||
      document.visibilityState==="hidden")return;
