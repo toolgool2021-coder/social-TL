@@ -53,11 +53,19 @@ async function animateCase(data,replay=false){
    if(seq!==caseSeq)return;
    // The pointer is precisely centered on the winning card.
    reel.style.transform="translate3d("+destination+"px,0,0)";
+   // Correct the actual on-screen position, not an assumed tile width or offset parent.
+   const markerX=viewport.getBoundingClientRect().left+viewport.getBoundingClientRect().width/2;
+   const actual=tiles[stop].getBoundingClientRect();
+   const drift=markerX-(actual.left+actual.width/2);
+   if(Math.abs(drift)>.25)reel.style.transform="translate3d("+(destination+drift)+"px,0,0)";
+   const landed=tiles[stop].getBoundingClientRect();
+   const mismatch=Math.abs(markerX-(landed.left+landed.width/2))>Math.min(landed.width/3,25);
+   if(mismatch)throw Error("Карточка не совпала с указателем. Результат не показан");
    tiles[stop].classList.add("rx-winning-tile");
-   $("rxCaseStatus").textContent="✦ Победитель "+(i+1)+": "+label(people.get(ids[stop]));
+   $("rxCaseStatus").textContent="✦ Под указателем: "+label(people.get(ids[stop]))+" · победитель "+(i+1)+"/"+strips.length;
    if(!slow)await sleep(950);
   }
-  if(seq===caseSeq){caseResult(data);$("rxCaseStatus").textContent="Розыгрыш завершён";$("rxCaseReplay").hidden=false}
+  if(seq===caseSeq){caseResult(data);$("rxCaseStatus").textContent="Розыгрыш завершён · под указателем: "+label(people.get(data.winners[data.winners.length-1]));$("rxCaseReplay").hidden=false}
  }finally{if(seq===caseSeq){caseBusy=false;$("rxRoll").disabled=false;$("rxCaseReplay").disabled=false}}
 }
 $("rxCaseReplay").onclick=()=>{if(lastCase&&!caseBusy)animateCase(lastCase,true).catch(e=>note("Ошибка повтора: "+e.message))};
