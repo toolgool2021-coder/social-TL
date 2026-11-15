@@ -201,3 +201,16 @@ test("muted conversation suppresses only its message notifications",async()=>{
   },"event-2"));
   assert.equal(app.notifications().length,1);
 });
+
+test("blocked actors cannot generate notifications",async()=>{
+  const app=backend({
+    "users/bob":{},
+    "posts/post-1":{uid:"bob"},
+    "users/bob/blockedUsers/alice":{createdAt:"server-time"}
+  });
+  await app.handlers.onNewComment(event({postId:"post-1",commentId:"comment-1"},{
+    uid:"alice",text:"Hello"
+  }));
+  await app.handlers.onNewFollower(event({uid:"bob",followerId:"alice"}));
+  assert.equal(app.notifications().length,0);
+});
