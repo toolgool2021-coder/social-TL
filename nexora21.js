@@ -4,7 +4,7 @@ import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.
 import {
   getFirestore,doc,getDoc,getDocs,collection,
   query,limit,setDoc,updateDoc,addDoc,deleteDoc,
-  serverTimestamp,onSnapshot
+  serverTimestamp,onSnapshot,writeBatch
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const config={
@@ -26,6 +26,8 @@ let panel="";
 let panelVersion=0;
 let presenceTimer=null;
 let unsubscribeNotifications=null;
+let notificationFilter="all";
+let notificationItems=[];
 let unsubscribePresence=null;
 let profileUid=null;
 let profileVersion=0;
@@ -139,38 +141,54 @@ async function loadSaved(version=panelVersion){
   }
 }
 
-async function loadNotifications(version=panelVersion){
-  const body=$("nx21body");
-  try{
-    const snap=await getDocs(query(
-      collection(db,"users",me.uid,"notifications"),limit(100)
-    ));
-    const items=snap.docs.sort((a,b)=>
-      (b.data().createdAt?.seconds||0)-
-      (a.data().createdAt?.seconds||0)
-    );
-
-    if(panel!=="notifications"||version!==panelVersion)return;
-
-    body.innerHTML=items.map(item=>{
-      const n=item.data();
-      return `<article class="nx21item">
-        <p>${esc(n.text||"Уведомление")}</p>
-        <small class="muted">${esc(date(n.createdAt))}</small>
-        ${n.read===true?"":`
-          <div class="nx21actions">
-            <button type="button" data-nx-read="${esc(item.id)}">
-              Отметить прочитанным
-            </button>
-          </div>`}
-      </article>`;
-    }).join("")||'<p class="muted">Уведомлений пока нет.</p>';
-  }catch(e){
-    if(panel==="notifications"&&version===panelVersion)
-      body.textContent=errorMessage(e);
-  }
+function renderNotificationCenter(){
+ if(panel!=="notifications")return;
+ const body=$("nx21body");
+ const unread=notificationItems.filter(item=>item.data().read!==true);
+ const visible=notificationFilter==="unread"?unread:notificationItems;
+ body.innerHTML=`
+ <div class="nx21actions" style="margin-bottom:16px">
+   <button type="button" data-nx-filter="all" aria-pressed="${notificationFilter==="all"}">Все (${notificationItems.length})</button>
+   <button type="button" data-nx-filter="unread" aria-pressed="${notificationFilter==="unread"}">Непрочитанные (${unread.length})</button>
+   <button type="button" data-nx-read-all ${unread.length?"":"disabled"}>✓ Прочитать все</button>
+ </div>`+visible.map(item=>{
+   const n=item.data();
+   const kind={message:"✉",comment:"💬",follow:"♙",like:"♥"}[n.kind]||"✦";
+   const link=n.kind==="message"&&typeof n.actorId==="string"
+     ?`<a href="./chats.html?user=${encodeURIComponent(n.actorId)}">Открыть переписку</a>`:"";
+   return `<article class="nx21item" style="opacity:${n.read===true?".72":"1"}">
+     <p>${kind} ${esc(n.text||"Уведомление")}</p>
+     <small class="muted">${esc(date(n.createdAt))}</small>
+     <div class="nx21actions">${link}
+       ${n.read===true?"":`<button type="button" data-nx-read="${esc(item.id)}">Отметить прочитанным</button>`}
+     </div>
+   </article>`;
+ }).join("")+(visible.length?"":'<p class="muted">Здесь пока нет уведомлений.</p>');
 }
-
+async function loadNotifications(version=panelVersion){
+ const body=$("nx21body");
+ try{
+   const snap=await getDocs(query(collection(db,"users",me.uid,"notifications"),limit(100)));
+   if(panel!=="notifications"||version!==panelVersion)return;
+   notificationItems=snap.docs.sort((a,b)=>
+     (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+   renderNotificationCenter();
+ }catch(e){
+   if(panel==="notifications"&&version===panelVersion)body.textContent=errorMessage(e);
+ }
+}
+async function markAllNotifications(){
+ if(!me)return;
+ const unread=notificationItems.filter(item=>item.data().read!==true);
+ if(!unread.length)return;
+ const batch=writeBatch(db);
+ unread.forEach(item=>batch.update(doc(db,"users",me.uid,"notifications",item.id),{read:true}));
+ await batch.commit();
+ notificationItems=notificationItems.map(item=>
+   unread.some(u=>u.id===item.id)
+     ?{id:item.id,data:()=>({...item.data(),read:true})}:item);
+ renderNotificationCenter();
+}
 async function loadVerification(version=panelVersion){
   const body=$("nx21body");
   try{
@@ -330,6 +348,12 @@ document.addEventListener("click",async event=>{
         await pinPost(button.dataset.nxPin);
       else if(button.hasAttribute("data-nx-unpin"))
         await unpinPost();
+      else if(button.hasAttribute("data-nx-filter")){
+        notificationFilter=button.dataset.nxFilter==="unread"?"unread":"all";
+        renderNotificationCenter();
+      }
+      else if(button.hasAttribute("data-nx-read-all"))
+        await markAllNotifications();
       else if(button.hasAttribute("data-nx-read"))
         await markRead(button.dataset.nxRead);
     });
@@ -511,9 +535,15 @@ function applyExtraAuth(user){
       const button=document.querySelector(
         '[data-nx-panel="notifications"]'
       );
-      if(button)button.title=count
-        ?`${count} непрочитанных уведомлений`
-        :"Уведомления";
+      if(button){
+        button.title=count?`${count} непрочитанных уведомлений`:"Уведомления";
+        button.setAttribute("aria-label",button.title);
+      }
+      if(panel==="notifications"){
+        notificationItems=snap.docs.sort((a,b)=>
+          (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+        renderNotificationCenter();
+      }
     },
     e=>console.warn("Notifications:",e)
   );
