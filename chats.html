@@ -424,6 +424,7 @@ input:focus,textarea:focus{border-color:var(--accent)}
 .chat-help-grid span:nth-child(odd){font-size:17px;text-align:center;color:#a9c4ff}
 #confirmDescription{color:#c0cde6;line-height:1.65}
 #confirmYes{min-width:132px}
+  .unread-dot{display:inline-block;flex-shrink:0;width:10px;height:10px;border-radius:50%;background:#70a5ff;box-shadow:0 0 0 3px rgba(93,143,255,.14),0 0 12px rgba(93,143,255,.55);margin-left:auto;vertical-align:middle}
   .unread-count{margin-left:auto;min-width:23px;height:23px;padding:2px 6px;border-radius:14px;background:#4f8fff;color:white;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 </style>
 <link rel="stylesheet" href="./nexora-unified.css?v=1">
@@ -701,7 +702,7 @@ function personRow(uid,preview="",unread=0){
           ${badge(user)}
         </span>
         <div class="preview">${esc(preview)}</div>
-        ${unread?`<span class="unread-count" aria-label="${unread} непрочитанных уведомлений">${unread>99?"99+":unread}</span>`:""}
+        ${unread?`<span class="unread-dot" role="img" aria-label="Есть непрочитанные сообщения" title="Непрочитанные сообщения"></span>`:""}
       </span>
     </button>`;
 }
