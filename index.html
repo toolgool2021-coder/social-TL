@@ -313,6 +313,11 @@
 @media(prefers-reduced-motion:reduce){#nxRandomizer .rx-wheel,#nxRandomizer .rx-reel{transition-duration:.01ms}}
 </style>  <link rel="stylesheet" href="./visual-refresh.css?v=5">
   <link rel="stylesheet" href="./nexora-aurora.css?v=1">
+<style>
+.nx-inbox-badge{margin-left:auto;min-width:21px;height:21px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:linear-gradient(135deg,#658fff,#8c75e8);color:white;font-size:11px;font-weight:800;box-shadow:0 0 15px #6c8bff55}
+.nx-inbox-badge[hidden]{display:none!important}
+.nx-inbox-hint{margin:10px 15px 18px;padding:10px 13px;border:1px solid #a8baff24;border-radius:12px;color:#a7b9db;background:#a7baff0a;font-size:12px}
+</style>
 </head>
 
 <body>
@@ -414,8 +419,8 @@
           ⌕ <span>Поиск</span>
         </button>
 
-        <a href="./chats.html">
-          ✉ <span>Сообщения</span>
+        <a href="./chats.html" data-nx-inbox-link title="Открыть личные сообщения">
+          ✉ <span>Сообщения</span> <span id="nxInboxBadge" class="nx-inbox-badge" hidden aria-live="polite">0</span>
         </a>
 
         <a href="./groups.html">
@@ -448,6 +453,7 @@
           🛡 <span>Панель управления</span>
         </a>
       </nav>
+      <div class="nx-inbox-hint" id="nxInboxHint" aria-live="polite">Все сообщения прочитаны</div>
     </aside>
 
     <!-- MAIN CONTENT -->
@@ -926,6 +932,7 @@
   <!-- FIREBASE MODULES -->
   <script type="module" src="./app.js?v=boot-loader-4"></script>
   <script type="module" src="./nexora21.js?v=32-email-gate-1"></script>
+  <script type="module" src="./inbox-badge.js?v=1"></script>
   <script type="module" src="./posts22.js?v=counters-20261114-1"></script>
 
   <!-- EMAIL VERIFICATION -->
