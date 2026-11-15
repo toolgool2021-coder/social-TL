@@ -14,8 +14,24 @@ function shufflePick(a,n){const b=[...a];for(let i=0;i<n;i++){let j=i+rand(b.len
 function note(t){$("rxNotice").textContent=t}
 function showMode(luck){$("rxCase").hidden=luck;$("rxLuck").hidden=!luck;$("rxCaseTab").classList.toggle("rx-active",!luck);$("rxLuckTab").classList.toggle("rx-active",luck)}
 $("rxCaseTab").onclick=()=>showMode(false);$("rxLuckTab").onclick=()=>showMode(true);
-$("nxRandomizerNav").onclick=()=>{const section=$("nxRandomizer");for(const el of $("mainContent").children)if(el!==section)el.classList.add("hidden");section.hidden=false;document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.id==="nxRandomizerNav"));window.scrollTo({top:0,behavior:"smooth"})};
-document.querySelectorAll('[data-page],[data-nx-panel]').forEach(b=>b.addEventListener("click",()=>{$("nxRandomizer").hidden=true},true));
+function openRandomizer(){
+ if($("app").classList.contains("nx-loading"))return;
+ const section=$("nxRandomizer");
+ // Hide ALL other pages, including the extra verification/saved panel.
+ for(const el of $("mainContent").children){
+  if(el!==section){el.classList.add("hidden");el.hidden=true}
+ }
+ section.classList.remove("hidden");section.hidden=false;
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.id==="nxRandomizerNav"));
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+$("nxRandomizerNav").onclick=openRandomizer;
+document.querySelectorAll('[data-page],[data-nx-panel]').forEach(b=>b.addEventListener("click",()=>{
+ $("nxRandomizer").hidden=true;
+ $("nxRandomizerNav").classList.remove("active");
+ // Other modules control their own page visibility; only clear the native hidden attribute.
+ for(const el of $("mainContent").children)if(el.id!=="nxRandomizer")el.hidden=false;
+},true));
 function renderPeople(){$("rxPeopleCount").textContent=users.length;$("rxPeople").innerHTML=users.map(u=>'<button type="button" data-rx-id="'+esc(u.id)+'" aria-pressed="'+selected.has(u.id)+'">'+esc(label(u))+'</button>').join("");$("rxPeople").querySelectorAll("button").forEach(b=>b.onclick=()=>{selected.has(b.dataset.rxId)?selected.delete(b.dataset.rxId):selected.add(b.dataset.rxId);renderPeople()})}
 function caseResult(data){const map=new Map(users.map(u=>[u.id,u]));$("rxWinners").innerHTML='<h3>Победители</h3>'+data.winners.map((id,i)=>'<p>✦ '+(i+1)+'. '+esc(label(map.get(id)))+'</p>').join("")}
 // A case result is the card at the fixed pointer, not a separate visual override.
@@ -88,4 +104,4 @@ $("rxLuckReplay").onclick=()=>{if(lastLuck&&!luckBusy)animateLuck(lastLuck,true)
 $("rxSpin").onclick=async()=>{if(!owner){note("Запуск колеса доступен только владельцу");return}if(luckBusy)return;const chance=Number($("rxChance").value),angle=rand(360);luckBusy=true;$("rxSpin").disabled=true;$("rxLuckStatus").textContent="Публикация вращения…";try{await getIdToken(auth.currentUser,true);await setDoc(luckRef,{chance,angle,success:angle<chance*3.6,startedAt:serverTimestamp(),updatedAt:serverTimestamp()});note("Вращение опубликовано");animateLuck({chance,angle,success:angle<chance*3.6},false).catch(e=>note("Ошибка анимации: "+e.message))}catch(e){luckBusy=false;$("rxSpin").disabled=false;$("rxLuckResult").textContent="";$("rxLuckStatus").textContent="Ошибка записи: "+(e.code||e.message);note("Firestore отклонил вращение: "+(e.code||e.message)+" · UID: "+auth.currentUser?.uid+" · verified: "+auth.currentUser?.emailVerified)}};
 onAuthStateChanged(auth,async u=>{owner=!!u&&u.uid===ownerUid&&u.emailVerified;$("rxOwnerCase").hidden=!owner;$("rxOwnerLuck").hidden=!owner;note(u?(owner?"Режим владельца · UID подтверждён":"Режим зрителя · UID: "+u.uid+" · verified: "+u.emailVerified+" · ожидается: "+ownerUid):"Для эфира войди в аккаунт");if(!u||!u.emailVerified){note(u?"Подтверди почту в Firebase Auth":"Войди в NEXORA");return}try{const snap=await getDocs(collection(db,"users"));users=snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>u.status!=="banned"&&u.privacy?.discoverable!==false);renderPeople()}catch(e){note("Ошибка списка пользователей: "+(e.code||e.message))}onSnapshot(caseRef,s=>{if(!s.exists()||s.metadata.hasPendingWrites)return;const d=s.data();lastCase=d;$("rxCaseReplay").hidden=false;const start=d.startedAt?.toMillis?.()||0;if(start&&Date.now()-start>d.durationMs+1000){if(!caseBusy){caseResult(d);$("rxCaseStatus").textContent="Последний розыгрыш · доступен повтор"}return}if(!caseBusy)animateCase(d).catch(e=>note("Ошибка анимации: "+e.message))},e=>note("CASE ROLL: "+(e.code||e.message)));onSnapshot(luckRef,s=>{if(!s.exists()||s.metadata.hasPendingWrites)return;const d=s.data();lastLuck=d;const start=d.startedAt?.toMillis?.()||0;if(start&&Date.now()-start>5000){if(!luckBusy){setChance(d.chance);wheelAngle=(360-d.angle)%360;const wheel=$("rxWheel");wheel.style.transition="none";wheel.style.transform="rotate("+wheelAngle+"deg)";finishLuck(d);$("rxLuckStatus").textContent="Последний результат · доступен повтор"}return}if(!luckBusy)animateLuck(d).catch(e=>note("Ошибка колеса: "+e.message))},e=>note("LUCK UPGRADE: "+(e.code||e.message)))});
 
-if(location.hash==="#randomizer"){const open=()=>{if(!$("app")?.classList.contains("hidden"))$("nxRandomizerNav")?.click()};onAuthStateChanged(auth,u=>{if(u)setTimeout(open,450)});}
+if(location.hash==="#randomizer"){const open=()=>{if(!$("app")?.classList.contains("hidden")&&!$("app")?.classList.contains("nx-loading"))openRandomizer()};window.addEventListener("nexora:app-ready",open);open();}
