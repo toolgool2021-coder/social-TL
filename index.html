@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<script>document.documentElement.classList.add("nx-booting")</script>
+<script>document.documentElement.classList.add("nx-booting");window.__nxBootStart=Date.now();setTimeout(()=>{if(document.documentElement.classList.contains("nx-booting")){const p=document.getElementById("nxLoadMessage"),b=document.getElementById("nxLoadRetry");if(p)p.textContent="Загрузка занимает слишком много времени. Проверь подключение.";if(b)b.hidden=false}},14000)</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#080c15">
@@ -20,7 +20,8 @@
   <link rel="icon" href="./image/icon.png">
   <link rel="apple-touch-icon" href="./image/icon.png">
 
-  <link rel="stylesheet" href="./style.css?v=3">
+  <style>html.nx-booting #nxLoadingScreen{display:flex!important;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:radial-gradient(circle at 50% 30%,#1d2951,#080c18 65%);color:#f2f5ff;font-family:system-ui,sans-serif;text-align:center;padding:24px}html.nx-booting{overflow:hidden}html.nx-booting #nxLoadingScreen~*{pointer-events:none}</style>
+<link rel="stylesheet" href="./style.css?v=3">
   <link rel="stylesheet" href="./nexora21.css?v=3">
   <link rel="stylesheet" href="./posts22.css?v=31">
 
@@ -918,7 +919,7 @@
 
   <script type="module" src="./maintenance.js?v=owner-recovery-2"></script>
   <!-- FIREBASE MODULES -->
-  <script type="module" src="./app.js?v=boot-loader-2"></script>
+  <script type="module" src="./app.js?v=boot-loader-3"></script>
   <script type="module" src="./nexora21.js?v=32-email-gate-1"></script>
   <script type="module" src="./posts22.js?v=counters-20261114-1"></script>
 
