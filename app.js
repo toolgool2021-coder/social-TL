@@ -820,6 +820,15 @@ $("postForm").addEventListener(
         ? await uploadPostImage(file)
         : imageURL($("postImage").value.trim());
       const imagePosition = $("postImagePosition").value === "top" ? "top" : "bottom";
+      const extraRaw = $("postExtraImages").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+      if(extraRaw.length>3)throw Error("Можно добавить не больше трёх дополнительных изображений.");
+      const extraImages=extraRaw.map(url=>{
+        const safe=imageURL(url);
+        if(!safe)throw Error("Дополнительные изображения должны иметь корректные HTTPS-ссылки.");
+        return safe;
+      });
+      const images=[...(imageUrl?[imageUrl]:[]),...extraImages];
+      if(images.length>4)throw Error("Максимум четыре изображения.");
 
       const data = {
         uid: me.uid,
@@ -827,8 +836,9 @@ $("postForm").addEventListener(
         createdAt: serverTimestamp()
       };
 
-      if (imageUrl) {
-        data.imageUrl = imageUrl;
+      if (imageUrl) data.imageUrl = imageUrl;
+      if (images.length) {
+        data.images = images;
         data.imagePosition = imagePosition;
       }
 
@@ -840,6 +850,7 @@ $("postForm").addEventListener(
       lastSent.post = Date.now();
       $("postInput").value = "";
       $("postImage").value = "";
+      $("postExtraImages").value = "";
       $("postImageFile").value = "";
       $("postImagePosition").value = "bottom";
       $("postCount").textContent = "0";
@@ -935,9 +946,13 @@ function postHTML(post) {
   const mine = post.uid === me?.uid;
   const liked = Boolean(likes[post.id]);
 
-  const image = safeStoredImage(
-    post.imageUrl
-  );
+  const imageList=Array.isArray(post.images)&&post.images.length
+    ?post.images.slice(0,4)
+    :(post.imageUrl?[post.imageUrl]:[]);
+  const images=imageList.map(safeStoredImage).filter(Boolean);
+  const imageMarkup=images.length?`<div class="nx-post-gallery" style="display:grid;grid-template-columns:repeat(${images.length===1?1:2},minmax(0,1fr));gap:8px;margin:12px 0">
+    ${images.map((url,i)=>`<img class="postimage" src="${esc(url)}" alt="Изображение публикации ${i+1}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:12px" onerror="this.hidden=true">`).join("")}
+  </div>`:"";
 
   return `
     <article
@@ -978,20 +993,14 @@ function postHTML(post) {
 
       </div>
 
-      ${image && post.imagePosition === "top" ? `
-        <img class="postimage" src="${esc(image)}" alt="Изображение публикации"
-          loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">
-      ` : ""}
+      ${post.imagePosition === "top" ? imageMarkup : ""}
 
       <div class="posttext">
         ${linkify(post.text || "")}
         ${post.editedAt ? '<small class="muted"> · изменено</small>' : ''}
       </div>
 
-      ${image && post.imagePosition !== "top" ? `
-        <img class="postimage" src="${esc(image)}" alt="Изображение публикации"
-          loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">
-      ` : ""}
+      ${post.imagePosition !== "top" ? imageMarkup : ""}
 
       <div class="actions">
 
