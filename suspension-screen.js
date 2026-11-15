@@ -65,10 +65,21 @@ function show(data){
 }
 onAuthStateChanged(auth,user=>{
  unsubscribe?.();unsubscribe=null;hide();currentUid=user?.uid||null;
- if(!user?.emailVerified)return;
+ if(!user)return;
  const uid=user.uid;
  unsubscribe=onSnapshot(doc(db,"users",uid),snap=>{
   if(currentUid!==uid)return;
   if(snap.exists())show(snap.data());else hide();
- },err=>console.warn("Account suspension:",err.message));
+ },err=>{
+  console.warn("Account suspension:",err.message);
+  if(currentUid!==uid)return;
+  if(err.code==="permission-denied"){
+    until=0;
+    $("nxSuspReason").textContent="Доступ ограничен. Подробная причина недоступна, пока не обновлены правила Firebase.";
+    $("nxSuspUntil").textContent="Не удалось получить срок";
+    $("nxSuspCountdown").textContent="Доступ закрыт";
+    screen.hidden=false;
+    document.body.classList.add("nx-suspended");
+  }
+ });
 });
