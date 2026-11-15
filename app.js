@@ -621,6 +621,7 @@ async function getOrCreateProfile(user, preferredName = "Пользовател�
 
 async function applyAuthState(user) {
   const token = ++authToken;
+  const minimumSplash = new Promise(resolve=>setTimeout(resolve,1100));
   closeAllComments();
 
   unsubPosts?.();
@@ -656,7 +657,7 @@ async function applyAuthState(user) {
   );
 
   if (verified) $("app").classList.add("nx-loading");
-  else { document.documentElement.classList.remove("nx-booting"); $("app").classList.remove("nx-loading"); }
+  else { await minimumSplash; if(token===authToken){ document.documentElement.classList.remove("nx-booting"); $("app").classList.remove("nx-loading"); } }
   // Unverified accounts may only complete registration and verify email.
   // Never start feed, notifications, or user queries for them.
   if (!user || !verified) return;
@@ -688,6 +689,8 @@ async function applyAuthState(user) {
 
     listenFeed();
     showPage("feed");
+    await minimumSplash;
+    if(token!==authToken)return;
     $("app").classList.remove("nx-loading");
     document.documentElement.classList.remove("nx-booting");
     window.dispatchEvent(new CustomEvent("nexora:app-ready"));
