@@ -353,17 +353,19 @@ function avatar(uid, big = false) {
 }
 
 function badgeHTML(uid) {
-  if ((uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID)) return `<span class="nx-owner-badge" title="NEXORA OWNER — основатель и владелец платформы" aria-label="NEXORA OWNER">✦ OWNER</span>`;
+  const ownerBadge = (uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID)
+    ? `<span class="nx-owner-badge" title="NEXORA OWNER — основатель и владелец платформы" aria-label="NEXORA OWNER">✦ OWNER</span>`
+    : "";
   const verification = Number(
     users[uid]?.verification || 0
   );
 
   const expiry=users[uid]?.verificationExpiresAt;
   if (verification < 1 || verification > 6 || (expiry?.toMillis?.() && expiry.toMillis()<=Date.now())) {
-    return "";
+    return ownerBadge;
   }
 
-  return `
+  return ownerBadge + `
     <button
       type="button"
       class="badgeicon"
