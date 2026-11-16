@@ -74,6 +74,7 @@ const BADGES = {
 
 const LIMITS = {
   post: 1000,
+  adminPost: 5000,
   comment: 300,
   bio: 160,
   name: 20,
@@ -84,6 +85,21 @@ const LIMITS = {
 
 let me = null;
 let myProfile = null;
+
+function postLimit() {
+  return me && (me.uid === OWNER_UID || me.uid === NEXORA_OFFICIAL_UID || ["admin", "moderator"].includes(myProfile?.role)) ? LIMITS.adminPost : LIMITS.post;
+}
+function updatePostLimitUI() {
+  const input = $("postInput");
+  if (!input) return;
+  input.maxLength = postLimit();
+  const count = $("postCount");
+  if (count) {
+    count.textContent = input.value.length;
+    if (count.nextSibling?.nodeType === Node.TEXT_NODE) count.nextSibling.textContent = ` / ${postLimit()}`;
+  }
+}
+
 let viewUid = null;
 
 let users = {};
@@ -661,6 +677,7 @@ async function applyAuthState(user) {
   const verified = Boolean(user?.emailVerified);
   me = verified ? user : null;
   myProfile = null;
+  updatePostLimitUI();
 
   users = {};
   posts = [];
@@ -697,6 +714,7 @@ async function applyAuthState(user) {
 
     if (token !== authToken) return;
     myProfile = profile;
+    updatePostLimitUI();
 
     $("topName").textContent =
       myProfile.name || "Пользователь";
@@ -816,10 +834,7 @@ async function uploadPostImage(file) {
    POST CREATION
 ========================================= */
 
-$("postInput").addEventListener("input", () => {
-  $("postCount").textContent =
-    $("postInput").value.length;
-});
+$("postInput").addEventListener("input", updatePostLimitUI);
 
 $("postForm").addEventListener(
   "submit",
@@ -836,8 +851,8 @@ $("postForm").addEventListener(
       return;
     }
 
-    if (text.length > LIMITS.post) {
-      toast("Максимум 1000 символов.");
+    if (text.length > postLimit()) {
+      toast(`Максимум ${postLimit()} символов.`);
       return;
     }
 
@@ -1180,7 +1195,7 @@ function openPostEditor(postId) {
     <form class="nx22-dialog">
       <h2>Редактировать публикацию</h2>
       <label class="fieldlabel">Текст</label>
-      <textarea name="text" maxlength="1000" required></textarea>
+      <textarea name="text" maxlength="${postLimit()}" required></textarea>
       <label class="fieldlabel">HTTPS-ссылка на изображение</label>
       <input name="imageUrl" type="url" placeholder="https://example.com/photo.png">
       <label class="fieldlabel">Или заменить изображение файлом</label>
@@ -1207,7 +1222,7 @@ function openPostEditor(postId) {
   form.addEventListener("submit",async event=>{
     event.preventDefault();
     const text = form.elements.text.value.trim();
-    if (!text || text.length > LIMITS.post) return toast("Текст должен содержать от 1 до 1000 символов.");
+    if (!text || text.length > postLimit()) return toast(`Текст должен содержать от 1 до ${postLimit()} символов.`);
     const button = form.querySelector('[type="submit"]');
     if (button.disabled) return;
     button.disabled = true;
