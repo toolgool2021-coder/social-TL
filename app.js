@@ -716,6 +716,7 @@ async function applyAuthState(user) {
 
     listenFeed();
     showPage("feed");
+    switchStream("official");
     await minimumSplash;
     if(token!==authToken)return;
     $("app").classList.remove("nx-loading");
@@ -869,10 +870,13 @@ $("postForm").addEventListener(
         data.imagePosition = imagePosition;
       }
 
-      await addDoc(
+      const published = await addDoc(
         collection(db, "posts"),
         data
       );
+      // Display the newly published post immediately, even before the feed listener refreshes.
+      posts = [{id: published.id, ...data, createdAt: {toMillis: () => Date.now()}}, ...posts.filter(post => post.id !== published.id)].slice(0, LIMITS.posts);
+      renderFeed();
 
       lastSent.post = Date.now();
       $("postInput").value = "";
