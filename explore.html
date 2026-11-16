@@ -506,7 +506,13 @@ document.addEventListener('click',event=>{
  searchTag();
 });
 
-$('refresh').onclick=loadPosts;
+$('refresh').onclick=async()=>{
+ const button=$('refresh');
+ button.disabled=true;
+ button.textContent='Обновляем...';
+ try{await loadPosts();notify('Рекомендации обновлены');}
+ finally{button.disabled=false;button.textContent='Обновить';}
+};
 
 function selectTab(name){
  for(const tab of [
