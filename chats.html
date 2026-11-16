@@ -597,7 +597,7 @@ window.addEventListener('unhandledrejection',event=>{
 setTimeout(nexoraShowBootFailure,12000);
 </script>
 <script type="module">
-import {initializeApp} from
+import {initializeApp,getApps,getApp} from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
 import {getAuth,onAuthStateChanged} from
@@ -620,7 +620,7 @@ const cfg={
   appId:"1:52396840735:web:a608b9c037c8481f2dc22a"
 };
 
-const app=initializeApp(cfg);
+const app=getApps().length ? getApp() : initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
 window.nexoraChatBooted=true;
