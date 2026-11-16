@@ -426,7 +426,7 @@ onAuthStateChanged(auth,async user=>{
     if(auth.currentUser?.uid!==user.uid)return;
 
     if(!snap.exists()||snap.data().role!=="owner"){
-      $("status").textContent="Доступ запрещён.";
+      $("status").textContent="Аккаунт владельца найден, но роль owner не настроена. В Firebase Console → Firestore Database → users → документ твоего UID установи поле role (string) = owner. После сохранения обнови страницу. Административные действия до подтверждения роли недоступны.";
       return;
     }
 
