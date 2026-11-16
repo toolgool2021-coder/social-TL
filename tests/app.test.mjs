@@ -109,6 +109,9 @@ function harness(initialProfiles = {}) {
         return elements.get(id);
       },
       querySelectorAll:() => [],
+      // The real browser exposes querySelector; return null for absent optional UI nodes.
+      // Keep unit tests focused on authentication, feed and comment behavior.
+      querySelector:() => null,
       addEventListener(){},
       createElement:tag => new Element(tag)
     },
