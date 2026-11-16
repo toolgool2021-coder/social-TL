@@ -335,6 +335,12 @@
 @media(max-width:480px){.nx-official-cover{height:160px}.nx-official-body{padding:14px 10px 17px}.nx-official-links{gap:4px}.nx-official-icon{width:48px;height:48px}.nx-official-link{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.nx-official-link,.nx-official-icon{transition:none}}
 </style>
+<style>
+.nx-stream-switch{display:flex;gap:8px;flex-wrap:wrap}
+.nx-stream-switch button{border:1px solid #a6bbff35;border-radius:12px;padding:10px 15px;background:#ffffff0b;color:inherit;font:inherit;font-size:13px;font-weight:750;cursor:pointer;transition:background .2s,border-color .2s}
+.nx-stream-switch button.active{background:#6889e633;border-color:#91adff80;color:#e6eeff}
+.nx-stream-switch button:focus-visible{outline:2px solid #a5b9ff;outline-offset:3px}
+</style>
 </head>
 
 <body>
@@ -432,6 +438,8 @@
           ✦ <span>Рекомендации</span>
         </a>
 
+        <button type="button" data-stream="community">☷ <span>Лента сообщества</span></button>
+
         <button type="button" data-page="search">
           ⌕ <span>Поиск</span>
         </button>
@@ -508,6 +516,13 @@
           </p>
         </div>
 
+        <div class="glass panel" style="padding:14px 18px">
+          <nav class="nx-stream-switch" aria-label="Выбор ленты публикаций">
+            <button type="button" data-stream="official" class="active" aria-pressed="true">✦ Главная</button>
+            <button type="button" data-stream="community" aria-pressed="false">☷ Сообщества</button>
+          </nav>
+        </div>
+
         <!-- POST COMPOSER -->
         <div class="glass panel">
           <div class="nx-compose-head">
@@ -571,7 +586,7 @@
         <div class="glass panel" style="padding:16px 20px">
           <div class="nx-feed-tabs">
             <div class="nx-feed-label">
-              Лента публикаций
+              <span id="nxStreamTitle">Официальные публикации</span>
             </div>
 
             <span class="muted" style="font-size:11px">
@@ -956,7 +971,7 @@
 
   <script type="module" src="./maintenance.js?v=owner-recovery-2"></script>
   <!-- FIREBASE MODULES -->
-  <script type="module" src="./app.js?v=boot-loader-4"></script>
+  <script type="module" src="./app.js?v=official-community-20261116"></script>
   <script type="module" src="./nexora21.js?v=32-email-gate-1"></script>
   <script type="module" src="./inbox-badge.js?v=1"></script>
   <script type="module" src="./posts22.js?v=counters-20261114-1"></script>
