@@ -258,6 +258,28 @@ textarea{min-height:145px;resize:vertical}
 
 <div id="notice" hidden role="status"></div>
 
+<script>
+/* Navigation works even when Firebase is slow, offline, or its module fails. */
+(function(){
+  function selectExploreTab(name){
+    if(!['recommendations','hashtags','drafts'].includes(name))return;
+    for(const id of ['recommendations','hashtags','drafts']){
+      const section=document.getElementById(id);
+      if(section)section.classList.toggle('hidden',id!==name);
+    }
+    document.querySelectorAll('[data-tab]').forEach(button=>{
+      const active=button.dataset.tab===name;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-selected',String(active));
+    });
+  }
+  window.nexoraSelectExploreTab=selectExploreTab;
+  document.querySelectorAll('[data-tab]').forEach(button=>{
+    button.type='button';
+    button.addEventListener('click',()=>selectExploreTab(button.dataset.tab));
+  });
+})();
+</script>
 <script type="module">
 import {
  initializeApp
@@ -529,9 +551,7 @@ function selectTab(name){
  });
 }
 
-document.querySelectorAll('[data-tab]').forEach(button=>{
- button.onclick=()=>selectTab(button.dataset.tab);
-});
+// Tabs are bound in the independent non-module navigation script above.
 
 function storageKey(){
  return me?'nexora22_drafts_'+me.uid:null;
