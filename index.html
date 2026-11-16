@@ -712,6 +712,12 @@
           </p>
 
           <form id="settingsForm" class="stack">
+            <div class="nx-settings-section"><h3>Имя и юзернейм</h3><p class="muted">Имя видно в публикациях, а уникальный @username помогает найти тебя в поиске.</p></div>
+            <label for="settingsName">Отображаемое имя</label>
+            <input id="settingsName" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="Твоё имя">
+            <label for="settingsUsername">Уникальный юзернейм</label>
+            <input id="settingsUsername" type="text" minlength="3" maxlength="20" pattern="[a-z0-9_]{3,20}" autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="например, toolgool">
+            <small class="nx-field-help">От 3 до 20 символов: латинские строчные буквы, цифры и _. Без @. Юзернейм должен быть свободен.</small>
             <div class="nx-settings-section">
               <h3>О себе</h3>
               <p class="muted">Расскажи немного о себе.</p>
