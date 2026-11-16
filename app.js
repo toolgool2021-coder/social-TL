@@ -1840,6 +1840,9 @@ async function toggleFollow(uid) {
 function fillSettings() {
   if (!myProfile) return;
 
+  $("settingsName").value = myProfile.name || "";
+  $("settingsUsername").value = myProfile.username || "";
+
   $("settingsBio").value =
     myProfile.bio || "";
 
@@ -1896,18 +1899,32 @@ $("settingsForm").addEventListener(
         );
       }
 
-      const changes = {
-        bio,
-        avatarUrl,
-        bannerUrl,
-        websiteUrl
-      };
-
-      await setDoc(
-        doc(db, "users", me.uid),
-        changes,
-        { merge: true }
-      );
+      const name = $("settingsName").value.trim();
+      const username = $("settingsUsername").value.trim().toLowerCase().replace(/^@/, "");
+      if (name.length < 3 || name.length > 20) throw Error("Имя должно содержать от 3 до 20 символов.");
+      if (username && !/^[a-z0-9_]{3,20}$/.test(username)) throw Error("Юзернейм: 3–20 латинских букв, цифр или _.");
+      const changes = {name, bio, avatarUrl, bannerUrl, websiteUrl};
+      const oldUsername = String(myProfile.username || "").toLowerCase();
+      if (username !== oldUsername) {
+        // Claim and release names atomically. Firestore rules validate the paired writes.
+        await runTransaction(db, async transaction => {
+          const profileRef = doc(db, "users", me.uid);
+          const current = await transaction.get(profileRef);
+          if (!current.exists()) throw Error("Профиль не найден.");
+          const previous = String(current.data().username || "").toLowerCase();
+          const nextRef = username ? doc(db, "usernames", username) : null;
+          const previousRef = previous ? doc(db, "usernames", previous) : null;
+          const nextSnapshot = nextRef ? await transaction.get(nextRef) : null;
+          const previousSnapshot = previousRef && previous !== username ? await transaction.get(previousRef) : null;
+          if (nextSnapshot?.exists() && nextSnapshot.data().uid !== me.uid) throw Error("Этот юзернейм уже занят.");
+          if (nextRef && !nextSnapshot?.exists()) transaction.set(nextRef, {uid: me.uid});
+          if (previousRef && previous !== username && previousSnapshot?.exists() && previousSnapshot.data().uid === me.uid) transaction.delete(previousRef);
+          transaction.update(profileRef, {...changes, username});
+        });
+      } else {
+        await setDoc(doc(db, "users", me.uid), changes, {merge: true});
+      }
+      changes.username = username;
 
       myProfile = {
         ...myProfile,
