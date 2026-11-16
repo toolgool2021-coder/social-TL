@@ -7,7 +7,7 @@ service cloud.firestore {
     function authd() { return signedIn() && request.auth.token.email_verified == true && (maintenanceOpen() || ownerIdentity(request.auth.uid)) && (ownerIdentity(request.auth.uid) || !existsUser(request.auth.uid) || profile(request.auth.uid).data.get('bannedUntil',null) == null || (profile(request.auth.uid).data.get('bannedUntil',null) is timestamp && profile(request.auth.uid).data.get('bannedUntil',null) <= request.time)); }
     function self(uid) { return authd() && request.auth.uid == uid; }
     function ownerUid() { return "ElpAtxZIBCZVsLBcLzgdIsr8T1w2"; }
-    function officialUid() { return "04LwiVjT3EQ184vpLOoOxFWelbW2"; }
+    function officialUid() { return "04LwiVjT3EQ184vpL0oOxFWelbW2"; }
     function ownerIdentity(uid) { return uid == ownerUid() || uid == officialUid(); }
     function profile(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
     function existsUser(uid) { return exists(/databases/$(database)/documents/users/$(uid)); }
