@@ -1632,12 +1632,6 @@ async function openProfile(uid) {
 
     $("profileHandle").textContent =
       handleHTML(uid);
-    const ownerStatus = $("nxOwnerStatus");
-    if (ownerStatus) {
-      ownerStatus.hidden = uid !== OWNER_UID && uid !== NEXORA_OFFICIAL_UID;
-      ownerStatus.innerHTML = (uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID) ? `<div class="nx-owner-status-heading">✦ ${uid === NEXORA_OFFICIAL_UID ? "NEXORA OFFICIAL" : "NEXORA OWNER"} <span>${uid === NEXORA_OFFICIAL_UID ? "Официальный аккаунт платформы" : "Основатель и владелец платформы"}</span></div><p>${uid === NEXORA_OFFICIAL_UID ? "Официальный аккаунт NEXORA. Новости, обновления, объявления и взаимодействие с сообществом." : "Основатель NEXORA. Разработка, управление платформой, модерация и развитие сообщества."}</p>${(me?.uid === OWNER_UID || me?.uid === NEXORA_OFFICIAL_UID) ? `<a href="./owner.html" class="nx-owner-control-link">⚙ Открыть панель управления</a>` : ""}` : "";
-    }
-
     // В index.html #profileAvatar уже
     // является контейнером .avatar.
     const avatarElement = $("profileAvatar");
