@@ -406,7 +406,7 @@ function handleHTML(uid) {
 function updateOwnerButton(user, profile) {
   const button = $("ownerButton");
   if (!button) return;
-  const allowed = Boolean(user?.emailVerified && user.uid === OWNER_UID && profile?.role === "owner");
+  const allowed = Boolean(user?.emailVerified && user.uid === OWNER_UID);
   button.classList.toggle("hidden", !allowed);
   button.hidden = !allowed;
   button.style.display = allowed ? "flex" : "none";
