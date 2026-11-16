@@ -866,11 +866,12 @@ $("muteConversation").onclick=()=>changeChatPreference("muted",!(chatPreferences
 
 function syncUnreadMessageListeners(){
   if(!me)return;
-  const visible=new Set(chatRecords.slice(0,60).map(d=>d.id));
+  // Limit expensive per-conversation listeners; chat list itself stays complete.
+  const visible=new Set(chatRecords.slice(0,12).map(d=>d.id));
   for(const [cid,stop] of stopUnreadMessages){
     if(!visible.has(cid)){stop();stopUnreadMessages.delete(cid);unreadMessages.delete(cid)}
   }
-  for(const chat of chatRecords.slice(0,60)){
+  for(const chat of chatRecords.slice(0,12)){
     if(stopUnreadMessages.has(chat.id))continue;
     const peer=chat.data().participants?.find(uid=>uid!==me.uid);
     if(!peer)continue;
@@ -1936,6 +1937,12 @@ onAuthStateChanged(auth,async user=>{
   }
   $("chats").innerHTML='<div class="empty">Подключаем диалоги...</div>';
   const requestedChat=new URLSearchParams(location.search).get("user");
+  let chatsReceived=false;
+  const chatLoadTimeout=setTimeout(()=>{
+    if(session!==authGeneration||chatsReceived)return;
+    $("chats").innerHTML='<div class="empty">Сервер долго отвечает. <button type="button" id="retryChatList">Повторить загрузку</button></div>';
+    $("retryChatList")?.addEventListener("click",()=>location.reload());
+  },9000);
   // Opening a direct chat must not wait for the entire users directory.
   if(requestedChat && requestedChat!==user.uid) void openChat(requestedChat);
   stopMessageAlerts=onSnapshot(collection(db,"users",user.uid,"notifications"),snap=>{
@@ -1977,6 +1984,8 @@ onAuthStateChanged(auth,async user=>{
     ),
     snap=>{
       if(session!==authGeneration)return;
+      chatsReceived=true;
+      clearTimeout(chatLoadTimeout);
       chatRecords=snap.docs.sort((a,b)=>
         (b.data().updatedAt?.seconds||0)-
         (a.data().updatedAt?.seconds||0)
@@ -1985,7 +1994,7 @@ onAuthStateChanged(auth,async user=>{
       syncUnreadMessageListeners();
       renderChats();
     },
-    err=>{if(session===authGeneration){$("chats").innerHTML='<div class="empty">Не удалось загрузить диалоги. Обнови страницу.</div>';showError("Диалоги: "+err.message);}}
+    err=>{clearTimeout(chatLoadTimeout);if(session===authGeneration){$("chats").innerHTML='<div class="empty">Не удалось загрузить диалоги. Обнови страницу.</div>';showError("Диалоги: "+err.message);}}
   );
 
   try{
