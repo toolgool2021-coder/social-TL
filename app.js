@@ -96,7 +96,7 @@ function updatePostLimitUI() {
   const count = $("postCount");
   if (count) {
     count.textContent = input.value.length;
-    if (count.nextSibling?.nodeType === Node.TEXT_NODE) count.nextSibling.textContent = ` / ${postLimit()}`;
+    if (count.nextSibling?.nodeType === 3) count.nextSibling.textContent = ` / ${postLimit()}`;
   }
 }
 
