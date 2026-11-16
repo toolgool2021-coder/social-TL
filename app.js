@@ -1607,6 +1607,14 @@ async function openProfile(uid) {
 
     if (token !== profileToken) return;
 
+    // Scope featured appearance by immutable Firebase UID, never by display name.
+    const profilePage = $("profilePage");
+    const featured = uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID;
+    profilePage?.classList.toggle("nx-featured-profile", featured);
+    profilePage?.classList.toggle("nx-owner-profile", uid === OWNER_UID);
+    profilePage?.classList.toggle("nx-brand-profile", uid === NEXORA_OFFICIAL_UID);
+    profilePage?.style.removeProperty("--nx-profile-cover");
+
     $("profileName").innerHTML = nameHTML(uid);
 
     $("profileHandle").textContent =
@@ -1643,6 +1651,10 @@ async function openProfile(uid) {
       banner
         ? `url("${banner.replace(/"/g, "%22")}")`
         : "";
+    if (featured && banner) {
+      // Same user-controlled banner extends across the entire profile card.
+      profilePage?.style.setProperty("--nx-profile-cover", `url("${banner.replace(/"/g, "%22")}")`);
+    }
 
     $("profileBio").textContent =
       user.bio || "Без описания";
