@@ -63,6 +63,7 @@ class Element {
     this.parentElement = null;
   }
   setAttribute() {}
+  removeAttribute() {}
   addEventListener(name, callback) { this.events[name] = callback; }
   querySelectorAll(selector) {
     const descendants = this.children.flatMap(child => [child, ...child.querySelectorAll('*')]);
