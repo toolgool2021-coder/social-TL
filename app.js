@@ -54,7 +54,7 @@ const firebaseConfig = {
 };
 
 const OWNER_UID = "ElpAtxZIBCZVsLBcLzgdIsr8T1w2";
-const NEXORA_OFFICIAL_UID = "04LwiVjT3EQ184vpLOoOxFWelbW2";
+const NEXORA_OFFICIAL_UID = "04LwiVjT3EQ184vpL0oOxFWelbW2";
 const OFFICIAL_FEED_UIDS = new Set([OWNER_UID, NEXORA_OFFICIAL_UID]);
 
 const app = getApps()[0] || initializeApp(firebaseConfig);
