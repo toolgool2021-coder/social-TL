@@ -363,6 +363,15 @@
 @media(prefers-reduced-motion:reduce){#profilePage.nx-owner-profile .profilename .name{animation:none;background-position:40% 0}}
 @media(max-width:520px){#profilePage.nx-featured-profile .profilebody{padding-left:17px;padding-right:17px}#profilePage.nx-featured-profile .cover{height:185px}}
 </style>
+<style>
+/* Owner-only animated RGB frame; official brand and other profiles stay unchanged. */
+#profilePage.nx-owner-profile .profile{position:relative;isolation:isolate;border:2px solid transparent!important;background:linear-gradient(#0b1125,#0b1125) padding-box,linear-gradient(110deg,#ff527b,#ffcf59,#8ef4c5,#63b9ff,#bc7cff,#ff527b) border-box!important;background-size:100% 100%,350% 350%!important;animation:nx-owner-frame 9s linear infinite;box-shadow:0 0 22px #7a7aff50,0 0 58px #744fff29,0 18px 50px #000a!important}
+#profilePage.nx-owner-profile .profile::after{content:"";position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 23px #7d91ff38,inset 0 0 3px #fff5}
+#profilePage.nx-owner-profile .profilebody{z-index:1}
+#profilePage.nx-owner-profile .avatar.large{box-shadow:0 0 0 3px #d6aaff,0 0 22px #a37cff8c,0 10px 30px #0009!important}
+@keyframes nx-owner-frame{0%{background-position:0 0,0% 50%}100%{background-position:0 0,350% 50%}}
+@media(prefers-reduced-motion:reduce){#profilePage.nx-owner-profile .profile{animation:none}}
+</style>
 </head>
 
 <body>
@@ -661,10 +670,6 @@
           <div class="profilebody">
             <div id="profileAvatar" class="avatar large">
               N
-            </div>
-
-            <div class="nx-profile-label">
-              ✦ NEXORA PROFILE
             </div>
 
             <div id="profileName" class="profilename"></div>
