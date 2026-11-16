@@ -353,7 +353,7 @@ function avatar(uid, big = false) {
 }
 
 function badgeHTML(uid) {
-  if (uid === OWNER_UID) return `<span class="nx-owner-badge" title="NEXORA OWNER — основатель и владелец платформы" aria-label="NEXORA OWNER">✦ OWNER</span>`;
+  if ((uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID)) return `<span class="nx-owner-badge" title="NEXORA OWNER — основатель и владелец платформы" aria-label="NEXORA OWNER">✦ OWNER</span>`;
   const verification = Number(
     users[uid]?.verification || 0
   );
@@ -406,7 +406,7 @@ function handleHTML(uid) {
 function updateOwnerButton(user, profile) {
   const button = $("ownerButton");
   if (!button) return;
-  const allowed = Boolean(user?.emailVerified && user.uid === OWNER_UID);
+  const allowed = Boolean(user?.emailVerified && (user.uid === OWNER_UID || user.uid === NEXORA_OFFICIAL_UID));
   button.classList.toggle("hidden", !allowed);
   button.hidden = !allowed;
   button.style.display = allowed ? "flex" : "none";
@@ -416,7 +416,7 @@ function updateOwnerButton(user, profile) {
 // The owner page still performs its own authorization check.
 onAuthStateChanged(auth, async user => {
   updateOwnerButton(null, null);
-  if (!user?.emailVerified || user.uid !== OWNER_UID) return;
+  if (!user?.emailVerified || (user.uid !== OWNER_UID && user.uid !== NEXORA_OFFICIAL_UID)) return;
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (auth.currentUser?.uid !== user.uid) return;
@@ -1625,7 +1625,7 @@ async function openProfile(uid) {
     const profilePage = $("profilePage");
     const featured = uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID;
     profilePage?.classList.toggle("nx-featured-profile", featured);
-    profilePage?.classList.toggle("nx-owner-profile", uid === OWNER_UID);
+    profilePage?.classList.toggle("nx-owner-profile", uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID);
     profilePage?.classList.toggle("nx-brand-profile", uid === NEXORA_OFFICIAL_UID);
     profilePage?.style.removeProperty("--nx-profile-cover");
 
@@ -1635,8 +1635,8 @@ async function openProfile(uid) {
       handleHTML(uid);
     const ownerStatus = $("nxOwnerStatus");
     if (ownerStatus) {
-      ownerStatus.hidden = uid !== OWNER_UID;
-      ownerStatus.innerHTML = uid === OWNER_UID ? `<div class="nx-owner-status-heading">✦ NEXORA OWNER <span>Основатель платформы</span></div><p>Официальный владелец NEXORA. Управление платформой, модерация, проверка заявок и развитие сообщества.</p>${me?.uid === OWNER_UID ? `<a href="./owner.html" class="nx-owner-control-link">⚙ Открыть панель управления</a>` : ""}` : "";
+      ownerStatus.hidden = uid !== OWNER_UID && uid !== NEXORA_OFFICIAL_UID;
+      ownerStatus.innerHTML = (uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID) ? `<div class="nx-owner-status-heading">✦ NEXORA OWNER <span>Основатель платформы</span></div><p>Официальный владелец NEXORA. Управление платформой, модерация, проверка заявок и развитие сообщества.</p>${(me?.uid === OWNER_UID || me?.uid === NEXORA_OFFICIAL_UID) ? `<a href="./owner.html" class="nx-owner-control-link">⚙ Открыть панель управления</a>` : ""}` : "";
     }
 
     // В index.html #profileAvatar уже
