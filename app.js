@@ -717,7 +717,8 @@ async function applyAuthState(user) {
     listenFeed();
     showPage("feed");
     switchStream("official");
-    const requestedProfile = new URLSearchParams(location.search).get("profile");
+    const requestedProfile = typeof URLSearchParams === "function"
+      ? new URLSearchParams(location.search || "").get("profile") : null;
     if (requestedProfile && /^[A-Za-z0-9]{8,128}$/.test(requestedProfile)) {
       currentPage = "profile";
       setPageVisibility("profile");
