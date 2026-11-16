@@ -395,7 +395,7 @@ function handleHTML(uid) {
 
   return username && validUsername(username)
     ? "@" + username
-    : "Участник NEXORA";
+    : "";
 }
 
 /* =========================================
