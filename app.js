@@ -54,6 +54,8 @@ const firebaseConfig = {
 };
 
 const OWNER_UID = "ElpAtxZIBCZVsLBcLzgdIsr8T1w2";
+const NEXORA_OFFICIAL_UID = "04LwiVjT3EQ184vpLOoOxFWelbW2";
+const OFFICIAL_FEED_UIDS = new Set([OWNER_UID, NEXORA_OFFICIAL_UID]);
 
 const app = getApps()[0] || initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -89,6 +91,7 @@ let posts = [];
 let likes = {};
 
 let currentPage = "feed";
+let streamMode = "official";
 let authMode = "login";
 
 let profileToken = 0;
@@ -488,6 +491,30 @@ document.querySelectorAll("[data-page]").forEach(
     });
   }
 );
+
+function switchStream(mode) {
+  if (mode !== "official" && mode !== "community") return;
+  streamMode = mode;
+  currentPage = "feed";
+  setPageVisibility("feed");
+  document.querySelectorAll("[data-stream]").forEach(button => {
+    const selected = button.dataset.stream === mode;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  document.querySelector('[data-page="feed"]')?.classList.toggle("active", mode === "official");
+  const title = $("nxStreamTitle");
+  if (title) title.textContent = mode === "official" ? "Официальные публикации" : "Публикации сообщества";
+  const composer = $("postForm")?.closest(".glass.panel");
+  if (composer) composer.hidden = mode === "official" && !OFFICIAL_FEED_UIDS.has(me?.uid);
+  renderFeed();
+}
+document.querySelectorAll("[data-stream]").forEach(button =>
+  button.addEventListener("click", () => { if (me) switchStream(button.dataset.stream); })
+);
+document.querySelector('[data-page="feed"]')?.addEventListener("click", () => {
+  if (me) switchStream("official");
+});
 
 /* =========================================
    AUTHENTICATION
@@ -1105,9 +1132,12 @@ function renderFeed() {
     return;
   }
 
-  renderPostList(container, posts.length
-    ? posts.map(postHTML).join("")
-    : '<div class="glass panel empty"><strong>Публикаций пока нет</strong><p class="muted">Стань первым, кто поделится чем-нибудь в NEXORA.</p></div>');
+  const visiblePosts = streamMode === "official"
+    ? posts.filter(post => OFFICIAL_FEED_UIDS.has(post.uid))
+    : posts;
+  renderPostList(container, visiblePosts.length
+    ? visiblePosts.map(postHTML).join("")
+    : '<div class="glass panel empty"><strong>Публикаций пока нет</strong><p class="muted">В этой ленте пока нет публикаций.</p></div>');
 
   if (likesError) {
     const warning = document.createElement("div");
