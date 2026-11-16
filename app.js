@@ -812,24 +812,6 @@ async function ensureUser(uid) {
   return users[uid];
 }
 
-// Upload image files to Firebase Storage, not Firestore documents.
-async function uploadPostImage(file) {
-  if (!me || !me.emailVerified) throw Error("Подтверди почту перед загрузкой.");
-  if (!["image/png","image/jpeg","image/webp"].includes(file?.type))
-    throw Error("Выбери PNG, JPG или WebP.");
-  if (file.size > 5 * 1024 * 1024 || file.size === 0)
-    throw Error("Размер изображения должен быть от 1 байта до 5 МБ.");
-  const {getStorage,ref,uploadBytes,getDownloadURL} = await import(
-    "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js"
-  );
-  const ext = file.type === "image/png" ? "png" :
-    file.type === "image/webp" ? "webp" : "jpg";
-  const path = `posts/${me.uid}/${crypto.randomUUID()}.${ext}`;
-  const object = ref(getStorage(app),path);
-  await uploadBytes(object,file,{contentType:file.type});
-  return imageURL(await getDownloadURL(object));
-}
-
 /* =========================================
    POST CREATION
 ========================================= */
@@ -865,10 +847,7 @@ $("postForm").addEventListener(
     button.disabled = true;
 
     try {
-      const file = $("postImageFile")?.files?.[0];
-      const imageUrl = file
-        ? await uploadPostImage(file)
-        : imageURL($("postImage").value.trim());
+      const imageUrl = imageURL($("postImage").value.trim());
       const imagePosition = $("postImagePosition").value === "top" ? "top" : "bottom";
       const extraRaw = $("postExtraImages").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
       if(extraRaw.length>3)throw Error("Можно добавить не больше трёх дополнительных изображений.");
@@ -907,7 +886,6 @@ $("postForm").addEventListener(
       $("postImage").value = "";
       $("postExtraImages").value = "";
       updatePostImagePreview();
-      $("postImageFile").value = "";
       $("postImagePosition").value = "bottom";
       $("postCount").textContent = "0";
 
@@ -1198,8 +1176,6 @@ function openPostEditor(postId) {
       <textarea name="text" maxlength="${postLimit()}" required></textarea>
       <label class="fieldlabel">HTTPS-ссылка на изображение</label>
       <input name="imageUrl" type="url" placeholder="https://example.com/photo.png">
-      <label class="fieldlabel">Или заменить изображение файлом</label>
-      <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp">
       <label class="fieldlabel">Расположение</label>
       <select name="imagePosition">
         <option value="bottom">Под текстом</option>
@@ -1228,9 +1204,7 @@ function openPostEditor(postId) {
     button.disabled = true;
     try {
       const remove = form.elements.removeImage.checked;
-      const file = form.elements.imageFile.files?.[0];
-      const imageUrl = remove ? "" : file
-        ? await uploadPostImage(file) : imageURL(form.elements.imageUrl.value.trim());
+      const imageUrl = remove ? "" : imageURL(form.elements.imageUrl.value.trim());
       const changes = {text,editedAt:serverTimestamp()};
       if (imageUrl) {
         changes.imageUrl = imageUrl;
