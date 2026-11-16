@@ -354,7 +354,7 @@ function avatar(uid, big = false) {
 
 function badgeHTML(uid) {
   const verification = Number(
-    users[uid]?.verification || 0
+    users[uid]?.verification || (uid === NEXORA_OFFICIAL_UID ? 2 : uid === OWNER_UID ? 3 : 0)
   );
 
   const expiry=users[uid]?.verificationExpiresAt;
