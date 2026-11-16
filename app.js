@@ -717,6 +717,12 @@ async function applyAuthState(user) {
     listenFeed();
     showPage("feed");
     switchStream("official");
+    const requestedProfile = new URLSearchParams(location.search).get("profile");
+    if (requestedProfile && /^[A-Za-z0-9]{8,128}$/.test(requestedProfile)) {
+      currentPage = "profile";
+      setPageVisibility("profile");
+      void openProfile(requestedProfile);
+    }
     await minimumSplash;
     if(token!==authToken)return;
     $("app").classList.remove("nx-loading");
