@@ -353,21 +353,16 @@ function avatar(uid, big = false) {
 }
 
 function badgeHTML(uid) {
-  const ownerBadge = uid === OWNER_UID
-    ? `<span class="nx-owner-badge" title="NEXORA OWNER — основатель и владелец платформы" aria-label="NEXORA OWNER">✦ OWNER</span>`
-    : uid === NEXORA_OFFICIAL_UID
-      ? `<span class="nx-owner-badge" title="NEXORA OFFICIAL — официальный аккаунт платформы" aria-label="NEXORA OFFICIAL">✦ OFFICIAL</span>`
-      : "";
   const verification = Number(
     users[uid]?.verification || 0
   );
 
   const expiry=users[uid]?.verificationExpiresAt;
   if (verification < 1 || verification > 6 || (expiry?.toMillis?.() && expiry.toMillis()<=Date.now())) {
-    return ownerBadge;
+    return "";
   }
 
-  return ownerBadge + `
+  return `
     <button
       type="button"
       class="badgeicon"
