@@ -296,6 +296,8 @@ const config={
 
 import {mountMaintenanceControl} from './maintenance.js?v=owner-recovery-2';
 const OWNER_UID="ElpAtxZIBCZVsLBcLzgdIsr8T1w2";
+const OFFICIAL_OWNER_UID="04LwiVjT3EQ184vpLOoOxFWelbW2";
+const isOwnerUid=uid=>uid===OWNER_UID||uid===OFFICIAL_OWNER_UID;
 
 const app=getApps()[0]||initializeApp(config);
 const auth=getAuth(app);
@@ -343,7 +345,7 @@ function roleName(role){
 }
 
 function canManage(){
-  return currentUser?.uid===OWNER_UID&&ownerVerified;
+  return isOwnerUid(currentUser?.uid)&&ownerVerified;
 }
 
 function safeImage(raw){
@@ -416,7 +418,7 @@ onAuthStateChanged(auth,async user=>{
     return;
   }
 
-  if(user.uid!==OWNER_UID){
+  if(!isOwnerUid(user.uid)){
     $("status").textContent="Доступ запрещён.";
     return;
   }
@@ -533,7 +535,7 @@ $("usersList").onclick=event=>{
   $("role").value=user.role==="owner"?"user":user.role||"user";
   $("verification").value=String(user.verification||0); $("badgeDuration").value="permanent";
 
-  const protectedAccount=user.uid===OWNER_UID||user.role==="owner";
+  const protectedAccount=isOwnerUid(user.uid)||user.role==="owner";
 
   $("role").disabled=protectedAccount;
   $("verification").disabled=protectedAccount;
@@ -551,7 +553,7 @@ $("usersList").onclick=event=>{
 };
 
 $("saveBan").onclick=()=>execute(async()=>{
- if(!canManage()||!selected||selected===OWNER_UID)return;
+ if(!canManage()||!selected||isOwnerUid(selected))return;
  const user=users.find(u=>u.uid===selected);
  if(!user||user.role==="owner")throw Error("Аккаунт владельца защищён.");
  const hours=Number($("banDuration").value);
@@ -575,7 +577,7 @@ $("closeEditor").onclick=closeEditor;
 $("cancelEditor").onclick=closeEditor;
 
 $("saveUser").onclick=()=>execute(async()=>{
-  if(!canManage()||!selected||selected===OWNER_UID)return;
+  if(!canManage()||!selected||isOwnerUid(selected))return;
 
   const user=users.find(u=>u.uid===selected);
   if(!user||user.role==="owner")return;
@@ -742,7 +744,7 @@ $("verificationList").onclick=event=>execute(async()=>{
   const target=request.uid||id;
   const type=Number(request.type);
 
-  if(target===OWNER_UID)throw Error("Аккаунт владельца защищён.");
+  if(isOwnerUid(target))throw Error("Аккаунт владельца защищён.");
   if(![1,2,3,4,5].includes(type))
     throw Error("Недопустимый тип верификации.");
 
