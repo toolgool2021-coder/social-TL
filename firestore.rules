@@ -27,7 +27,13 @@ service cloud.firestore {
       // Validate only changed optional fields so legacy data remains editable.
       return (!fieldChanged('name') || !('name' in request.resource.data) || txt(request.resource.data.name,3,20)) &&
         (!fieldChanged('bio') || !('bio' in request.resource.data) || txt(request.resource.data.bio,0,160)) &&
-        (!fieldChanged('username') || !('username' in request.resource.data) || username(request.resource.data.username)) &&
+        (!fieldChanged('username') || (('username' in request.resource.data) &&
+          (request.resource.data.username == '' ||
+           (username(request.resource.data.username) &&
+            getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == request.auth.uid)) &&
+          (!('username' in resource.data) || resource.data.username == '' ||
+           resource.data.username == request.resource.data.username ||
+           !existsAfter(/databases/$(database)/documents/usernames/$(resource.data.username))))) &&
         (!fieldChanged('avatarUrl') || !('avatarUrl' in request.resource.data) || optionalUrl(request.resource.data.avatarUrl)) &&
         (!fieldChanged('bannerUrl') || !('bannerUrl' in request.resource.data) || optionalUrl(request.resource.data.bannerUrl)) &&
         (!fieldChanged('websiteUrl') || !('websiteUrl' in request.resource.data) || optionalUrl(request.resource.data.websiteUrl)) &&
@@ -57,6 +63,19 @@ service cloud.firestore {
       return authd() && p is list && p.size() == 2 &&
         p[0] is string && p[1] is string && p[0] != p[1] &&
         request.auth.uid in p && p[0] < p[1] && existsUser(p[0]) && existsUser(p[1]);
+    }
+    match /usernames/{handle} {
+      allow get: if authd();
+      allow list: if false;
+      allow create: if authd() && username(handle) &&
+        request.resource.data.keys().hasOnly(['uid']) &&
+        request.resource.data.uid == request.auth.uid &&
+        existsAfter(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == handle;
+      allow update: if false;
+      allow delete: if authd() && resource.data.uid == request.auth.uid &&
+        existsAfter(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('username','') != handle;
     }
     match /users/{uid} {
       // Registration may create/read ONLY its own limited profile before email verification.
