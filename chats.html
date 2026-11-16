@@ -556,6 +556,22 @@ input:focus,textarea:focus{border-color:var(--accent)}
   </div>
 </div>
 
+<script>
+/* Detect failed Firebase module imports instead of leaving the initial loading text forever. */
+window.nexoraChatBooted=false;
+window.addEventListener('error',event=>{
+  if(window.nexoraChatBooted)return;
+  const node=document.getElementById('chats');
+  if(node)node.innerHTML='<div class="empty">Ошибка запуска сообщений. Проверь подключение к Firebase и обнови страницу.</div>';
+});
+setTimeout(()=>{
+  if(window.nexoraChatBooted)return;
+  const node=document.getElementById('chats');
+  if(!node)return;
+  node.innerHTML='<div class="empty">Не удалось запустить сообщения. <button type="button" id="retryChatBoot">Повторить</button></div>';
+  document.getElementById('retryChatBoot')?.addEventListener('click',()=>location.reload());
+},12000);
+</script>
 <script type="module">
 import {initializeApp} from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -583,6 +599,7 @@ const cfg={
 const app=initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
+window.nexoraChatBooted=true;
 const $=id=>document.getElementById(id);
 
 let me=null;
