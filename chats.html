@@ -557,20 +557,44 @@ input:focus,textarea:focus{border-color:var(--accent)}
 </div>
 
 <script>
-/* Detect failed Firebase module imports instead of leaving the initial loading text forever. */
+/* Diagnose module startup without treating unrelated image/script errors as Firebase failures. */
 window.nexoraChatBooted=false;
-window.addEventListener('error',event=>{
-  if(window.nexoraChatBooted)return;
-  const node=document.getElementById('chats');
-  if(node)node.innerHTML='<div class="empty">Ошибка запуска сообщений. Проверь подключение к Firebase и обнови страницу.</div>';
-});
-setTimeout(()=>{
+let nexoraBootError='';
+function nexoraShowBootFailure(){
   if(window.nexoraChatBooted)return;
   const node=document.getElementById('chats');
   if(!node)return;
-  node.innerHTML='<div class="empty">Не удалось запустить сообщения. <button type="button" id="retryChatBoot">Повторить</button></div>';
-  document.getElementById('retryChatBoot')?.addEventListener('click',()=>location.reload());
-},12000);
+  node.replaceChildren();
+  const box=document.createElement('div');
+  box.className='empty';
+  const title=document.createElement('p');
+  title.textContent='Не удалось запустить сообщения.';
+  const detail=document.createElement('p');
+  detail.style.cssText='font-size:12px;overflow-wrap:anywhere;user-select:text';
+  detail.textContent=nexoraBootError||'Модуль Firebase не запустился за 12 секунд. Возможна блокировка загрузки или ошибка подключения.';
+  const retry=document.createElement('button');
+  retry.type='button';
+  retry.textContent='Повторить';
+  retry.onclick=()=>location.reload();
+  box.append(title,detail,retry);
+  node.append(box);
+}
+window.addEventListener('error',event=>{
+  if(window.nexoraChatBooted)return;
+  // Only capture script execution or module import failures; ignore image and CSS load errors.
+  if(event instanceof ErrorEvent){
+    nexoraBootError=String(event.message||'Ошибка JavaScript').slice(0,350);
+    nexoraShowBootFailure();
+  }else if(event.target?.tagName==='SCRIPT'){
+    nexoraBootError='Не загрузился скрипт: '+String(event.target.src||'встроенный модуль').slice(0,250);
+  }
+},true);
+window.addEventListener('unhandledrejection',event=>{
+  if(window.nexoraChatBooted)return;
+  nexoraBootError=String(event.reason?.message||event.reason||'Ошибка загрузки модуля').slice(0,350);
+  nexoraShowBootFailure();
+});
+setTimeout(nexoraShowBootFailure,12000);
 </script>
 <script type="module">
 import {initializeApp} from
