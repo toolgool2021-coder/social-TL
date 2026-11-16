@@ -353,9 +353,11 @@ function avatar(uid, big = false) {
 }
 
 function badgeHTML(uid) {
-  const ownerBadge = (uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID)
+  const ownerBadge = uid === OWNER_UID
     ? `<span class="nx-owner-badge" title="NEXORA OWNER — основатель и владелец платформы" aria-label="NEXORA OWNER">✦ OWNER</span>`
-    : "";
+    : uid === NEXORA_OFFICIAL_UID
+      ? `<span class="nx-owner-badge" title="NEXORA OFFICIAL — официальный аккаунт платформы" aria-label="NEXORA OFFICIAL">✦ OFFICIAL</span>`
+      : "";
   const verification = Number(
     users[uid]?.verification || 0
   );
@@ -1638,7 +1640,7 @@ async function openProfile(uid) {
     const ownerStatus = $("nxOwnerStatus");
     if (ownerStatus) {
       ownerStatus.hidden = uid !== OWNER_UID && uid !== NEXORA_OFFICIAL_UID;
-      ownerStatus.innerHTML = (uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID) ? `<div class="nx-owner-status-heading">✦ NEXORA OWNER <span>Основатель платформы</span></div><p>Официальный владелец NEXORA. Управление платформой, модерация, проверка заявок и развитие сообщества.</p>${(me?.uid === OWNER_UID || me?.uid === NEXORA_OFFICIAL_UID) ? `<a href="./owner.html" class="nx-owner-control-link">⚙ Открыть панель управления</a>` : ""}` : "";
+      ownerStatus.innerHTML = (uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID) ? `<div class="nx-owner-status-heading">✦ ${uid === NEXORA_OFFICIAL_UID ? "NEXORA OFFICIAL" : "NEXORA OWNER"} <span>${uid === NEXORA_OFFICIAL_UID ? "Официальный аккаунт платформы" : "Основатель и владелец платформы"}</span></div><p>${uid === NEXORA_OFFICIAL_UID ? "Официальный аккаунт NEXORA. Новости, обновления, объявления и взаимодействие с сообществом." : "Основатель NEXORA. Разработка, управление платформой, модерация и развитие сообщества."}</p>${(me?.uid === OWNER_UID || me?.uid === NEXORA_OFFICIAL_UID) ? `<a href="./owner.html" class="nx-owner-control-link">⚙ Открыть панель управления</a>` : ""}` : "";
     }
 
     // В index.html #profileAvatar уже
