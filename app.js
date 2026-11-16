@@ -875,8 +875,10 @@ $("postForm").addEventListener(
         data
       );
       // Display the newly published post immediately, even before the feed listener refreshes.
-      posts = [{id: published.id, ...data, createdAt: {toMillis: () => Date.now()}}, ...posts.filter(post => post.id !== published.id)].slice(0, LIMITS.posts);
-      renderFeed();
+      if (published?.id) {
+        posts = [{id: published.id, ...data, createdAt: {toMillis: () => Date.now()}}, ...posts.filter(post => post.id !== published.id)].slice(0, LIMITS.posts);
+        renderFeed();
+      }
 
       lastSent.post = Date.now();
       $("postInput").value = "";
