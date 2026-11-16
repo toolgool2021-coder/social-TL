@@ -47,7 +47,7 @@ function harness(){
     location:{search:""},innerWidth:1000,innerHeight:800,confirm:()=>true,
     Date:class extends Date{static now(){return control.now;}},
     setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,clearInterval(){},
-    initializeApp:()=>({}),getAuth:()=>auth,getFirestore:()=>({}),
+    initializeApp:()=>({}),getApps:()=>[],getApp:()=>({}),getAuth:()=>auth,getFirestore:()=>({}),
     onAuthStateChanged:(_,callback)=>{authCallback=callback;},
     serverTimestamp:()=>({serverTimestamp:true}),
     doc:(parent,...parts)=>({path:parts.length?parts.join("/"):parent.path+"/auto"}),
