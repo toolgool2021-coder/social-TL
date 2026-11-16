@@ -319,6 +319,22 @@
 .nx-inbox-hint{margin:10px 15px 18px;padding:10px 13px;border:1px solid #a8baff24;border-radius:12px;color:#a7b9db;background:#a7baff0a;font-size:12px}
 </style>
   <script type="module" src="./suspension-screen.js?v=2"></script>
+<style>
+/* NEXORA official cover and social links */
+.nx-official{overflow:hidden;padding:0!important;margin-bottom:18px}
+.nx-official-cover{display:block;width:100%;height:clamp(150px,26vw,310px);object-fit:cover;object-position:center;background:#111a30}
+.nx-official-body{padding:18px 20px 21px}
+.nx-official-title{margin:0 0 14px;font-size:13px;font-weight:800;letter-spacing:.045em;color:#c6d2ef}
+.nx-official-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.nx-official-link{display:flex;flex-direction:column;align-items:center;gap:9px;text-decoration:none;color:inherit;font-size:12px;font-weight:700;text-align:center;min-width:0;transition:transform .25s ease,color .25s ease}
+.nx-official-icon{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#28395b,#141f36);border:1px solid #a6bbff35;box-shadow:0 7px 20px #0003;transition:background .25s ease,box-shadow .25s ease,transform .25s ease}
+.nx-official-icon svg{width:25px;height:25px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nx-official-link:hover,.nx-official-link:focus-visible{color:#afc5ff;transform:translateY(-3px)}
+.nx-official-link:hover .nx-official-icon,.nx-official-link:focus-visible .nx-official-icon{box-shadow:0 10px 24px #718dff44;background:#344b79}
+.nx-official-link:active .nx-official-icon{transform:scale(.92)}
+@media(max-width:480px){.nx-official-cover{height:160px}.nx-official-body{padding:14px 10px 17px}.nx-official-links{gap:4px}.nx-official-icon{width:48px;height:48px}.nx-official-link{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.nx-official-link,.nx-official-icon{transition:none}}
+</style>
 </head>
 
 <body>
@@ -468,6 +484,15 @@
 </section>
       <!-- FEED -->
       <section id="feedPage">
+<div class="glass panel nx-official" aria-label="Официальные ресурсы NEXORA">
+<img class="nx-official-cover" src="./image/BackFon.png" alt="Баннер NEXORA" loading="eager" decoding="async">
+<div class="nx-official-body"><h2 class="nx-official-title">Официальные ресурсы</h2>
+<nav class="nx-official-links" aria-label="Ссылки NEXORA">
+<a class="nx-official-link" href="https://t.me/toolgool" target="_blank" rel="noopener noreferrer" aria-label="Telegram разработчика"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m21 3-7.5 18-4-7-7-4L21 3Z"/><path d="m9.5 14 5-5"/></svg></span><span>Мой Telegram</span></a>
+<a class="nx-official-link" href="https://t.me/Nexora_TL" target="_blank" rel="noopener noreferrer" aria-label="Telegram-канал NEXORA"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m3 11 18-8-7 18-4-7-7-3Z"/><path d="m10 14 5-5"/></svg></span><span>ТГ-канал</span></a>
+<a class="nx-official-link" href="https://t.me/NexoraTL_bot" target="_blank" rel="noopener noreferrer" aria-label="Бот NEXORA"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M12 3v4M9 3h6M8 13h.01M16 13h.01M9 17h6"/></svg></span><span>Бот</span></a>
+<a class="nx-official-link" href="https://tlnexora-ai.duckdns.org/" target="_blank" rel="noopener noreferrer" aria-label="NEXORA AI"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></svg></span><span>NEXORA AI</span></a>
+</nav></div></div>
         <div class="glass panel nx-welcome">
           <div class="nx-eyebrow">
             <span class="nx-version-dot"></span>
