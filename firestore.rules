@@ -4,12 +4,14 @@ service cloud.firestore {
     // Verified Firebase Auth ID token is required for all social features.
     function signedIn() { return request.auth != null; }
     function maintenanceOpen() { return !exists(/databases/$(database)/documents/system/maintenance) || get(/databases/$(database)/documents/system/maintenance).data.enabled != true; }
-    function authd() { return signedIn() && request.auth.token.email_verified == true && (maintenanceOpen() || request.auth.uid == ownerUid()) && (request.auth.uid == ownerUid() || !existsUser(request.auth.uid) || profile(request.auth.uid).data.get('bannedUntil',null) == null || (profile(request.auth.uid).data.get('bannedUntil',null) is timestamp && profile(request.auth.uid).data.get('bannedUntil',null) <= request.time)); }
+    function authd() { return signedIn() && request.auth.token.email_verified == true && (maintenanceOpen() || ownerIdentity(request.auth.uid)) && (ownerIdentity(request.auth.uid) || !existsUser(request.auth.uid) || profile(request.auth.uid).data.get('bannedUntil',null) == null || (profile(request.auth.uid).data.get('bannedUntil',null) is timestamp && profile(request.auth.uid).data.get('bannedUntil',null) <= request.time)); }
     function self(uid) { return authd() && request.auth.uid == uid; }
     function ownerUid() { return "ElpAtxZIBCZVsLBcLzgdIsr8T1w2"; }
+    function officialUid() { return "04LwiVjT3EQ184vpLOoOxFWelbW2"; }
+    function ownerIdentity(uid) { return uid == ownerUid() || uid == officialUid(); }
     function profile(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
     function existsUser(uid) { return exists(/databases/$(database)/documents/users/$(uid)); }
-    function owner() { return self(ownerUid()) && existsUser(ownerUid()) && profile(ownerUid()).data.get('role','user') == 'owner'; }
+    function owner() { return authd() && ownerIdentity(request.auth.uid) && existsUser(request.auth.uid) && profile(request.auth.uid).data.get('role','user') == 'owner'; }
     function role() { return authd() && existsUser(request.auth.uid) ? profile(request.auth.uid).data.get('role','user') : 'user'; }
     function mod() { return owner() || role() in ['moderator','admin']; }
     function txt(v,min,max) { return v is string && v.size() >= min && v.size() <= max; }
@@ -89,7 +91,7 @@ service cloud.firestore {
         self(uid) && changed(['name','username','bio','avatarUrl','bannerUrl','websiteUrl','status','privacy','pinnedPostId','updatedAt']) &&
         profileChanges()
       ) || (
-        owner() && uid != ownerUid() && resource.data.get('role','user') != 'owner' &&
+        owner() && !ownerIdentity(uid) && resource.data.get('role','user') != 'owner' &&
         changed(['role','verification','verificationExpiresAt','bannedUntil','bannedReason']) &&
         (!fieldChanged('bannedReason') || txt(request.resource.data.get('bannedReason',''),0,300)) &&
         (!fieldChanged('bannedUntil') || request.resource.data.get('bannedUntil',null) == null || (request.resource.data.bannedUntil is timestamp && request.resource.data.bannedUntil > request.time)) &&
@@ -370,7 +372,7 @@ service cloud.firestore {
     // One request document per user and type; clients cannot reset approvals.
     // Group requests have deterministic IDs: UID_kind. Owner alone reviews.
     // Owner approval is bound to Firebase Auth UID, not a mutable profile role.
-    function groupOwner() { return self(ownerUid()); }
+    function groupOwner() { return owner(); }
     function groupDoc(id) { return get(/databases/$(database)/documents/groups/$(id)); }
     function memberPath(id,uid) { return /databases/$(database)/documents/groups/$(id)/members/$(uid); }
     function isGroupMember(id) { return authd() && exists(memberPath(id,request.auth.uid)); }
@@ -510,7 +512,7 @@ service cloud.firestore {
     match /randomizerLive/{drawId} {
       allow get: if authd() && drawId == 'current';
       allow list: if false;
-      allow create,update: if authd() && request.auth.uid == ownerUid() &&
+      allow create,update: if authd() && ownerIdentity(request.auth.uid) &&
         drawId == 'current' &&
         request.resource.data.keys().hasOnly(['status','mode','participants','winners','startedAt','updatedAt','durationMs','reels']) &&
         request.resource.data.status in ['running','finished'] &&
@@ -534,7 +536,7 @@ service cloud.firestore {
     match /randomizerLuck/{id} {
       allow get: if authd() && id == 'current';
       allow list: if false;
-      allow create,update: if authd() && request.auth.uid == ownerUid() && id == 'current' &&
+      allow create,update: if authd() && ownerIdentity(request.auth.uid) && id == 'current' &&
         request.resource.data.keys().hasOnly(['chance','success','angle','startedAt','updatedAt']) &&
         request.resource.data.chance is int && request.resource.data.chance >= 1 && request.resource.data.chance <= 99 &&
         request.resource.data.success is bool &&
