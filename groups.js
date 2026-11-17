@@ -7,11 +7,11 @@ const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getF
 const OWNER="ElpAtxZIBCZVsLBcLzgdIsr8T1w2";
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let me=null,kind="clan",groups=[],active=null,unsubMessages=null,unsubMembers=null,unsubGroups=null,member=false,memberRole="",ownerMode=false;
+let me=null,kind="clan",groups=[],active=null,unsubMessages=null,unsubMembers=null,unsubJoinStatus=null,unsubGroups=null,member=false,memberRole="",ownerMode=false;
 function notice(t){$("notice").textContent=t; if(t)setTimeout(()=>{if($("notice").textContent===t)$("notice").textContent=""},6500)}
 function err(e){console.error("[NEXORA GROUPS]",e);const message=e?.code==="permission-denied"?"Firestore отклонил действие. Проверь, что опубликованы последние firestore.rules, вход выполнен с UID владельца и почта подтверждена.":(e?.message||e?.code||String(e));notice("Ошибка: "+message)}
 function ensure(){if(!me||!me.emailVerified)throw Error("Войди в аккаунт и подтверди электронную почту")}
-function selectKind(k){kind=k;document.querySelectorAll("[data-kind]").forEach(b=>b.classList.toggle("active",b.dataset.kind===k));$("catalog").hidden=false;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=true;active=null;unsubMessages?.();unsubMessages=null;unsubMembers?.();unsubMembers=null;$("tagField").hidden=k!=="clan";$("createForm").elements.tag.required=k==="clan";$("createForm").elements.tag.value=k==="clan"?$("createForm").elements.tag.value:"";renderCards()}
+function selectKind(k){kind=k;document.querySelectorAll("[data-kind]").forEach(b=>b.classList.toggle("active",b.dataset.kind===k));$("catalog").hidden=false;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=true;active=null;unsubMessages?.();unsubMessages=null;unsubMembers?.();unsubMembers=null;unsubJoinStatus?.();unsubJoinStatus=null;$("tagField").hidden=k!=="clan";$("createForm").elements.tag.required=k==="clan";$("createForm").elements.tag.value=k==="clan"?$("createForm").elements.tag.value:"";renderCards()}
 document.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>selectKind(b.dataset.kind));
 $("newBtn").onclick=async()=>{try{ensure();$("catalog").hidden=true;$("groupPanel").hidden=true;$("ownerPanel").hidden=true;$("createPanel").hidden=false;const snap=await getDoc(doc(db,"groupRequests",me.uid+"_"+kind));$("myRequest").textContent=snap.exists()?"Ваша заявка: "+({pending:"ожидает решения",approved:"одобрена",rejected:"отклонена"}[snap.data().status]||snap.data().status)+". ":"";$("createForm").querySelector('button[type="submit"]').disabled=snap.exists()&&snap.data().status!=="rejected";}catch(e){err(e)}};
 $("cancelBtn").onclick=()=>selectKind(kind);
@@ -19,23 +19,49 @@ $("createForm").onsubmit=async e=>{e.preventDefault();try{ensure();const f=new F
 function renderCards(){const a=filterGroups(groups,kind,$("groupSearch")?.value,$("verifiedGroupsOnly")?.checked);if($("groupSearchCount"))$("groupSearchCount").textContent="Найдено: "+a.length;$("cards").innerHTML=a.length?a.map(g=>'<article class="glass card"><div class="actions">'+(g.kind==="clan"?'<span class="tag">['+esc(g.tag)+']</span>':'')+(g.verified?'<span class="tag">✓ Подтверждено</span>':'')+'<span class="small">'+esc(g.category)+'</span></div><h3>'+esc(g.name)+'</h3><p>'+esc(g.description)+'</p><div class="actions"><button data-open="'+esc(g.id)+'" class="primary">Открыть →</button></div></article>').join(""):'<div class="empty">Пока нет одобренных '+(kind==="clan"?"кланов":"сообществ")+'</div>';document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openGroup(b.dataset.open))}
 $("groupSearch")?.addEventListener("input",renderCards);
 $("verifiedGroupsOnly")?.addEventListener("change",renderCards);
-async function openGroup(id){try{ensure();const g=groups.find(x=>x.id===id);if(!g)return;active=g;unsubMessages?.();unsubMembers?.();unsubMembers=null;$("catalog").hidden=true;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=false;$("groupTitle").textContent=(g.kind==="clan"?"["+g.tag+"] ":"")+(g.verified?"✓ ":"")+g.name;$("groupAbout").textContent=g.description+" · "+g.category;$("chatHeading").textContent=g.kind==="clan"?"Публикации канала":"Групповой чат";const m=await getDoc(doc(db,"groups",id,"members",me.uid));member=m.exists();memberRole=m.exists()?m.data().role:"";refreshMembership();if(member){watchMessages();watchMembers()}else if(g.kind==="community"){
- const requestSnap=await getDoc(doc(db,"groups",id,"joinRequests",me.uid));
- if(active?.id!==id)return;
- if(requestSnap.exists()){
-  const status=requestSnap.data().status;
-  if(status==="pending"){
-   $("joinBtn").disabled=true;$("joinBtn").textContent="Ожидает одобрения";
-   $("memberStatus").textContent="Заявка отправлена владельцу";
-  }else if(status==="approved"){
-   $("joinBtn").disabled=true;$("joinBtn").textContent="Заявка одобрена";
-   $("memberStatus").textContent="Обнови страницу для проверки участия";
-  }else if(status==="rejected"){
-   $("joinBtn").disabled=true;$("joinBtn").textContent="Заявка отклонена";
-   $("memberStatus").textContent="Повторная подача пока недоступна";
+async function openGroup(id){
+ try{
+  ensure();
+  const g=groups.find(x=>x.id===id);
+  if(!g)return;
+  active=g;
+  unsubMessages?.();unsubMessages=null;
+  unsubMembers?.();unsubMembers=null;
+  unsubJoinStatus?.();unsubJoinStatus=null;
+  $("catalog").hidden=true;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=false;
+  $("groupTitle").textContent=(g.kind==="clan"?"["+g.tag+"] ":"")+(g.verified?"✓ ":"")+g.name;
+  $("groupAbout").textContent=g.description+" · "+g.category;
+  $("chatHeading").textContent=g.kind==="clan"?"Публикации канала":"Групповой чат";
+  const m=await getDoc(doc(db,"groups",id,"members",me.uid));
+  if(active?.id!==id)return;
+  member=m.exists();memberRole=m.exists()?m.data().role:"";
+  refreshMembership();
+  if(member){watchMessages();watchMembers()}
+  else if(g.kind==="community"){
+   const uid=me.uid;
+   unsubJoinStatus=onSnapshot(doc(db,"groups",id,"joinRequests",uid),async snap=>{
+    if(active?.id!==id||me?.uid!==uid||member)return;
+    const status=snap.exists()?snap.data().status:"";
+    if(status==="approved"){
+     const membership=await getDoc(doc(db,"groups",id,"members",uid));
+     if(active?.id!==id||me?.uid!==uid)return;
+     if(membership.exists()){
+      member=true;memberRole=membership.data().role;
+      const current=await getDoc(doc(db,"groups",id));
+      if(current.exists())active.memberCount=current.data().memberCount;
+      refreshMembership();watchMessages();watchMembers();
+      unsubJoinStatus?.();unsubJoinStatus=null;
+      notice("Заявка одобрена — вы вступили в сообщество");
+      return;
+     }
+    }
+    $("joinBtn").disabled=status==="pending"||status==="approved"||status==="rejected"||active.memberCount>=30;
+    $("joinBtn").textContent= status==="pending"?"Ожидает одобрения":status==="approved"?"Заявка одобрена":status==="rejected"?"Заявка отклонена":"Подать заявку";
+    $("memberStatus").textContent=status==="pending"?"Заявка отправлена владельцу":status==="approved"?"Одобрено, обновляем участие…":status==="rejected"?"Повторная подача пока недоступна":"Участников: "+active.memberCount+"/30";
+   },err);
   }
- }
-}}catch(e){err(e)}}
+ }catch(e){err(e)}
+}
 function refreshMembership(){$("reviewJoinBtn").hidden=!active||active.kind!=="community"||active.ownerId!==me?.uid;$("joinRequestsPanel").hidden=true;if(!member&&active?.kind==="community"){$("joinBtn").textContent="Подать заявку";}$("membersPanel").hidden=!member;if(!member){unsubMembers?.();unsubMembers=null;$("membersList").innerHTML="";}$("joinBtn").hidden=member;$("leaveBtn").hidden=!member||active?.ownerId===me?.uid;$("memberStatus").textContent=member?(active.kind==="community"?"Вы участник · "+active.memberCount+"/30":"Вы подписаны"):(active.kind==="community"?"Участников: "+active.memberCount+"/30":"Подписаться на канал");$("joinBtn").disabled=!member&&active.kind==="community"&&active.memberCount>=30;$("chatForm").hidden=!member||(active.kind==="clan"&&memberRole!=="leader");if(!member)$("chatMessages").innerHTML='<div class="empty">Вступи, чтобы читать сообщения</div>'}
 $("joinBtn").onclick=async()=>{
   try{
