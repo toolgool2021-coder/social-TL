@@ -1838,6 +1838,38 @@ async function toggleFollow(uid) {
    SETTINGS
 ========================================= */
 
+function renderProfilePreview() {
+  const name = $("settingsName")?.value.trim() || "Пользователь";
+  const username = $("settingsUsername")?.value.trim().replace(/^@/, "") || "username";
+  const bio = $("settingsBio")?.value.trim() || "Без описания";
+  const avatar = imageURL($("settingsAvatar")?.value.trim() || "");
+  const banner = imageURL($("settingsBanner")?.value.trim() || "");
+  const previewName = $("nxPreviewName");
+  if (!previewName) return;
+  previewName.textContent = name;
+  $("nxPreviewHandle").textContent = "@" + username;
+  $("nxPreviewBio").textContent = bio;
+  const avatarBox = $("nxPreviewAvatar");
+  avatarBox.replaceChildren();
+  if (avatar) {
+    const img = document.createElement("img");
+    img.src = avatar;
+    img.alt = "Предпросмотр аватара";
+    img.style.cssText = "width:100%;height:100%;object-fit:cover";
+    img.onerror = () => { avatarBox.textContent = name.slice(0,1).toUpperCase(); };
+    avatarBox.append(img);
+  } else {
+    avatarBox.textContent = name.slice(0,1).toUpperCase();
+  }
+  const cover = $("nxPreviewCover");
+  cover.style.backgroundImage = banner
+    ? 'url("' + banner.replace(/"/g, "%22") + '")'
+    : "linear-gradient(120deg,#345d9c,#6950a4)";
+}
+for (const id of ["settingsName","settingsUsername","settingsBio","settingsAvatar","settingsBanner"]) {
+  $(id)?.addEventListener("input", renderProfilePreview);
+}
+
 function fillSettings() {
   if (!myProfile) return;
 
@@ -1855,6 +1887,7 @@ function fillSettings() {
 
   $("settingsWebsite").value =
     myProfile.websiteUrl || "";
+  renderProfilePreview();
 }
 
 $("settingsForm").addEventListener(
