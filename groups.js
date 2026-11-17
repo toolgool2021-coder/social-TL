@@ -126,6 +126,14 @@ $("joinRequestsList").onclick=async event=>{
       tx.update(rref,{status:approve?"approved":"rejected",reviewedBy:me.uid,reviewedAt:serverTimestamp()});
     });
     button.closest(".nx-member-row")?.remove();
+    if(approve&&active?.id===id){
+      active.memberCount++;
+      refreshMembership();
+      $("joinRequestsPanel").hidden=false;
+    }
+    if(!$("joinRequestsList").querySelector(".nx-member-row")){
+      $("joinRequestsList").innerHTML='<p class="small">Нет новых заявок</p>';
+    }
     notice(approve?"Участник принят":"Заявка отклонена");
   }catch(e){err(e);button.disabled=false}
 };
