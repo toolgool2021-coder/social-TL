@@ -20,8 +20,73 @@ function renderCards(){const a=filterGroups(groups,kind,$("groupSearch")?.value,
 $("groupSearch")?.addEventListener("input",renderCards);
 $("verifiedGroupsOnly")?.addEventListener("change",renderCards);
 async function openGroup(id){try{ensure();const g=groups.find(x=>x.id===id);if(!g)return;active=g;unsubMessages?.();unsubMembers?.();unsubMembers=null;$("catalog").hidden=true;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=false;$("groupTitle").textContent=(g.kind==="clan"?"["+g.tag+"] ":"")+(g.verified?"✓ ":"")+g.name;$("groupAbout").textContent=g.description+" · "+g.category;$("chatHeading").textContent=g.kind==="clan"?"Публикации канала":"Групповой чат";const m=await getDoc(doc(db,"groups",id,"members",me.uid));member=m.exists();memberRole=m.exists()?m.data().role:"";refreshMembership();if(member){watchMessages();watchMembers()}}catch(e){err(e)}}
-function refreshMembership(){$("membersPanel").hidden=!member;if(!member){unsubMembers?.();unsubMembers=null;$("membersList").innerHTML="";}$("joinBtn").hidden=member;$("leaveBtn").hidden=!member||active?.ownerId===me?.uid;$("memberStatus").textContent=member?(active.kind==="community"?"Вы участник · "+active.memberCount+"/30":"Вы подписаны"):(active.kind==="community"?"Участников: "+active.memberCount+"/30":"Подписаться на канал");$("joinBtn").disabled=!member&&active.kind==="community"&&active.memberCount>=30;$("chatForm").hidden=!member||(active.kind==="clan"&&memberRole!=="leader");if(!member)$("chatMessages").innerHTML='<div class="empty">Вступи, чтобы читать сообщения</div>'}
-$("joinBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||g.data().status!=="active")throw Error("Объединение недоступно");if(m.exists())throw Error("Вы уже участник");if(g.data().kind==="community"&&g.data().memberCount>=30)throw Error("Сообщество заполнено (30/30)");tx.update(gref,{memberCount:g.data().memberCount+1});tx.set(mref,{uid:me.uid,role:"member",joinedAt:serverTimestamp()})});member=true;memberRole="member";active.memberCount++;refreshMembership();watchMessages();watchMembers()}catch(e){err(e)}};
+function refreshMembership(){$("reviewJoinBtn").hidden=!active||active.kind!=="community"||active.ownerId!==me?.uid;$("joinRequestsPanel").hidden=true;if(!member&&active?.kind==="community"){$("joinBtn").textContent="Подать заявку";}$("membersPanel").hidden=!member;if(!member){unsubMembers?.();unsubMembers=null;$("membersList").innerHTML="";}$("joinBtn").hidden=member;$("leaveBtn").hidden=!member||active?.ownerId===me?.uid;$("memberStatus").textContent=member?(active.kind==="community"?"Вы участник · "+active.memberCount+"/30":"Вы подписаны"):(active.kind==="community"?"Участников: "+active.memberCount+"/30":"Подписаться на канал");$("joinBtn").disabled=!member&&active.kind==="community"&&active.memberCount>=30;$("chatForm").hidden=!member||(active.kind==="clan"&&memberRole!=="leader");if(!member)$("chatMessages").innerHTML='<div class="empty">Вступи, чтобы читать сообщения</div>'}
+$("joinBtn").onclick=async()=>{
+  try{
+    ensure();
+    if(!active) return;
+    if(active.kind==="community"){
+      const requestRef=doc(db,"groups",active.id,"joinRequests",me.uid);
+      const existing=await getDoc(requestRef);
+      if(existing.exists() && existing.data().status!=="rejected"){
+        notice(existing.data().status==="pending"?"Заявка уже ожидает рассмотрения":"Заявка уже одобрена");
+        return;
+      }
+      if(existing.exists()) throw Error("Повторная заявка после отказа пока недоступна");
+      await setDoc(requestRef,{uid:me.uid,status:"pending",createdAt:serverTimestamp()});
+      notice("Заявка отправлена владельцу сообщества");
+      $("joinBtn").disabled=true;
+      $("joinBtn").textContent="Заявка отправлена";
+      return;
+    }
+    await runTransaction(db,async tx=>{
+      const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);
+      const g=await tx.get(gref),m=await tx.get(mref);
+      if(!g.exists()||g.data().status!=="active")throw Error("Объединение недоступно");
+      if(m.exists())throw Error("Вы уже участник");
+      tx.update(gref,{memberCount:g.data().memberCount+1});
+      tx.set(mref,{uid:me.uid,role:"member",joinedAt:serverTimestamp()});
+    });
+    member=true;memberRole="member";active.memberCount++;
+    refreshMembership();watchMessages();watchMembers();
+  }catch(e){err(e)}
+};
+$("reviewJoinBtn").onclick=async()=>{
+  if(!active||active.ownerId!==me?.uid)return;
+  const panel=$("joinRequestsPanel");
+  panel.hidden=!panel.hidden;
+  if(panel.hidden)return;
+  try{
+    const snap=await getDocs(query(collection(db,"groups",active.id,"joinRequests"),where("status","==","pending"),limit(30)));
+    $("joinRequestsList").innerHTML=snap.empty?'<p class="small">Нет новых заявок</p>':snap.docs.map(d=>
+      '<div class="nx-member-row"><span>'+esc(d.id.slice(0,16))+'</span><div class="actions"><button data-join-approve="'+esc(d.id)+'" class="primary">Принять</button><button data-join-reject="'+esc(d.id)+'">Отклонить</button></div></div>').join("");
+  }catch(e){err(e)}
+};
+$("joinRequestsList").onclick=async event=>{
+  const approve=event.target.closest("[data-join-approve]");
+  const reject=event.target.closest("[data-join-reject]");
+  const uid=approve?.dataset.joinApprove||reject?.dataset.joinReject;
+  if(!uid||!active||active.ownerId!==me?.uid)return;
+  const button=approve||reject;
+  button.disabled=true;
+  try{
+    const id=active.id;
+    await runTransaction(db,async tx=>{
+      const gref=doc(db,"groups",id),mref=doc(db,"groups",id,"members",uid),rref=doc(db,"groups",id,"joinRequests",uid);
+      const group=await tx.get(gref),request=await tx.get(rref),existing=await tx.get(mref);
+      if(!group.exists()||group.data().ownerId!==me.uid||!request.exists()||request.data().status!=="pending")throw Error("Заявка уже обработана");
+      if(approve){
+        if(existing.exists())throw Error("Пользователь уже участник");
+        if(group.data().memberCount>=30)throw Error("Сообщество заполнено");
+        tx.update(gref,{memberCount:group.data().memberCount+1,lastApprovedUid:uid});
+        tx.set(mref,{uid,role:"member",joinedAt:serverTimestamp()});
+      }
+      tx.update(rref,{status:approve?"approved":"rejected",reviewedBy:me.uid,reviewedAt:serverTimestamp()});
+    });
+    button.closest(".nx-member-row")?.remove();
+    notice(approve?"Участник принят":"Заявка отклонена");
+  }catch(e){err(e);button.disabled=false}
+};
 $("leaveBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||!m.exists()||m.data().role!=="member")throw Error("Нельзя выйти");tx.update(gref,{memberCount:g.data().memberCount-1});tx.delete(mref)});member=false;memberRole="";active.memberCount--;unsubMessages?.();unsubMessages=null;refreshMembership()}catch(e){err(e)}};
 $("backBtn").onclick=()=>selectKind(kind);
 function watchMembers(){
