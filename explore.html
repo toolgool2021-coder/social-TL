@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080d19">
-<title>NEXORA 2.2 | Explore</title>
+<title>NEXORA Beta 4.0 | Explore</title>
 <style>
 :root{
  color-scheme:dark;
@@ -182,7 +182,7 @@ textarea{min-height:145px;resize:vertical}
 
 <header>
  <div class="brand">
-  NEXORA <span>2.2 EXPLORE</span>
+  NEXORA <span>BETA 4.0 · EXPLORE</span>
  </div>
  <a href="./index.html">← Главная</a>
 </header>
@@ -197,6 +197,7 @@ textarea{min-height:145px;resize:vertical}
   <button class="active" data-tab="recommendations">
    ✦ Рекомендации
   </button>
+  <button data-tab="search">⌕ Поиск</button>
   <button data-tab="hashtags">
    # Хештеги
   </button>
@@ -212,6 +213,16 @@ textarea{min-height:145px;resize:vertical}
   </p>
   <button id="refresh">Обновить</button>
   <div id="recommendedPosts"></div>
+ </section>
+
+ <section id="search" class="glass panel hidden">
+  <h2>Поиск в NEXORA</h2>
+  <p class="muted">Поиск по загруженным пользователям и последним 100 публикациям. Для глобального поиска потребуется отдельный индекс.</p>
+  <div class="row">
+   <input id="exploreSearch" type="search" maxlength="100" autocomplete="off" placeholder="Имя, @username, текст или #хэштег" aria-label="Поиск в NEXORA">
+   <button id="exploreSearchClear" type="button">Очистить</button>
+  </div>
+  <div id="exploreSearchResults" aria-live="polite"><p class="muted">Начни вводить запрос.</p></div>
  </section>
 
  <section id="hashtags" class="glass panel hidden">
@@ -262,8 +273,8 @@ textarea{min-height:145px;resize:vertical}
 /* Navigation works even when Firebase is slow, offline, or its module fails. */
 (function(){
   function selectExploreTab(name){
-    if(!['recommendations','hashtags','drafts'].includes(name))return;
-    for(const id of ['recommendations','hashtags','drafts']){
+    if(!['recommendations','search','hashtags','drafts'].includes(name))return;
+    for(const id of ['recommendations','search','hashtags','drafts']){
       const section=document.getElementById(id);
       if(section)section.classList.toggle('hidden',id!==name);
     }
@@ -281,6 +292,7 @@ textarea{min-height:145px;resize:vertical}
 })();
 </script>
 <script type="module">
+import {searchExplore} from './explore-search.mjs?v=1';
 import {
  initializeApp
 } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
@@ -453,6 +465,7 @@ async function loadPosts(){
 
    renderRecommendations();
    renderPopularTags();
+   renderExploreSearch();
   }catch(error){
    $('recommendedPosts').textContent=
     'Ошибка загрузки: '+error.message;
@@ -473,6 +486,37 @@ function renderRecommendations(){
   sorted.map(postHTML).join('')||
   '<p class="muted">Публикаций пока нет.</p>';
 }
+
+function renderExploreSearch() {
+ const term=$('exploreSearch').value.trim();
+ const target=$('exploreSearchResults');
+ if(!term){target.innerHTML='<p class="muted">Начни вводить запрос.</p>';return;}
+ const results=searchExplore(term,users,posts);
+ const userItems=results.users.map(({uid,user})=>{
+  const username=String(user?.username||'').replace(/^@/,'');
+  const name=escapeHTML(user?.name||'Пользователь');
+  const profileUrl='./index.html?profile='+encodeURIComponent(uid);
+  return '<div class="post"><div class="name">'+name+' '+badgeHTML(user)+'</div>'+
+   '<p class="muted">'+(username?'@'+escapeHTML(username):'Без юзернейма')+'</p>'+
+   '<a class="button" href="'+escapeHTML(profileUrl)+'">Открыть профиль</a></div>';
+ }).join('');
+ const tagItems=results.tags.map(([tag,count])=>
+  '<button class="tag" data-tag="'+escapeHTML(tag)+'">'+escapeHTML(tag)+' · '+count+'</button>'
+ ).join('');
+ const postItems=results.posts.map(postHTML).join('');
+ target.innerHTML='<h2>Пользователи ('+results.users.length+')</h2>'+
+  (userItems||'<p class="muted">Совпадений нет.</p>')+
+  '<h2>Хэштеги ('+results.tags.length+')</h2>'+
+  (tagItems||'<p class="muted">Совпадений нет.</p>')+
+  '<h2>Публикации ('+results.posts.length+')</h2>'+
+  (postItems||'<p class="muted">Совпадений нет.</p>');
+}
+$('exploreSearch').addEventListener('input',renderExploreSearch);
+$('exploreSearchClear').addEventListener('click',()=>{
+ $('exploreSearch').value='';
+ renderExploreSearch();
+ $('exploreSearch').focus();
+});
 
 function renderPopularTags(){
  const counts=new Map();
@@ -538,7 +582,7 @@ $('refresh').onclick=async()=>{
 
 function selectTab(name){
  for(const tab of [
-  'recommendations','hashtags','drafts'
+  'recommendations','search','hashtags','drafts'
  ]){
   $(tab).classList.toggle('hidden',tab!==name);
  }
