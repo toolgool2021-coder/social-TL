@@ -24,8 +24,53 @@ function refreshMembership(){$("joinBtn").hidden=member;$("leaveBtn").hidden=!me
 $("joinBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||g.data().status!=="active")throw Error("Объединение недоступно");if(m.exists())throw Error("Вы уже участник");if(g.data().kind==="community"&&g.data().memberCount>=30)throw Error("Сообщество заполнено (30/30)");tx.update(gref,{memberCount:g.data().memberCount+1});tx.set(mref,{uid:me.uid,role:"member",joinedAt:serverTimestamp()})});member=true;memberRole="member";active.memberCount++;refreshMembership();watchMessages()}catch(e){err(e)}};
 $("leaveBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||!m.exists()||m.data().role!=="member")throw Error("Нельзя выйти");tx.update(gref,{memberCount:g.data().memberCount-1});tx.delete(mref)});member=false;memberRole="";active.memberCount--;unsubMessages?.();refreshMembership()}catch(e){err(e)}};
 $("backBtn").onclick=()=>selectKind(kind);
-function watchMessages(){if(!active||!member)return;const id=active.id;unsubMessages=onSnapshot(query(collection(db,"groups",id,"messages"),orderBy("createdAt","asc"),limit(100)),snap=>{if(active?.id!==id)return;$("chatMessages").innerHTML=snap.empty?'<div class="empty">Сообщений пока нет</div>':snap.docs.map(d=>{const m=d.data();return '<div class="bubble '+(m.senderId===me.uid?"mine":"")+'"><span class="small">'+esc(m.senderId===me.uid?"Вы":m.senderId.slice(0,8))+'</span><div>'+esc(m.text)+'</div></div>'}).join("");$("chatMessages").scrollTop=$("chatMessages").scrollHeight},err)}
-$("chatForm").onsubmit=async e=>{e.preventDefault();try{ensure();if(!active||!member||(active.kind==="clan"&&memberRole!=="leader"))return;const text=$("chatText").value.trim();if(!text||text.length>2000)return;const ref=doc(collection(db,"groups",active.id,"messages"));await setDoc(ref,{senderId:me.uid,type:"text",text,createdAt:serverTimestamp()});$("chatText").value=""}catch(e){err(e)}};
+function groupMessageTime(value){
+  const date=value?.toDate?.();
+  return date instanceof Date && !Number.isNaN(date.getTime())
+    ? date.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}) : "";
+}
+function watchMessages(){
+  if(!active||!member)return;
+  unsubMessages?.();
+  const id=active.id;
+  unsubMessages=onSnapshot(query(collection(db,"groups",id,"messages"),orderBy("createdAt","asc"),limit(100)),snap=>{
+    if(active?.id!==id||!member)return;
+    const box=$("chatMessages");
+    const nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
+    box.innerHTML=snap.empty?'<div class="empty">Сообщений пока нет</div>':snap.docs.map(d=>{
+      const m=d.data();
+      const own=m.senderId===me?.uid;
+      const sender=own?"Вы":String(m.senderId||"").slice(0,8);
+      return '<div class="bubble '+(own?"mine":"")+'"><div class="small" style="display:flex;justify-content:space-between;gap:10px"><span>'+esc(sender)+'</span><time>'+esc(groupMessageTime(m.createdAt))+'</time></div><div>'+esc(m.text)+'</div></div>';
+    }).join("");
+    if(nearBottom||snap.docChanges().some(c=>c.type==="added"&&c.doc.data().senderId===me?.uid)){
+      box.scrollTop=box.scrollHeight;
+    }
+  },err);
+}
+let groupMessageSending=false;
+$("chatText").addEventListener("input",()=>{
+  $("chatCounter").textContent=$("chatText").value.length+" / 2000";
+});
+$("chatForm").onsubmit=async e=>{
+  e.preventDefault();
+  if(groupMessageSending)return;
+  const button=$("sendGroupMessage");
+  try{
+    ensure();
+    if(!active||!member||(active.kind==="clan"&&memberRole!=="leader"))return;
+    const text=$("chatText").value.trim();
+    if(!text||text.length>2000)return;
+    groupMessageSending=true;
+    button.disabled=true;
+    button.textContent="Отправляем…";
+    const ref=doc(collection(db,"groups",active.id,"messages"));
+    await setDoc(ref,{senderId:me.uid,type:"text",text,createdAt:serverTimestamp()});
+    if($("chatText").value.trim()===text)$("chatText").value="";
+    $("chatCounter").textContent=$("chatText").value.length+" / 2000";
+  }catch(e){err(e)}
+  finally{groupMessageSending=false;button.disabled=false;button.textContent="Отправить"}
+};
 $("ownerTab").onclick=async()=>{try{ensure();if(me.uid!==OWNER)throw Error("Доступ запрещён");$("catalog").hidden=true;$("groupPanel").hidden=true;$("createPanel").hidden=true;$("ownerPanel").hidden=false;renderVerifyGroups();const snap=await getDocs(query(collection(db,"groupRequests"),where("status","==","pending"),limit(100)));$("requests").innerHTML=snap.empty?'<p>Новых заявок нет.</p>':snap.docs.map(d=>{const v=d.data();return '<article class="glass" style="margin:12px 0"><b>'+esc(v.name)+'</b> <span class="tag">['+esc(v.tag)+']</span><p>'+esc(v.description)+'</p><p class="small">'+esc(v.kind)+' · '+esc(v.category)+' · '+esc(v.ownerId)+'</p><p><b>Причина:</b> '+esc(v.reason||'Не указана')+'</p><div class="actions"><button data-approve="'+esc(d.id)+'" class="primary">Одобрить</button><button data-reject="'+esc(d.id)+'">Отклонить</button></div></article>'}).join("");document.querySelectorAll("[data-approve]").forEach(b=>b.onclick=()=>review(b.dataset.approve,true));document.querySelectorAll("[data-reject]").forEach(b=>b.onclick=()=>review(b.dataset.reject,false))}catch(e){err(e)}};
 async function review(id,approved){try{ensure();if(me.uid!==OWNER)throw Error("Доступ запрещён");const ref=doc(db,"groupRequests",id),snap=await getDoc(ref);if(!snap.exists()||snap.data().status!=="pending")throw Error("Заявка уже обработана");const v=snap.data();
 if(approved){
