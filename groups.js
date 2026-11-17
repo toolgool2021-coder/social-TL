@@ -162,7 +162,7 @@ $("joinRequestsList").onclick=async event=>{
     notice(approve?"Участник принят":"Заявка отклонена");
   }catch(e){err(e);if(row)row.querySelectorAll("button").forEach(b=>b.disabled=false)}
 };
-$("leaveBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||!m.exists()||m.data().role!=="member")throw Error("Нельзя выйти");tx.update(gref,{memberCount:g.data().memberCount-1});tx.delete(mref)});member=false;memberRole="";active.memberCount--;unsubMessages?.();unsubMessages=null;refreshMembership()}catch(e){err(e)}};
+$("leaveBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||!m.exists()||m.data().role!=="member")throw Error("Нельзя выйти");tx.update(gref,{memberCount:g.data().memberCount-1});tx.delete(mref)});member=false;memberRole="";active.memberCount--;unsubMessages?.();unsubMessages=null;unsubMembers?.();unsubMembers=null;const groupId=active.id;if(active.kind==="community"){const requestRef=doc(db,"groups",groupId,"joinRequests",me.uid);const previous=await getDoc(requestRef);if(previous.exists()&&previous.data().status==="approved")await deleteDoc(requestRef)}await openGroup(groupId)}catch(e){err(e)}};
 $("backBtn").onclick=()=>selectKind(kind);
 function watchMembers(){
   if(!active||!member)return;
