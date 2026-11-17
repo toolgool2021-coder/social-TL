@@ -529,3 +529,26 @@ test("community requests require approval and cannot grant roles",async()=>{
   }));
   await assertSucceeds(getDoc(ref(BOB,"groups",group,"members",BOB)));
 });
+
+test("community applicants can withdraw and retry but cannot delete approved requests",async()=>{
+ const group="community-withdraw-test";
+ await env.withSecurityRulesDisabled(async context=>{
+  const d=context.firestore();
+  await setDoc(doc(d,"groups",group),{ownerId:ALICE,kind:"community",status:"active",memberCount:1});
+  await setDoc(doc(d,"groups",group,"members",ALICE),{uid:ALICE,role:"leader",joinedAt:new Date()});
+ });
+ const applicant=ref(BOB,"groups",group,"joinRequests",BOB);
+ await assertSucceeds(setDoc(applicant,{uid:BOB,status:"pending",createdAt:serverTimestamp()}));
+ await assertFails(deleteDoc(ref(MALLORY,"groups",group,"joinRequests",BOB)));
+ await assertSucceeds(deleteDoc(applicant));
+ await assertSucceeds(setDoc(applicant,{uid:BOB,status:"pending",createdAt:serverTimestamp()}));
+ await env.withSecurityRulesDisabled(async context=>{
+  await updateDoc(doc(context.firestore(),"groups",group,"joinRequests",BOB),{status:"rejected"});
+ });
+ await assertSucceeds(deleteDoc(applicant));
+ await assertSucceeds(setDoc(applicant,{uid:BOB,status:"pending",createdAt:serverTimestamp()}));
+ await env.withSecurityRulesDisabled(async context=>{
+  await updateDoc(doc(context.firestore(),"groups",group,"joinRequests",BOB),{status:"approved"});
+ });
+ await assertFails(deleteDoc(applicant));
+});
