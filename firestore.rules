@@ -466,7 +466,10 @@ service cloud.firestore {
           (request.resource.data.memberCount == resource.data.memberCount - 1 &&
             exists(memberPath(groupId,request.auth.uid)) &&
             get(memberPath(groupId,request.auth.uid)).data.role == 'member' &&
-            !existsAfter(memberPath(groupId,request.auth.uid)))
+            !existsAfter(memberPath(groupId,request.auth.uid))) ||
+          (isGroupLeader(groupId) && resource.data.kind == 'community' &&
+            request.resource.data.memberCount == resource.data.memberCount + 1 &&
+            resource.data.memberCount < 30)
         )
       );
       allow delete: if false;
@@ -506,7 +509,20 @@ service cloud.firestore {
           request.resource.data.joinedAt == request.time &&
           groupDoc(groupId).data.status == 'active' &&
           getAfter(/databases/$(database)/documents/groups/$(groupId)).data.memberCount == groupDoc(groupId).data.memberCount + 1 &&
-          (groupDoc(groupId).data.kind == 'clan' || groupDoc(groupId).data.memberCount < 30)
+          groupDoc(groupId).data.kind == 'clan'
+        ) || (
+          isGroupLeader(groupId) &&
+          groupDoc(groupId).data.kind == 'community' &&
+          request.resource.data.keys().hasOnly(['uid','role','joinedAt']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.role == 'member' &&
+          request.resource.data.joinedAt == request.time &&
+          !exists(memberPath(groupId,uid)) &&
+          exists(/databases/$(database)/documents/groups/$(groupId)/joinRequests/$(uid)) &&
+          get(/databases/$(database)/documents/groups/$(groupId)/joinRequests/$(uid)).data.status == 'pending' &&
+          getAfter(/databases/$(database)/documents/groups/$(groupId)/joinRequests/$(uid)).data.status == 'approved' &&
+          groupDoc(groupId).data.memberCount < 30 &&
+          getAfter(/databases/$(database)/documents/groups/$(groupId)).data.memberCount == groupDoc(groupId).data.memberCount + 1
         );
         allow update: if false;
         allow delete: if self(uid) && resource.data.role == 'member' &&
