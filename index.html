@@ -343,6 +343,11 @@
 </style>
 <style>
 /* Special profile treatment: only the verified owner and official NEXORA UID */
+#profilePage:not(.nx-featured-profile) .profile{border-color:var(--nx-user-accent,#ffffff20)}
+#profilePage:not(.nx-featured-profile) .profilename{color:var(--nx-user-accent,#edf3ff)}
+#profilePage:not(.nx-featured-profile) .cover{background-color:var(--nx-user-accent,#283c63)}
+#nxProfilePreview{border-color:var(--nx-preview-accent,#638dff)!important}
+#nxPreviewName{color:var(--nx-preview-accent,#638dff)}
 #profilePage.nx-featured-profile{--nx-profile-accent:#9a8cff}
 #profilePage.nx-featured-profile .profile{position:relative;isolation:isolate;overflow:hidden;border:1px solid #9c9eff66;box-shadow:0 22px 65px #05071999,0 0 28px #7779ff20}
 #profilePage.nx-featured-profile .profile::before{content:"";position:absolute;z-index:-1;inset:0;background-image:linear-gradient(180deg,#0a102500 0%,#0b1125b8 24%,#0b1125f0 55%,#0b1125f5 100%),var(--nx-profile-cover,linear-gradient(135deg,#242b50,#11172b));background-position:center top;background-size:cover;filter:saturate(1.12)}
@@ -778,6 +783,12 @@
               JPG или WebP.
             </small>
 
+            <label for="settingsAccent">Акцентный цвет профиля</label>
+            <div class="row" style="display:flex;gap:12px;align-items:center">
+              <input id="settingsAccent" type="color" value="#638dff" aria-label="Выбрать цвет" style="width:62px;height:48px;padding:4px;cursor:pointer">
+              <button type="button" id="nxAccentReset" class="quiet">Стандартный цвет</button>
+            </div>
+            <small class="nx-field-help">Цвет будет виден другим пользователям после сохранения профиля.</small>
             <div class="nx-settings-section" style="margin:15px 0 0">
               <h3>Предпросмотр профиля</h3>
               <p class="muted">Изменения отображаются здесь до сохранения. Другие пользователи увидят их только после сохранения.</p>
