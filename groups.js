@@ -28,6 +28,8 @@ async function openGroup(id){
   unsubMessages?.();unsubMessages=null;
   unsubMembers?.();unsubMembers=null;
   unsubJoinStatus?.();unsubJoinStatus=null;
+  unsubJoinRequests?.();unsubJoinRequests=null;
+  $("joinRequestsPanel").hidden=true;
   $("catalog").hidden=true;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=false;
   $("groupTitle").textContent=(g.kind==="clan"?"["+g.tag+"] ":"")+(g.verified?"✓ ":"")+g.name;
   $("groupAbout").textContent=g.description+" · "+g.category;
