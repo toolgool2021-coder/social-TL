@@ -498,3 +498,10 @@ test("profile accent allows valid hex colors and rejects malformed values", asyn
   await assertFails(updateDoc(ref(ALICE,"users",ALICE),{accentColor:"#12345g"}));
   await assertFails(updateDoc(ref(BOB,"users",ALICE),{accentColor:"#000000"}));
 });
+
+test("profile pinning accepts own posts and rejects others", async () => {
+  await assertSucceeds(updateDoc(ref(ALICE,"users",ALICE),{pinnedPostId:"p1"}));
+  await assertFails(updateDoc(ref(BOB,"users",BOB),{pinnedPostId:"p1"}));
+  await assertFails(updateDoc(ref(ALICE,"users",ALICE),{pinnedPostId:"missing-post"}));
+  await assertSucceeds(updateDoc(ref(ALICE,"users",ALICE),{pinnedPostId:""}));
+});
