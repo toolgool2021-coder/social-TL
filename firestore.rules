@@ -24,7 +24,7 @@ service cloud.firestore {
         (!('avatarUrl' in d) || optionalUrl(d.avatarUrl)) &&
         (!('bannerUrl' in d) || optionalUrl(d.bannerUrl)) &&
         (!('websiteUrl' in d) || optionalUrl(d.websiteUrl)) &&
-        (!('accentColor' in d) || (d.accentColor is string && d.accentColor.matches('^#[0-9a-fA-F]{6}
+        (!('accentColor' in d) || (d.accentColor is string && d.accentColor.matches('^#[0-9a-fA-F]{6}$')));
     }
     function profileChanges() {
       // Validate only changed optional fields so legacy data remains editable.
@@ -40,7 +40,7 @@ service cloud.firestore {
         (!fieldChanged('avatarUrl') || !('avatarUrl' in request.resource.data) || optionalUrl(request.resource.data.avatarUrl)) &&
         (!fieldChanged('bannerUrl') || !('bannerUrl' in request.resource.data) || optionalUrl(request.resource.data.bannerUrl)) &&
         (!fieldChanged('websiteUrl') || !('websiteUrl' in request.resource.data) || optionalUrl(request.resource.data.websiteUrl)) &&
-        (!fieldChanged('accentColor') || (request.resource.data.accentColor is string && request.resource.data.accentColor.matches('^#[0-9a-fA-F]{6}
+        (!fieldChanged('accentColor') || (request.resource.data.accentColor is string && request.resource.data.accentColor.matches('^#[0-9a-fA-F]{6}$'))) &&
         (!fieldChanged('updatedAt') || request.resource.data.updatedAt == request.time);
     }
     function username(v) { return v is string && v.matches('^[a-z0-9_]{3,20}$'); }
