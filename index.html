@@ -779,6 +779,22 @@
             </small>
 
             <div class="nx-settings-section" style="margin:15px 0 0">
+              <h3>Предпросмотр профиля</h3>
+              <p class="muted">Изменения отображаются здесь до сохранения. Другие пользователи увидят их только после сохранения.</p>
+            </div>
+            <div id="nxProfilePreview" class="glass panel" aria-live="polite" style="padding:0;overflow:hidden;border-radius:18px">
+              <div id="nxPreviewCover" style="height:110px;background:linear-gradient(120deg,#345d9c,#6950a4);background-size:cover;background-position:center"></div>
+              <div style="padding:15px;display:flex;gap:13px;align-items:center">
+                <div id="nxPreviewAvatar" class="avatar" style="width:54px;height:54px;flex-shrink:0;overflow:hidden;border-radius:50%;background:#283d63;display:grid;place-items:center">N</div>
+                <div style="min-width:0">
+                  <strong id="nxPreviewName" style="display:block;overflow-wrap:anywhere">Пользователь</strong>
+                  <span id="nxPreviewHandle" class="muted">@username</span>
+                  <p id="nxPreviewBio" class="muted" style="margin:7px 0 0;white-space:pre-wrap;overflow-wrap:anywhere">Без описания</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nx-settings-section" style="margin:15px 0 0">
               <h3>Ссылки</h3>
               <p class="muted">
                 Укажи свой сайт или публичную страницу.
