@@ -232,7 +232,17 @@ if(approved){
   if(v.kind==="community"&&v.tag!=="")throw Error("Старая заявка: у сообщества не должно быть тега. Отклони заявку с пояснением, чтобы пользователь подал новую.");
 }
 const batch=writeBatch(db);const reviewNote=prompt(approved?"Комментарий к одобрению (необязательно)":"Укажи причину отказа:","");if(reviewNote===null)return;if(!approved&&!reviewNote.trim())throw Error("Укажи причину отказа");if(reviewNote.length>500)throw Error("Комментарий слишком длинный");batch.update(ref,{status:approved?"approved":"rejected",reviewedBy:me.uid,reviewNote:reviewNote.trim(),reviewedAt:serverTimestamp()});if(approved){if(v.kind==="clan"){const tagDoc=await getDoc(doc(db,"groupTags",v.tag));if(tagDoc.exists())throw Error("Этот тег уже занят")}const group=doc(db,"groups",id);batch.set(group,{ownerId:v.ownerId,kind:v.kind,name:v.name,tag:v.tag,description:v.description,category:v.category,status:"active",verified:false,memberCount:1,createdAt:serverTimestamp()});if(v.kind==="clan")batch.set(doc(db,"groupTags",v.tag),{groupId:id,createdAt:serverTimestamp()});batch.set(doc(db,"groups",id,"members",v.ownerId),{uid:v.ownerId,role:"leader",joinedAt:serverTimestamp()})}await batch.commit();notice(approved?"Заявка одобрена":"Заявка отклонена");$("ownerTab").click()}catch(e){err(e)}}
-onAuthStateChanged(auth,async user=>{me=user;$("identity").textContent=user?(user.emailVerified?"Аккаунт: "+(user.email||user.uid):"Подтверди почту"):"Вход не выполнен";$("ownerTab").hidden=!user||user.uid!==OWNER;if(!user||!user.emailVerified){unsubGroups?.();unsubMessages?.();$("cards").innerHTML='<div class="empty">Войди в аккаунт NEXORA и подтверди почту.</div>';return}unsubGroups?.();unsubGroups=onSnapshot(query(collection(db,"groups"),where("status","==","active"),limit(100)),snap=>{groups=snap.docs.map(d=>({id:d.id,...d.data()}));renderCards()},err)});
+onAuthStateChanged(auth,async user=>{me=user;$("identity").textContent=user?(user.emailVerified?"Аккаунт: "+(user.email||user.uid):"Подтверди почту"):"Вход не выполнен";$("ownerTab").hidden=!user||user.uid!==OWNER;if(!user||!user.emailVerified){
+ unsubGroups?.();unsubGroups=null;
+ unsubMessages?.();unsubMessages=null;
+ unsubMembers?.();unsubMembers=null;
+ unsubJoinStatus?.();unsubJoinStatus=null;
+ unsubJoinRequests?.();unsubJoinRequests=null;
+ active=null;member=false;memberRole="";
+ $("groupPanel").hidden=true;$("ownerPanel").hidden=true;$("createPanel").hidden=true;$("catalog").hidden=false;
+ $("cards").innerHTML='<div class="empty">Войди в аккаунт NEXORA и подтверди почту.</div>';
+ return
+}unsubGroups?.();unsubGroups=onSnapshot(query(collection(db,"groups"),where("status","==","active"),limit(100)),snap=>{groups=snap.docs.map(d=>({id:d.id,...d.data()}));renderCards()},err)});
 
 function renderVerifyGroups(){if(!me||me.uid!==OWNER)return;$("verifyGroups").innerHTML=groups.length?groups.map(g=>'<div class="actions" style="justify-content:space-between;padding:10px;border-bottom:1px solid #ffffff20"><span>'+(g.verified?'✓ ':'')+esc(g.name)+' <span class="small">('+esc(g.kind)+')</span></span><button data-verify="'+esc(g.id)+'">'+(g.verified?'Отозвать галочку':'Верифицировать')+'</button></div>').join(""):'<p class="small">Пока нет созданных объединений</p>';document.querySelectorAll("[data-verify]").forEach(b=>b.onclick=async()=>{try{ensure();if(me.uid!==OWNER)throw Error("Доступ запрещён");const g=groups.find(x=>x.id===b.dataset.verify);if(!g)return;await updateDoc(doc(db,"groups",g.id),{verified:!g.verified,verifiedAt:serverTimestamp()});notice(g.verified?"Верификация отозвана":"Объединение верифицировано");g.verified=!g.verified;renderVerifyGroups()}catch(e){err(e)}})}
 selectKind("clan");
