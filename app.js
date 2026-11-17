@@ -1035,6 +1035,10 @@ function postHTML(post) {
         ${
           mine
             ? `
+              ${currentPage === "profile" && viewUid === me.uid ? `
+                <button class="quiet" type="button" data-action="pin-post" data-id="${esc(post.id)}">
+                  ${users[me.uid]?.pinnedPostId === post.id ? "Открепить" : "Закрепить"}
+                </button>` : ""}
               <button class="quiet" type="button"
                 data-action="edit-post" data-id="${esc(post.id)}">Редактировать</button>
               <button
@@ -1305,6 +1309,19 @@ document.addEventListener(
             window.dispatchEvent(new CustomEvent("nexora:post-counts-changed",{detail:{id}}));
           }
         );
+      }
+
+      if (action === "pin-post") {
+        await runOnce("pin:" + id, async () => {
+          const post = posts.find(item => item.id === id);
+          if (!post || post.uid !== me.uid) throw Error("Закреплять можно только свои публикации.");
+          const next = users[me.uid]?.pinnedPostId === id ? "" : id;
+          await setDoc(doc(db, "users", me.uid), {pinnedPostId: next}, {merge:true});
+          users[me.uid] = {...users[me.uid], pinnedPostId: next};
+          if (myProfile) myProfile.pinnedPostId = next;
+          renderProfilePosts();
+          toast(next ? "Публикация закреплена." : "Публикация откреплена.");
+        });
       }
 
       if (action === "edit-post") {
@@ -1775,7 +1792,10 @@ function renderProfilePosts() {
   renderPostList($("profilePosts"),
     posts
       .filter(post => post.uid === viewUid)
-      .map(postHTML)
+      .sort((a,b) => Number(b.id === users[viewUid]?.pinnedPostId) - Number(a.id === users[viewUid]?.pinnedPostId))
+      .map(post => (post.id === users[viewUid]?.pinnedPostId
+        ? '<div class="nx-pinned-label" style="margin:12px 0 5px;color:#9dbaff;font-weight:700">📌 Закреплённая публикация</div>'
+        : "") + postHTML(post))
       .join("") || `
         <div class="glass panel empty">
           Публикаций в загруженной ленте нет.
