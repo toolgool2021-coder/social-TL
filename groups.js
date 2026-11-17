@@ -149,8 +149,7 @@ $("joinRequestsList").onclick=async event=>{
     button.closest(".nx-member-row")?.remove();
     if(approve&&active?.id===id){
       active.memberCount++;
-      refreshMembership();
-      $("joinRequestsPanel").hidden=false;
+      $("memberStatus").textContent="Вы участник · "+active.memberCount+"/30";
     }
     if(!$("joinRequestsList").querySelector(".nx-member-row")){
       $("joinRequestsList").innerHTML='<p class="small">Нет новых заявок</p>';
