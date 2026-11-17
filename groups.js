@@ -135,6 +135,8 @@ $("joinRequestsList").onclick=async event=>{
   if(!uid||!active||active.ownerId!==me?.uid)return;
   const button=approve||reject;
   button.disabled=true;
+  const row=button.closest(".nx-member-row");
+  if(row)row.querySelectorAll("button").forEach(b=>b.disabled=true);
   try{
     const id=active.id;
     await runTransaction(db,async tx=>{
@@ -158,7 +160,7 @@ $("joinRequestsList").onclick=async event=>{
       $("joinRequestsList").innerHTML='<p class="small">Нет новых заявок</p>';
     }
     notice(approve?"Участник принят":"Заявка отклонена");
-  }catch(e){err(e);button.disabled=false}
+  }catch(e){err(e);if(row)row.querySelectorAll("button").forEach(b=>b.disabled=false)}
 };
 $("leaveBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||!m.exists()||m.data().role!=="member")throw Error("Нельзя выйти");tx.update(gref,{memberCount:g.data().memberCount-1});tx.delete(mref)});member=false;memberRole="";active.memberCount--;unsubMessages?.();unsubMessages=null;refreshMembership()}catch(e){err(e)}};
 $("backBtn").onclick=()=>selectKind(kind);
