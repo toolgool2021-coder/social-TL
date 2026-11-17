@@ -19,3 +19,8 @@ body[data-nx-page="groups"] .group-members-panel summary{cursor:pointer;font-wei
 body[data-nx-page="groups"] .nx-member-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 4px;border-bottom:1px solid #ffffff15}
 body[data-nx-page="groups"] .nx-member-row:last-child{border-bottom:0}
 body[data-nx-page="groups"] .nx-member-name{font-weight:600;overflow-wrap:anywhere}
+
+body[data-nx-page="groups"] .nx-member-identity{display:flex;align-items:center;gap:11px;min-width:0}
+body[data-nx-page="groups"] .nx-member-avatar{width:38px;height:38px;flex:none;border-radius:12px;object-fit:cover;background:#243b68}
+body[data-nx-page="groups"] .nx-member-placeholder{display:grid;place-items:center;font-weight:750;color:#d8e7ff}
+body[data-nx-page="groups"] .nx-member-identity>div{min-width:0;overflow-wrap:anywhere}
