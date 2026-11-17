@@ -19,7 +19,23 @@ $("createForm").onsubmit=async e=>{e.preventDefault();try{ensure();const f=new F
 function renderCards(){const a=filterGroups(groups,kind,$("groupSearch")?.value,$("verifiedGroupsOnly")?.checked);if($("groupSearchCount"))$("groupSearchCount").textContent="Найдено: "+a.length;$("cards").innerHTML=a.length?a.map(g=>'<article class="glass card"><div class="actions">'+(g.kind==="clan"?'<span class="tag">['+esc(g.tag)+']</span>':'')+(g.verified?'<span class="tag">✓ Подтверждено</span>':'')+'<span class="small">'+esc(g.category)+'</span></div><h3>'+esc(g.name)+'</h3><p>'+esc(g.description)+'</p><div class="actions"><button data-open="'+esc(g.id)+'" class="primary">Открыть →</button></div></article>').join(""):'<div class="empty">Пока нет одобренных '+(kind==="clan"?"кланов":"сообществ")+'</div>';document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openGroup(b.dataset.open))}
 $("groupSearch")?.addEventListener("input",renderCards);
 $("verifiedGroupsOnly")?.addEventListener("change",renderCards);
-async function openGroup(id){try{ensure();const g=groups.find(x=>x.id===id);if(!g)return;active=g;unsubMessages?.();unsubMembers?.();unsubMembers=null;$("catalog").hidden=true;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=false;$("groupTitle").textContent=(g.kind==="clan"?"["+g.tag+"] ":"")+(g.verified?"✓ ":"")+g.name;$("groupAbout").textContent=g.description+" · "+g.category;$("chatHeading").textContent=g.kind==="clan"?"Публикации канала":"Групповой чат";const m=await getDoc(doc(db,"groups",id,"members",me.uid));member=m.exists();memberRole=m.exists()?m.data().role:"";refreshMembership();if(member){watchMessages();watchMembers()}}catch(e){err(e)}}
+async function openGroup(id){try{ensure();const g=groups.find(x=>x.id===id);if(!g)return;active=g;unsubMessages?.();unsubMembers?.();unsubMembers=null;$("catalog").hidden=true;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=false;$("groupTitle").textContent=(g.kind==="clan"?"["+g.tag+"] ":"")+(g.verified?"✓ ":"")+g.name;$("groupAbout").textContent=g.description+" · "+g.category;$("chatHeading").textContent=g.kind==="clan"?"Публикации канала":"Групповой чат";const m=await getDoc(doc(db,"groups",id,"members",me.uid));member=m.exists();memberRole=m.exists()?m.data().role:"";refreshMembership();if(member){watchMessages();watchMembers()}else if(g.kind==="community"){
+ const requestSnap=await getDoc(doc(db,"groups",id,"joinRequests",me.uid));
+ if(active?.id!==id)return;
+ if(requestSnap.exists()){
+  const status=requestSnap.data().status;
+  if(status==="pending"){
+   $("joinBtn").disabled=true;$("joinBtn").textContent="Ожидает одобрения";
+   $("memberStatus").textContent="Заявка отправлена владельцу";
+  }else if(status==="approved"){
+   $("joinBtn").disabled=true;$("joinBtn").textContent="Заявка одобрена";
+   $("memberStatus").textContent="Обнови страницу для проверки участия";
+  }else if(status==="rejected"){
+   $("joinBtn").disabled=true;$("joinBtn").textContent="Заявка отклонена";
+   $("memberStatus").textContent="Повторная подача пока недоступна";
+  }
+ }
+}}catch(e){err(e)}}
 function refreshMembership(){$("reviewJoinBtn").hidden=!active||active.kind!=="community"||active.ownerId!==me?.uid;$("joinRequestsPanel").hidden=true;if(!member&&active?.kind==="community"){$("joinBtn").textContent="Подать заявку";}$("membersPanel").hidden=!member;if(!member){unsubMembers?.();unsubMembers=null;$("membersList").innerHTML="";}$("joinBtn").hidden=member;$("leaveBtn").hidden=!member||active?.ownerId===me?.uid;$("memberStatus").textContent=member?(active.kind==="community"?"Вы участник · "+active.memberCount+"/30":"Вы подписаны"):(active.kind==="community"?"Участников: "+active.memberCount+"/30":"Подписаться на канал");$("joinBtn").disabled=!member&&active.kind==="community"&&active.memberCount>=30;$("chatForm").hidden=!member||(active.kind==="clan"&&memberRole!=="leader");if(!member)$("chatMessages").innerHTML='<div class="empty">Вступи, чтобы читать сообщения</div>'}
 $("joinBtn").onclick=async()=>{
   try{
