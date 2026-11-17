@@ -41,6 +41,12 @@ service cloud.firestore {
         (!fieldChanged('bannerUrl') || !('bannerUrl' in request.resource.data) || optionalUrl(request.resource.data.bannerUrl)) &&
         (!fieldChanged('websiteUrl') || !('websiteUrl' in request.resource.data) || optionalUrl(request.resource.data.websiteUrl)) &&
         (!fieldChanged('accentColor') || (request.resource.data.accentColor is string && request.resource.data.accentColor.matches('^#[0-9a-fA-F]{6}$'))) &&
+        (!fieldChanged('pinnedPostId') ||
+          (request.resource.data.pinnedPostId is string &&
+            (request.resource.data.pinnedPostId == '' ||
+              (request.resource.data.pinnedPostId.size() <= 128 &&
+                exists(/databases/$(database)/documents/posts/$(request.resource.data.pinnedPostId)) &&
+                get(/databases/$(database)/documents/posts/$(request.resource.data.pinnedPostId)).data.uid == request.auth.uid)))) &&
         (!fieldChanged('updatedAt') || request.resource.data.updatedAt == request.time);
     }
     function username(v) { return v is string && v.matches('^[a-z0-9_]{3,20}$'); }
