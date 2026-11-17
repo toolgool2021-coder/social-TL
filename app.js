@@ -1616,6 +1616,8 @@ async function openProfile(uid) {
     profilePage?.classList.toggle("nx-owner-profile", uid === OWNER_UID || uid === NEXORA_OFFICIAL_UID);
     profilePage?.classList.toggle("nx-brand-profile", uid === NEXORA_OFFICIAL_UID);
     profilePage?.style.removeProperty("--nx-profile-cover");
+    const accent = /^#[0-9a-fA-F]{6}$/.test(user.accentColor || "") ? user.accentColor : "#edf3ff";
+    profilePage?.style.setProperty("--nx-user-accent", accent);
 
     $("profileName").innerHTML = nameHTML(uid);
 
@@ -1861,14 +1863,21 @@ function renderProfilePreview() {
   } else {
     avatarBox.textContent = name.slice(0,1).toUpperCase();
   }
+  const accent = $("settingsAccent")?.value || "#638dff";
+  $("nxProfilePreview")?.style.setProperty("--nx-preview-accent", accent);
   const cover = $("nxPreviewCover");
   cover.style.backgroundImage = banner
     ? 'url("' + banner.replace(/"/g, "%22") + '")'
     : "linear-gradient(120deg,#345d9c,#6950a4)";
 }
-for (const id of ["settingsName","settingsUsername","settingsBio","settingsAvatar","settingsBanner"]) {
+for (const id of ["settingsName","settingsUsername","settingsBio","settingsAvatar","settingsBanner","settingsAccent"]) {
   $(id)?.addEventListener("input", renderProfilePreview);
 }
+
+$("nxAccentReset")?.addEventListener("click", () => {
+  $("settingsAccent").value = "#638dff";
+  renderProfilePreview();
+});
 
 function fillSettings() {
   if (!myProfile) return;
@@ -1887,6 +1896,7 @@ function fillSettings() {
 
   $("settingsWebsite").value =
     myProfile.websiteUrl || "";
+  $("settingsAccent").value = /^#[0-9a-fA-F]{6}$/.test(myProfile.accentColor || "") ? myProfile.accentColor : "#638dff";
   renderProfilePreview();
 }
 
@@ -1937,7 +1947,9 @@ $("settingsForm").addEventListener(
       const username = $("settingsUsername").value.trim().toLowerCase().replace(/^@/, "");
       if (name.length < 3 || name.length > 20) throw Error("Имя должно содержать от 3 до 20 символов.");
       if (username && !/^[a-z0-9_]{3,20}$/.test(username)) throw Error("Юзернейм: 3–20 латинских букв, цифр или _.");
-      const changes = {name, bio, avatarUrl, bannerUrl, websiteUrl};
+      const accentColor = $("settingsAccent").value;
+      if (!/^#[0-9a-fA-F]{6}$/.test(accentColor)) throw Error("Некорректный цвет профиля.");
+      const changes = {name, bio, avatarUrl, bannerUrl, websiteUrl, accentColor};
       const oldUsername = String(myProfile.username || "").toLowerCase();
       if (username !== oldUsername) {
         // Claim and release names atomically. Firestore rules validate the paired writes.
