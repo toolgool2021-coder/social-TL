@@ -495,7 +495,7 @@ service cloud.firestore {
           request.resource.data.reviewedAt == request.time &&
           (request.resource.data.status == 'rejected' ||
             getAfter(memberPath(groupId,uid)).data.role == 'member');
-        allow delete: if self(uid) && resource.data.status == 'rejected';
+        allow delete: if self(uid) && resource.data.status in ['pending','rejected'];
       }
       match /members/{uid} {
         allow get: if groupOwner() || (authd() && request.auth.uid == uid) || isGroupMember(groupId);
