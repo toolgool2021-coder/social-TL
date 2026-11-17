@@ -518,8 +518,9 @@ test("community requests require approval and cannot grant roles",async()=>{
   await assertFails(setDoc(ref(BOB,"groups",group,"members",BOB),{uid:BOB,role:"leader",joinedAt:serverTimestamp()}));
   await assertFails(updateDoc(request,{status:"approved"}));
   await assertFails(updateDoc(ref(BOB,"groups",group),{memberCount:2}));
-  await assertSucceeds(runTransaction(db(ALICE),async tx=>{
-    const g=doc(db(ALICE),"groups",group),m=doc(db(ALICE),"groups",group,"members",BOB),q=doc(db(ALICE),"groups",group,"joinRequests",BOB);
+  const aliceDb=db(ALICE);
+  await assertSucceeds(runTransaction(aliceDb,async tx=>{
+    const g=doc(aliceDb,"groups",group),m=doc(aliceDb,"groups",group,"members",BOB),q=doc(aliceDb,"groups",group,"joinRequests",BOB);
     const groupSnap=await tx.get(g);
     await tx.get(q);
     tx.update(g,{memberCount:groupSnap.data().memberCount+1,lastApprovedUid:BOB});
