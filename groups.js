@@ -60,6 +60,7 @@ async function openGroup(id){
     $("withdrawJoinBtn").hidden=status!=="pending"&&status!=="rejected";
     $("withdrawJoinBtn").textContent=status==="pending"?"Отозвать заявку":"Подать повторно";
     $("joinBtn").disabled=status==="pending"||status==="approved"||status==="rejected"||active.memberCount>=30;
+    $("joinBtn").title=status==="pending"?"Заявка ожидает решения владельца":status==="approved"?"Заявка уже одобрена":status==="rejected"?"Сначала нажмите «Подать повторно»":active.memberCount>=30?"Достигнут лимит 30 участников":"";
     $("joinBtn").textContent= status==="pending"?"Ожидает одобрения":status==="approved"?"Заявка одобрена":status==="rejected"?"Заявка отклонена":"Подать заявку";
     $("memberStatus").textContent=status==="pending"?"Заявка отправлена владельцу":status==="approved"?"Одобрено, обновляем участие…":status==="rejected"?"Нажмите «Подать повторно», чтобы создать новую заявку":"Участников: "+active.memberCount+"/30";
    },err);
