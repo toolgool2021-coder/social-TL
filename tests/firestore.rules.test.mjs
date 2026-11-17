@@ -489,3 +489,12 @@ test("post galleries permit up to four HTTPS images and reject unsafe data",asyn
   await assertFails(create("gallery-empty",[]));
   await assertFails(create("gallery-blank",[""]));
 });
+
+
+test("profile accent allows valid hex colors and rejects malformed values", async () => {
+  await assertSucceeds(updateDoc(ref(ALICE,"users",ALICE),{accentColor:"#638dff"}));
+  await assertSucceeds(updateDoc(ref(ALICE,"users",ALICE),{accentColor:"#AABBCC"}));
+  await assertFails(updateDoc(ref(ALICE,"users",ALICE),{accentColor:"red"}));
+  await assertFails(updateDoc(ref(ALICE,"users",ALICE),{accentColor:"#12345g"}));
+  await assertFails(updateDoc(ref(BOB,"users",ALICE),{accentColor:"#000000"}));
+});
