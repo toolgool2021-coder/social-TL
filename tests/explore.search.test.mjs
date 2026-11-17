@@ -37,3 +37,19 @@ test('limits results and safely handles missing fields',()=>{
  assert.equal(result.users.length,1);
  assert.equal(result.posts.length,1);
 });
+
+test('multiword searches match terms in any order across profile fields',()=>{
+ const result=searchExplore('alex александр',users,posts);
+ assert.deepEqual(result.users.map(x=>x.uid),['a']);
+});
+test('post search matches multiple words regardless of order',()=>{
+ assert.deepEqual(searchExplore('nexora обновление',users,posts).posts.map(x=>x.id),['1']);
+});
+test('hashtags are case-folded before deduplication',()=>{
+ const result=searchExplore('#news',{},[{text:'#NEWS #news'}]);
+ assert.deepEqual(result.tags,[['#news',1]]);
+});
+test('result limits are bounded and invalid caps return empty results',()=>{
+ assert.deepEqual(searchExplore('alex',users,posts,-1),{users:[],posts:[],tags:[]});
+ assert.equal(searchExplore('alex',users,posts,1).users.length,1);
+});
