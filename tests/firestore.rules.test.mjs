@@ -505,3 +505,26 @@ test("profile pinning accepts own posts and rejects others", async () => {
   await assertFails(updateDoc(ref(ALICE,"users",ALICE),{pinnedPostId:"missing-post"}));
   await assertSucceeds(updateDoc(ref(ALICE,"users",ALICE),{pinnedPostId:""}));
 });
+
+test("community requests require approval and cannot grant roles",async()=>{
+  const group="community-approval-test";
+  await env.withSecurityRulesDisabled(async context=>{
+    const d=context.firestore();
+    await setDoc(doc(d,"groups",group),{ownerId:ALICE,kind:"community",name:"Test",status:"active",memberCount:1});
+    await setDoc(doc(d,"groups",group,"members",ALICE),{uid:ALICE,role:"leader",joinedAt:new Date()});
+  });
+  const request=ref(BOB,"groups",group,"joinRequests",BOB);
+  await assertSucceeds(setDoc(request,{uid:BOB,status:"pending",createdAt:serverTimestamp()}));
+  await assertFails(setDoc(ref(BOB,"groups",group,"members",BOB),{uid:BOB,role:"leader",joinedAt:serverTimestamp()}));
+  await assertFails(updateDoc(request,{status:"approved"}));
+  await assertFails(updateDoc(ref(BOB,"groups",group),{memberCount:2}));
+  await assertSucceeds(runTransaction(db(ALICE),async tx=>{
+    const g=doc(db(ALICE),"groups",group),m=doc(db(ALICE),"groups",group,"members",BOB),q=doc(db(ALICE),"groups",group,"joinRequests",BOB);
+    const groupSnap=await tx.get(g);
+    await tx.get(q);
+    tx.update(g,{memberCount:groupSnap.data().memberCount+1,lastApprovedUid:BOB});
+    tx.set(m,{uid:BOB,role:"member",joinedAt:serverTimestamp()});
+    tx.update(q,{status:"approved",reviewedBy:ALICE,reviewedAt:serverTimestamp()});
+  }));
+  await assertSucceeds(getDoc(ref(BOB,"groups",group,"members",BOB)));
+});
