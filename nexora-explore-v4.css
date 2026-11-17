@@ -1,0 +1,23 @@
+/* NEXORA Beta 4.0 · Explore visual refresh */
+:root{--nx-edge:rgba(150,177,255,.16);--nx-glow:#8da7ff;--nx-radius:22px}
+body[data-nx-page="explore"]{background:radial-gradient(ellipse 65% 45% at 12% -5%,rgba(65,104,211,.20),transparent),radial-gradient(ellipse 60% 55% at 100% 65%,rgba(116,67,200,.13),transparent),#080d19}
+body[data-nx-page="explore"] header{border-bottom:1px solid var(--nx-edge);box-shadow:0 5px 35px #050a1580}
+body[data-nx-page="explore"] .brand{letter-spacing:.08em}
+body[data-nx-page="explore"] main{max-width:1080px}
+body[data-nx-page="explore"] main>h1{font-size:clamp(28px,4vw,43px);letter-spacing:-.045em;font-weight:850}
+body[data-nx-page="explore"] main>.muted{font-size:14px}
+body[data-nx-page="explore"] .glass{border:1px solid var(--nx-edge);background:linear-gradient(145deg,rgba(29,41,67,.91),rgba(15,24,41,.94));box-shadow:0 14px 50px #0207105c;border-radius:var(--nx-radius)}
+body[data-nx-page="explore"] .tabs{padding:6px;border:1px solid var(--nx-edge);background:#0e1729b8;border-radius:17px;gap:5px}
+body[data-nx-page="explore"] .tabs button{flex:1;white-space:nowrap;border:0;background:transparent;color:#b8c6e4;padding:12px 14px}
+body[data-nx-page="explore"] .tabs button.active{color:white;background:linear-gradient(120deg,#436be2,#7359ca);box-shadow:0 5px 18px #415fd24a}
+body[data-nx-page="explore"] button,body[data-nx-page="explore"] .button{transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
+@media(hover:hover){body[data-nx-page="explore"] button:hover,body[data-nx-page="explore"] .button:hover{transform:translateY(-1px)}}
+body[data-nx-page="explore"] input:focus-visible,body[data-nx-page="explore"] textarea:focus-visible,body[data-nx-page="explore"] button:focus-visible{outline:2px solid #a8baff;outline-offset:2px}
+body[data-nx-page="explore"] .post{margin:12px 0;padding:17px;border:1px solid #a0b5f11a;border-radius:16px;background:#0c15278c}
+body[data-nx-page="explore"] .post:last-child{border-bottom:1px solid #a0b5f11a}
+body[data-nx-page="explore"] .tag{border-color:#7b9be466;background:#233c6b88}
+body[data-nx-page="explore"] #exploreSearch{min-height:50px;font-size:15px;background:#091323}
+body[data-nx-page="explore"] #exploreSearchResults>h2{margin:28px 0 10px;font-size:15px;color:#aabefa;letter-spacing:.02em}
+body[data-nx-page="explore"] #exploreSearchResults .button{display:inline-block;margin-top:6px;padding:8px 13px}
+@media(max-width:650px){body[data-nx-page="explore"] .tabs{overflow-x:auto;flex-wrap:nowrap}body[data-nx-page="explore"] .tabs button{flex:0 0 auto;font-size:12px;padding:11px 12px}body[data-nx-page="explore"] .post{padding:13px}body[data-nx-page="explore"] #exploreSearchClear{padding:12px}}
+@media(prefers-reduced-motion:reduce){body[data-nx-page="explore"] button,body[data-nx-page="explore"] .button{transition:none!important;transform:none!important}}
