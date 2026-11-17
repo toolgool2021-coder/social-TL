@@ -1,0 +1,15 @@
+/* NEXORA Beta 4.0: community discovery refresh */
+body[data-nx-page="groups"]{background:radial-gradient(ellipse 65% 45% at 8% 0%,#3655a833,transparent),radial-gradient(ellipse 50% 60% at 100% 75%,#6243a82a,transparent),#080c15}
+body[data-nx-page="groups"] main{max-width:1140px}
+body[data-nx-page="groups"] h1{letter-spacing:-.04em}
+body[data-nx-page="groups"] .glass{background:linear-gradient(135deg,#1a2641ed,#111a2ded);border:1px solid #a4b9ee26;box-shadow:0 14px 42px #02071270}
+body[data-nx-page="groups"] .card{transition:transform .22s,border-color .22s,box-shadow .22s}
+@media(hover:hover){body[data-nx-page="groups"] .card:hover{transform:translateY(-3px);border-color:#8da7ff78;box-shadow:0 20px 50px #020712a6}}
+body[data-nx-page="groups"] button{transition:background .2s,transform .2s}
+body[data-nx-page="groups"] button:focus-visible,body[data-nx-page="groups"] input:focus-visible{outline:2px solid #aabfff;outline-offset:2px}
+body[data-nx-page="groups"] #groupSearch{font-size:15px;min-height:48px;background:#0a1428}
+body[data-nx-page="groups"] #groupSearchCount{margin:8px 0 0}
+body[data-nx-page="groups"] .grid{gap:18px}
+body[data-nx-page="groups"] .card h3{font-size:19px;letter-spacing:-.02em}
+body[data-nx-page="groups"] .tag{border:1px solid #81a3ff3d}
+@media(prefers-reduced-motion:reduce){body[data-nx-page="groups"] .card,body[data-nx-page="groups"] button{transition:none!important;transform:none!important}}
