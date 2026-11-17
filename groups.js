@@ -1,7 +1,7 @@
 import {filterGroups} from "./groups-search.mjs";
 import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,doc,getDoc,getDocs,query,where,orderBy,limit,onSnapshot,serverTimestamp,setDoc,writeBatch,runTransaction,updateDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,doc,getDoc,getDocs,query,where,orderBy,limit,onSnapshot,serverTimestamp,setDoc,deleteDoc,writeBatch,runTransaction,updateDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",authDomain:"toolchat-bfac8.firebaseapp.com",projectId:"toolchat-bfac8",storageBucket:"toolchat-bfac8.firebasestorage.app",messagingSenderId:"52396840735",appId:"1:52396840735:web:a608b9c037c8481f2dc22a"};
 const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const OWNER="ElpAtxZIBCZVsLBcLzgdIsr8T1w2";
@@ -55,14 +55,16 @@ async function openGroup(id){
       return;
      }
     }
+    $("withdrawJoinBtn").hidden=status!=="pending"&&status!=="rejected";
+    $("withdrawJoinBtn").textContent=status==="pending"?"Отозвать заявку":"Подать повторно";
     $("joinBtn").disabled=status==="pending"||status==="approved"||status==="rejected"||active.memberCount>=30;
     $("joinBtn").textContent= status==="pending"?"Ожидает одобрения":status==="approved"?"Заявка одобрена":status==="rejected"?"Заявка отклонена":"Подать заявку";
-    $("memberStatus").textContent=status==="pending"?"Заявка отправлена владельцу":status==="approved"?"Одобрено, обновляем участие…":status==="rejected"?"Повторная подача пока недоступна":"Участников: "+active.memberCount+"/30";
+    $("memberStatus").textContent=status==="pending"?"Заявка отправлена владельцу":status==="approved"?"Одобрено, обновляем участие…":status==="rejected"?"Нажмите «Подать повторно», чтобы создать новую заявку":"Участников: "+active.memberCount+"/30";
    },err);
   }
  }catch(e){err(e)}
 }
-function refreshMembership(){$("reviewJoinBtn").hidden=!active||active.kind!=="community"||active.ownerId!==me?.uid;$("joinRequestsPanel").hidden=true;if(!member&&active?.kind==="community"){$("joinBtn").textContent="Подать заявку";}$("membersPanel").hidden=!member;if(!member){unsubMembers?.();unsubMembers=null;$("membersList").innerHTML="";}$("joinBtn").hidden=member;$("leaveBtn").hidden=!member||active?.ownerId===me?.uid;$("memberStatus").textContent=member?(active.kind==="community"?"Вы участник · "+active.memberCount+"/30":"Вы подписаны"):(active.kind==="community"?"Участников: "+active.memberCount+"/30":"Подписаться на канал");$("joinBtn").disabled=!member&&active.kind==="community"&&active.memberCount>=30;$("chatForm").hidden=!member||(active.kind==="clan"&&memberRole!=="leader");if(!member)$("chatMessages").innerHTML='<div class="empty">Вступи, чтобы читать сообщения</div>'}
+function refreshMembership(){$("withdrawJoinBtn").hidden=true;$("reviewJoinBtn").hidden=!active||active.kind!=="community"||active.ownerId!==me?.uid;$("joinRequestsPanel").hidden=true;if(!member&&active?.kind==="community"){$("joinBtn").textContent="Подать заявку";}$("membersPanel").hidden=!member;if(!member){unsubMembers?.();unsubMembers=null;$("membersList").innerHTML="";}$("joinBtn").hidden=member;$("leaveBtn").hidden=!member||active?.ownerId===me?.uid;$("memberStatus").textContent=member?(active.kind==="community"?"Вы участник · "+active.memberCount+"/30":"Вы подписаны"):(active.kind==="community"?"Участников: "+active.memberCount+"/30":"Подписаться на канал");$("joinBtn").disabled=!member&&active.kind==="community"&&active.memberCount>=30;$("chatForm").hidden=!member||(active.kind==="clan"&&memberRole!=="leader");if(!member)$("chatMessages").innerHTML='<div class="empty">Вступи, чтобы читать сообщения</div>'}
 $("joinBtn").onclick=async()=>{
   try{
     ensure();
@@ -74,7 +76,7 @@ $("joinBtn").onclick=async()=>{
         notice(existing.data().status==="pending"?"Заявка уже ожидает рассмотрения":"Заявка уже одобрена");
         return;
       }
-      if(existing.exists()) throw Error("Повторная заявка после отказа пока недоступна");
+      if(existing.exists()) throw Error("Удалите отклонённую заявку кнопкой «Подать повторно»");
       await setDoc(requestRef,{uid:me.uid,status:"pending",createdAt:serverTimestamp()});
       notice("Заявка отправлена владельцу сообщества");
       $("joinBtn").disabled=true;
@@ -92,6 +94,22 @@ $("joinBtn").onclick=async()=>{
     member=true;memberRole="member";active.memberCount++;
     refreshMembership();watchMessages();watchMembers();
   }catch(e){err(e)}
+};
+$("withdrawJoinBtn").onclick=async()=>{
+ try{
+  ensure();
+  if(!active||active.kind!=="community"||member)return;
+  const id=active.id;
+  const requestRef=doc(db,"groups",id,"joinRequests",me.uid);
+  const current=await getDoc(requestRef);
+  if(!current.exists()||!["pending","rejected"].includes(current.data().status))throw Error("Заявка уже обработана");
+  const retry=current.data().status==="rejected";
+  if(!retry&&!confirm("Отозвать заявку на вступление?"))return;
+  $("withdrawJoinBtn").disabled=true;
+  await deleteDoc(requestRef);
+  if(active?.id!==id)return;
+  notice(retry?"Теперь можно подать новую заявку":"Заявка отозвана");
+ }catch(e){err(e)}finally{$("withdrawJoinBtn").disabled=false}
 };
 $("reviewJoinBtn").onclick=async()=>{
   if(!active||active.ownerId!==me?.uid)return;
