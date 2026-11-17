@@ -164,26 +164,49 @@ $("joinRequestsList").onclick=async event=>{
 };
 $("leaveBtn").onclick=async()=>{try{ensure();await runTransaction(db,async tx=>{const gref=doc(db,"groups",active.id),mref=doc(db,"groups",active.id,"members",me.uid);const g=await tx.get(gref),m=await tx.get(mref);if(!g.exists()||!m.exists()||m.data().role!=="member")throw Error("Нельзя выйти");tx.update(gref,{memberCount:g.data().memberCount-1});tx.delete(mref)});member=false;memberRole="";active.memberCount--;unsubMessages?.();unsubMessages=null;unsubMembers?.();unsubMembers=null;const groupId=active.id;if(active.kind==="community"){const requestRef=doc(db,"groups",groupId,"joinRequests",me.uid);const previous=await getDoc(requestRef);if(previous.exists()&&previous.data().status==="approved")await deleteDoc(requestRef)}await openGroup(groupId)}catch(e){err(e)}};
 $("backBtn").onclick=()=>selectKind(kind);
+const memberProfiles=new Map();
+let currentMemberItems=[],memberRenderVersion=0;
+function safeAvatar(url){
+  try{const u=new URL(String(url));return u.protocol==="https:"?u.href:""}catch{return ""}
+}
+function renderMemberList(){
+  const target=$("membersList");
+  const search=($("memberSearch")?.value||"").trim().toLocaleLowerCase("ru");
+  const filtered=currentMemberItems.filter(m=>{
+    const p=memberProfiles.get(m.uid)||{};
+    return !search||m.uid.toLowerCase().includes(search)||String(p.name||"").toLocaleLowerCase("ru").includes(search)||String(p.username||"").toLocaleLowerCase("ru").includes(search)||(m.uid===me?.uid&&"вы".includes(search));
+  });
+  target.innerHTML=filtered.map(m=>{
+    const p=memberProfiles.get(m.uid)||{};
+    const name=p.name||p.username||(m.uid===me?.uid?"Вы":"Участник "+m.uid.slice(0,8));
+    const avatar=safeAvatar(p.avatarUrl);
+    return '<div class="nx-member-row"><div class="nx-member-identity">'+(avatar?'<img class="nx-member-avatar" alt="" loading="lazy" referrerpolicy="no-referrer" src="'+esc(avatar)+'">':'<span class="nx-member-avatar nx-member-placeholder">'+esc(String(name).slice(0,1).toUpperCase())+'</span>')+'<div><span class="nx-member-name">'+esc(name)+'</span>'+(p.username?'<div class="small">@'+esc(p.username)+'</div>':'')+'</div></div><span class="small">'+(m.role==="leader"?"Создатель":"Участник")+'</span></div>';
+  }).join("")||'<p class="small">'+(search?'По вашему запросу участники не найдены.':'Участников пока нет.')+'</p>';
+}
 function watchMembers(){
   if(!active||!member)return;
   unsubMembers?.();
   const groupId=active.id;
-  const target=$("membersList");
-  target.innerHTML='<p class="small">Загрузка участников…</p>';
+  const version=++memberRenderVersion;
+  $("membersList").innerHTML='<p class="small">Загрузка участников…</p>';
   unsubMembers=onSnapshot(collection(db,"groups",groupId,"members"),snapshot=>{
-    if(!active||active.id!==groupId||!member)return;
-    const items=snapshot.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>
-      Number(b.role==="leader")-Number(a.role==="leader") ||
-      String(a.uid).localeCompare(String(b.uid)));
-    const search=($("memberSearch")?.value||"").trim().toLowerCase();
-    const filtered=search?items.filter(m=>m.uid.toLowerCase().includes(search)||(m.uid===me?.uid&&"вы".includes(search))):items;
-    target.innerHTML=filtered.map(m=>'<div class="nx-member-row"><span class="nx-member-name">'+esc(m.uid===me?.uid?"Вы":m.uid.slice(0,12))+'</span><span class="small">'+(m.role==="leader"?"Создатель":"Участник")+'</span></div>').join("") ||
-      '<p class="small">'+(search?'По вашему запросу участники не найдены.':'Участников пока нет.')+'</p>';
-    active.memberCount=items.length;
-    $("memberStatus").textContent=active.kind==="community"?"Вы участник · "+items.length+"/30":"Вы подписаны · "+items.length;
+    if(!active||active.id!==groupId||!member||version!==memberRenderVersion)return;
+    currentMemberItems=snapshot.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>
+      Number(b.role==="leader")-Number(a.role==="leader")||String(a.uid).localeCompare(String(b.uid)));
+    active.memberCount=currentMemberItems.length;
+    $("memberStatus").textContent=active.kind==="community"?"Вы участник · "+currentMemberItems.length+"/30":"Вы подписаны · "+currentMemberItems.length;
+    renderMemberList();
+    for(const m of currentMemberItems){
+      if(memberProfiles.has(m.uid))continue;
+      memberProfiles.set(m.uid,{});
+      getDoc(doc(db,"users",m.uid)).then(profile=>{
+        if(profile.exists())memberProfiles.set(m.uid,{name:profile.data().name,username:profile.data().username,avatarUrl:profile.data().avatarUrl});
+        if(active?.id===groupId&&version===memberRenderVersion)renderMemberList();
+      }).catch(()=>{});
+    }
   },err);
 }
-$("memberSearch")?.addEventListener("input",()=>{if(member&&active)watchMembers()});
+$("memberSearch")?.addEventListener("input",()=>{if(member&&active)renderMemberList()});
 function groupMessageTime(value){
   const date=value?.toDate?.();
   return date instanceof Date && !Number.isNaN(date.getTime())
