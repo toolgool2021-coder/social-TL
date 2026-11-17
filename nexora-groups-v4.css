@@ -13,3 +13,9 @@ body[data-nx-page="groups"] .grid{gap:18px}
 body[data-nx-page="groups"] .card h3{font-size:19px;letter-spacing:-.02em}
 body[data-nx-page="groups"] .tag{border:1px solid #81a3ff3d}
 @media(prefers-reduced-motion:reduce){body[data-nx-page="groups"] .card,body[data-nx-page="groups"] button{transition:none!important;transform:none!important}}
+
+body[data-nx-page="groups"] .group-members-panel{margin:22px 0;padding:14px 17px;border:1px solid #a4b9ee30;border-radius:16px;background:#0b1729b0}
+body[data-nx-page="groups"] .group-members-panel summary{cursor:pointer;font-weight:700;list-style-position:inside}
+body[data-nx-page="groups"] .nx-member-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 4px;border-bottom:1px solid #ffffff15}
+body[data-nx-page="groups"] .nx-member-row:last-child{border-bottom:0}
+body[data-nx-page="groups"] .nx-member-name{font-weight:600;overflow-wrap:anywhere}
