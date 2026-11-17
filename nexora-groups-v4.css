@@ -24,3 +24,44 @@ body[data-nx-page="groups"] .nx-member-identity{display:flex;align-items:center;
 body[data-nx-page="groups"] .nx-member-avatar{width:38px;height:38px;flex:none;border-radius:12px;object-fit:cover;background:#243b68}
 body[data-nx-page="groups"] .nx-member-placeholder{display:grid;place-items:center;font-weight:750;color:#d8e7ff}
 body[data-nx-page="groups"] .nx-member-identity>div{min-width:0;overflow-wrap:anywhere}
+
+/* Consistent, glyph-free interactive controls */
+body[data-nx-page="groups"] button{
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;
+  gap:8px;min-height:42px;padding:10px 16px;
+  border:1px solid rgba(159,181,234,.26)!important;
+  border-radius:12px!important;background:rgba(31,45,75,.88);
+  color:#eaf0ff;font-size:14px;font-weight:650;line-height:1.3;
+  letter-spacing:.005em;cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease!important
+}
+body[data-nx-page="groups"] button.primary,
+body[data-nx-page="groups"] .tabs button.active{
+  background:linear-gradient(120deg,#426ef0,#6556d9)!important;
+  border-color:rgba(160,176,255,.45)!important;
+  box-shadow:0 4px 14px rgba(56,84,190,.19)
+}
+body[data-nx-page="groups"] button:not(:disabled):hover{
+  background:#31456e;border-color:#8daaff!important;
+  box-shadow:0 7px 20px rgba(26,41,85,.3)
+}
+body[data-nx-page="groups"] button.primary:not(:disabled):hover,
+body[data-nx-page="groups"] .tabs button.active:not(:disabled):hover{
+  background:linear-gradient(120deg,#507cff,#7967ef)!important
+}
+body[data-nx-page="groups"] button:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
+body[data-nx-page="groups"] button:focus-visible{outline:2px solid #a7baff;outline-offset:3px}
+body[data-nx-page="groups"] .tabs{gap:9px}
+body[data-nx-page="groups"] .tabs button{min-height:44px}
+body[data-nx-page="groups"] .tabs #newBtn{margin-left:auto}
+body[data-nx-page="groups"] .actions{gap:9px}
+body[data-nx-page="groups"] .actions button{white-space:normal;text-align:center}
+body[data-nx-page="groups"] #leaveBtn,
+body[data-nx-page="groups"] [data-reject],
+body[data-nx-page="groups"] [data-join-reject]{border-color:rgba(239,142,157,.3)!important;color:#ffcad1}
+@media(max-width:600px){
+  body[data-nx-page="groups"] .tabs #newBtn{margin-left:0}
+  body[data-nx-page="groups"] .tabs button{flex:1 1 auto}
+  body[data-nx-page="groups"] .actions button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){body[data-nx-page="groups"] button{transition:none!important}}
