@@ -7,11 +7,11 @@ const app=getApps().length?getApp():initializeApp(cfg),auth=getAuth(app),db=getF
 const OWNER="ElpAtxZIBCZVsLBcLzgdIsr8T1w2";
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let me=null,kind="clan",groups=[],active=null,unsubMessages=null,unsubMembers=null,unsubJoinStatus=null,unsubGroups=null,member=false,memberRole="",ownerMode=false;
+let me=null,kind="clan",groups=[],active=null,unsubMessages=null,unsubMembers=null,unsubJoinStatus=null,unsubJoinRequests=null,unsubGroups=null,member=false,memberRole="",ownerMode=false;
 function notice(t){$("notice").textContent=t; if(t)setTimeout(()=>{if($("notice").textContent===t)$("notice").textContent=""},6500)}
 function err(e){console.error("[NEXORA GROUPS]",e);const message=e?.code==="permission-denied"?"Firestore отклонил действие. Проверь, что опубликованы последние firestore.rules, вход выполнен с UID владельца и почта подтверждена.":(e?.message||e?.code||String(e));notice("Ошибка: "+message)}
 function ensure(){if(!me||!me.emailVerified)throw Error("Войди в аккаунт и подтверди электронную почту")}
-function selectKind(k){kind=k;document.querySelectorAll("[data-kind]").forEach(b=>b.classList.toggle("active",b.dataset.kind===k));$("catalog").hidden=false;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=true;active=null;unsubMessages?.();unsubMessages=null;unsubMembers?.();unsubMembers=null;unsubJoinStatus?.();unsubJoinStatus=null;$("tagField").hidden=k!=="clan";$("createForm").elements.tag.required=k==="clan";$("createForm").elements.tag.value=k==="clan"?$("createForm").elements.tag.value:"";renderCards()}
+function selectKind(k){kind=k;document.querySelectorAll("[data-kind]").forEach(b=>b.classList.toggle("active",b.dataset.kind===k));$("catalog").hidden=false;$("createPanel").hidden=true;$("ownerPanel").hidden=true;$("groupPanel").hidden=true;active=null;unsubMessages?.();unsubMessages=null;unsubMembers?.();unsubMembers=null;unsubJoinStatus?.();unsubJoinStatus=null;unsubJoinRequests?.();unsubJoinRequests=null;$("tagField").hidden=k!=="clan";$("createForm").elements.tag.required=k==="clan";$("createForm").elements.tag.value=k==="clan"?$("createForm").elements.tag.value:"";renderCards()}
 document.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>selectKind(b.dataset.kind));
 $("newBtn").onclick=async()=>{try{ensure();$("catalog").hidden=true;$("groupPanel").hidden=true;$("ownerPanel").hidden=true;$("createPanel").hidden=false;const snap=await getDoc(doc(db,"groupRequests",me.uid+"_"+kind));$("myRequest").textContent=snap.exists()?"Ваша заявка: "+({pending:"ожидает решения",approved:"одобрена",rejected:"отклонена"}[snap.data().status]||snap.data().status)+". ":"";$("createForm").querySelector('button[type="submit"]').disabled=snap.exists()&&snap.data().status!=="rejected";}catch(e){err(e)}};
 $("cancelBtn").onclick=()=>selectKind(kind);
@@ -111,16 +111,19 @@ $("withdrawJoinBtn").onclick=async()=>{
   notice(retry?"Теперь можно подать новую заявку":"Заявка отозвана");
  }catch(e){err(e)}finally{$("withdrawJoinBtn").disabled=false}
 };
-$("reviewJoinBtn").onclick=async()=>{
-  if(!active||active.ownerId!==me?.uid)return;
-  const panel=$("joinRequestsPanel");
-  panel.hidden=!panel.hidden;
-  if(panel.hidden)return;
-  try{
-    const snap=await getDocs(query(collection(db,"groups",active.id,"joinRequests"),where("status","==","pending"),limit(30)));
-    $("joinRequestsList").innerHTML=snap.empty?'<p class="small">Нет новых заявок</p>':snap.docs.map(d=>
-      '<div class="nx-member-row"><span>'+esc(d.id.slice(0,16))+'</span><div class="actions"><button data-join-approve="'+esc(d.id)+'" class="primary">Принять</button><button data-join-reject="'+esc(d.id)+'">Отклонить</button></div></div>').join("");
-  }catch(e){err(e)}
+$("reviewJoinBtn").onclick=()=>{
+ if(!active||active.kind!=="community"||active.ownerId!==me?.uid)return;
+ const panel=$("joinRequestsPanel");
+ panel.hidden=!panel.hidden;
+ if(panel.hidden){unsubJoinRequests?.();unsubJoinRequests=null;return}
+ const id=active.id;
+ $("joinRequestsList").innerHTML='<p class="small">Загружаем заявки…</p>';
+ unsubJoinRequests?.();
+ unsubJoinRequests=onSnapshot(query(collection(db,"groups",id,"joinRequests"),where("status","==","pending"),limit(30)),snap=>{
+  if(active?.id!==id||panel.hidden)return;
+  $("joinRequestsList").innerHTML=snap.empty?'<p class="small">Нет новых заявок</p>':snap.docs.map(d=>
+   '<div class="nx-member-row"><span>'+esc(d.id.slice(0,16))+'</span><div class="actions"><button data-join-approve="'+esc(d.id)+'" class="primary">Принять</button><button data-join-reject="'+esc(d.id)+'">Отклонить</button></div></div>').join("");
+ },err);
 };
 $("joinRequestsList").onclick=async event=>{
   const approve=event.target.closest("[data-join-approve]");
