@@ -470,6 +470,25 @@ service cloud.firestore {
         )
       );
       allow delete: if false;
+      match /joinRequests/{uid} {
+        allow get: if authd() && (request.auth.uid == uid || isGroupLeader(groupId));
+        allow list: if isGroupLeader(groupId);
+        allow create: if self(uid) && groupDoc(groupId).data.status == 'active' &&
+          groupDoc(groupId).data.kind == 'community' &&
+          !exists(memberPath(groupId,uid)) &&
+          request.resource.data.keys().hasOnly(['uid','status','createdAt']) &&
+          request.resource.data.uid == uid &&
+          request.resource.data.status == 'pending' &&
+          request.resource.data.createdAt == request.time;
+        allow update: if isGroupLeader(groupId) && resource.data.status == 'pending' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt','reviewedBy']) &&
+          request.resource.data.status in ['approved','rejected'] &&
+          request.resource.data.reviewedBy == request.auth.uid &&
+          request.resource.data.reviewedAt == request.time &&
+          (request.resource.data.status == 'rejected' ||
+            getAfter(memberPath(groupId,uid)).data.role == 'member');
+        allow delete: if self(uid) && resource.data.status == 'rejected';
+      }
       match /members/{uid} {
         allow get: if groupOwner() || (authd() && request.auth.uid == uid) || isGroupMember(groupId);
         allow list: if isGroupMember(groupId);
