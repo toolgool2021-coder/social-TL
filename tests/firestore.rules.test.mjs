@@ -550,5 +550,16 @@ test("community applicants can withdraw and retry but cannot delete approved req
  await env.withSecurityRulesDisabled(async context=>{
   await updateDoc(doc(context.firestore(),"groups",group,"joinRequests",BOB),{status:"approved"});
  });
+ await assertSucceeds(deleteDoc(applicant));
+ await assertSucceeds(setDoc(applicant,{uid:BOB,status:"pending",createdAt:serverTimestamp()}));
+ await env.withSecurityRulesDisabled(async context=>{
+  const d=context.firestore();
+  await updateDoc(doc(d,"groups",group,"joinRequests",BOB),{status:"approved"});
+  await setDoc(doc(d,"groups",group,"members",BOB),{uid:BOB,role:"member",joinedAt:new Date()});
+ });
  await assertFails(deleteDoc(applicant));
+ await env.withSecurityRulesDisabled(async context=>{
+  await deleteDoc(doc(context.firestore(),"groups",group,"members",BOB));
+ });
+ await assertSucceeds(deleteDoc(applicant));
 });
