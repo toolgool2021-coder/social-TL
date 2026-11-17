@@ -172,6 +172,8 @@ function watchMembers(){
       String(a.uid).localeCompare(String(b.uid)));
     target.innerHTML=items.map(m=>'<div class="nx-member-row"><span class="nx-member-name">'+esc(m.uid===me?.uid?"Вы":m.uid.slice(0,12))+'</span><span class="small">'+(m.role==="leader"?"Создатель":"Участник")+'</span></div>').join("") ||
       '<p class="small">Участников пока нет.</p>';
+    active.memberCount=items.length;
+    $("memberStatus").textContent=active.kind==="community"?"Вы участник · "+items.length+"/30":"Вы подписаны · "+items.length;
   },err);
 }
 function groupMessageTime(value){
