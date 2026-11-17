@@ -454,7 +454,7 @@ service cloud.firestore {
         request.resource.data.verifiedAt == request.time
       ) || (
         authd() && resource.data.status == 'active' &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount']) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount','lastApprovedUid']) &&
         request.resource.data.memberCount is int &&
         request.resource.data.memberCount >= 1 &&
         (resource.data.kind == 'clan' || request.resource.data.memberCount <= 30) &&
@@ -469,7 +469,12 @@ service cloud.firestore {
             !existsAfter(memberPath(groupId,request.auth.uid))) ||
           (isGroupLeader(groupId) && resource.data.kind == 'community' &&
             request.resource.data.memberCount == resource.data.memberCount + 1 &&
-            resource.data.memberCount < 30)
+            resource.data.memberCount < 30 &&
+            request.resource.data.lastApprovedUid is string &&
+            request.resource.data.lastApprovedUid.size() > 0 &&
+            !exists(memberPath(groupId,request.resource.data.lastApprovedUid)) &&
+            getAfter(memberPath(groupId,request.resource.data.lastApprovedUid)).data.role == 'member' &&
+            getAfter(/databases/$(database)/documents/groups/$(groupId)/joinRequests/$(request.resource.data.lastApprovedUid)).data.status == 'approved')
         )
       );
       allow delete: if false;
