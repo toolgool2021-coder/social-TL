@@ -37,12 +37,21 @@ notice.id='tlBrowserNotice';
 notice.setAttribute('role','dialog');
 notice.setAttribute('aria-modal','true');
 notice.setAttribute('aria-labelledby','tlNoticeTitle');
-notice.innerHTML='<div class="tl-notice-inner"><div class="tl-notice-symbol" aria-hidden="true">!</div><div class="tl-notice-kicker">ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ</div><h2 id="tlNoticeTitle">Просим открыть сайт в браузере</h2><p>Пожалуйста, используйте Google Chrome, Яндекс Браузер, Firefox или другой полноценный браузер. Во встроенных браузерах Telegram и других приложений некоторые функции могут работать некорректно или сайт может не открыться.</p><div class="tl-notice-read" id="tlNoticeRead">Примерное время прочтения — 5 секунд</div><div class="tl-notice-actions" id="tlNoticeActions"><button type="button" id="tlNoticeAccept" disabled>Я ознакомился</button><label class="tl-notice-check"><input type="checkbox" id="tlNoticeRemember"><span>Больше не показывать</span></label></div></div>';
+notice.innerHTML='<div class="tl-notice-inner"><div class="tl-notice-symbol" aria-hidden="true">!</div><div class="tl-notice-kicker">ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ</div><h2 id="tlNoticeTitle">Просим открыть сайт в браузере</h2><p>Пожалуйста, используйте Google Chrome, Яндекс Браузер, Firefox или другой полноценный браузер. Во встроенных браузерах Telegram и других приложений некоторые функции могут работать некорректно или сайт может не открыться.</p><div class="tl-notice-read" id="tlNoticeRead">Время до подтверждения: 5 сек.</div><div class="tl-notice-actions" id="tlNoticeActions"><button type="button" id="tlNoticeAccept" disabled>Я ознакомился</button><label class="tl-notice-check"><input type="checkbox" id="tlNoticeRemember"><span>Больше не показывать</span></label></div></div>';
 document.body.appendChild(notice);
 var actions=notice.querySelector('#tlNoticeActions');
 var accept=notice.querySelector('#tlNoticeAccept');
 if(isWork){var loader=document.createElement('div');loader.id='tlWorkLoader';loader.textContent='WORKERS';document.body.appendChild(loader)}
-setTimeout(function(){actions.classList.add('tl-ready');accept.disabled=false;accept.focus()},5000);
+var remaining=5;
+var readout=notice.querySelector('#tlNoticeRead');
+var countdown=setInterval(function(){
+remaining--;
+if(remaining>0){readout.textContent='Время до подтверждения: '+remaining+' сек.';return}
+clearInterval(countdown);
+readout.textContent='Можно продолжить';
+actions.classList.add('tl-ready');
+accept.disabled=false;
+},1000);
 accept.addEventListener('click',function(){
 if(accept.disabled)return;
 if(notice.querySelector('#tlNoticeRemember').checked){try{localStorage.setItem(storageKey,'1')}catch(e){}}
