@@ -3,40 +3,55 @@
 <html lang="ru">
 <head><style id="tl-browser-notice-style">
 html.tl-browser-notice{overflow:hidden!important}
-#tlBrowserNotice{position:fixed;inset:0;z-index:2147483647;background:#080a10;color:#f5f6fa;display:grid;place-items:center;padding:26px;font-family:system-ui,-apple-system,sans-serif;text-align:center;opacity:1;transition:opacity .55s ease}
+#tlBrowserNotice{position:fixed;inset:0;z-index:2147483647;background:#080a10;color:#f5f6fa;display:grid;place-items:center;padding:26px;font-family:system-ui,-apple-system,sans-serif;text-align:center;opacity:1;transition:opacity .5s ease}
 #tlBrowserNotice.tl-exit{opacity:0;pointer-events:none}
-.tl-notice-inner{width:min(440px,100%);animation:tlNoticeEnter .65s ease both}
-.tl-notice-symbol{width:70px;height:70px;margin:0 auto 28px;border:1px solid #ffffff35;border-radius:50%;display:grid;place-items:center;font-size:32px;font-weight:300}
-.tl-notice-kicker{font-size:11px;letter-spacing:.32em;color:#a6a8b0;font-weight:700}
-#tlBrowserNotice h2{font-size:clamp(26px,6vw,38px);letter-spacing:-.04em;margin:15px 0;font-weight:750}
-#tlBrowserNotice p{font-size:14px;line-height:1.85;color:#b1b5c0;margin:0 auto;max-width:360px}
-.tl-notice-line{width:54px;height:2px;background:#e5e6ed;margin:30px auto 0;animation:tlNoticePulse 1.2s ease-in-out infinite alternate}
+.tl-notice-inner{width:min(440px,100%);animation:tlNoticeEnter .55s ease both}
+.tl-notice-symbol{width:66px;height:66px;margin:0 auto 24px;border:1px solid #ffffff35;border-radius:50%;display:grid;place-items:center;font-size:30px}
+.tl-notice-kicker{font-size:11px;letter-spacing:.24em;color:#a6a8b0;font-weight:700}
+#tlBrowserNotice h2{font-size:clamp(25px,6vw,36px);letter-spacing:-.04em;margin:16px 0;font-weight:750}
+#tlBrowserNotice p{font-size:14px;line-height:1.8;color:#b1b5c0;margin:0 auto;max-width:370px}
+.tl-notice-read{font-size:12px;color:#8e94a3;margin-top:23px}
+.tl-notice-actions{margin-top:22px;display:grid;gap:16px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s;pointer-events:none}
+.tl-notice-actions.tl-ready{opacity:1;transform:none;pointer-events:auto}
+#tlNoticeAccept{width:100%;padding:15px 20px;border-radius:12px;border:1px solid #d7d9e2;background:#eceef4;color:#10121a;font:700 14px system-ui;cursor:pointer;transition:background .2s}
+#tlNoticeAccept:hover{background:white}
+.tl-notice-check{display:flex;align-items:center;justify-content:center;gap:10px;color:#b1b5c0;font-size:13px;cursor:pointer}
+.tl-notice-check input{width:17px;height:17px;accent-color:#d9deef}
 html.tl-browser-notice #nxLoadingScreen,html.tl-browser-notice #anonLoadingScreen{visibility:hidden!important;opacity:0!important}
 #tlWorkLoader{position:fixed;inset:0;z-index:2147483640;display:none;place-items:center;background:#080a10;color:white;font:700 22px system-ui;letter-spacing:.25em}
 html.tl-work-loading #tlWorkLoader{display:grid}
 @keyframes tlNoticeEnter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes tlNoticePulse{to{opacity:.3;transform:scaleX(.65)}}
-@media(prefers-reduced-motion:reduce){.tl-notice-inner,.tl-notice-line{animation:none}}
+@media(prefers-reduced-motion:reduce){.tl-notice-inner{animation:none}}
 </style><script id="tl-browser-notice-script">
 (function(){
+var storageKey='tl-browser-notice-ack-v2';
+var skip=false;
+try{skip=localStorage.getItem(storageKey)==='1'}catch(e){}
+if(skip)return;
 document.documentElement.classList.add('tl-browser-notice');
-var isWork=document.title.indexOf('WORKERS')>=0;
 function start(){
 if(document.getElementById('tlBrowserNotice'))return;
+var isWork=!!document.querySelector('title')&&document.title.indexOf('WORKERS')>=0;
 var notice=document.createElement('div');
 notice.id='tlBrowserNotice';
-notice.setAttribute('role','status');
-notice.setAttribute('aria-live','polite');
-notice.innerHTML='<div class="tl-notice-inner"><div class="tl-notice-symbol">!</div><div class="tl-notice-kicker">ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ</div><h2>Откройте в браузере</h2><p>Для корректной работы используйте обычный браузер: Google Chrome, Яндекс Браузер, Firefox или другой. Не открывайте сайт во встроенном браузере Telegram и других приложений.</p><div class="tl-notice-line"></div></div>';
+notice.setAttribute('role','dialog');
+notice.setAttribute('aria-modal','true');
+notice.setAttribute('aria-labelledby','tlNoticeTitle');
+notice.innerHTML='<div class="tl-notice-inner"><div class="tl-notice-symbol" aria-hidden="true">!</div><div class="tl-notice-kicker">ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ</div><h2 id="tlNoticeTitle">Просим открыть сайт в браузере</h2><p>Пожалуйста, используйте Google Chrome, Яндекс Браузер, Firefox или другой полноценный браузер. Во встроенных браузерах Telegram и других приложений некоторые функции могут работать некорректно или сайт может не открыться.</p><div class="tl-notice-read" id="tlNoticeRead">Примерное время прочтения — 5 секунд</div><div class="tl-notice-actions" id="tlNoticeActions"><button type="button" id="tlNoticeAccept" disabled>Я ознакомился</button><label class="tl-notice-check"><input type="checkbox" id="tlNoticeRemember"><span>Больше не показывать</span></label></div></div>';
 document.body.appendChild(notice);
+var actions=notice.querySelector('#tlNoticeActions');
+var accept=notice.querySelector('#tlNoticeAccept');
 if(isWork){var loader=document.createElement('div');loader.id='tlWorkLoader';loader.textContent='WORKERS';document.body.appendChild(loader)}
-setTimeout(function(){
+setTimeout(function(){actions.classList.add('tl-ready');accept.disabled=false;accept.focus()},5000);
+accept.addEventListener('click',function(){
+if(accept.disabled)return;
+if(notice.querySelector('#tlNoticeRemember').checked){try{localStorage.setItem(storageKey,'1')}catch(e){}}
 notice.classList.add('tl-exit');
 document.documentElement.classList.remove('tl-browser-notice');
 if(isWork)document.documentElement.classList.add('tl-work-loading');
-setTimeout(function(){notice.remove()},600);
+setTimeout(function(){notice.remove()},550);
 if(isWork)setTimeout(function(){document.documentElement.classList.remove('tl-work-loading');var loader=document.getElementById('tlWorkLoader');if(loader)loader.remove()},1100);
-},2600);
+});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
