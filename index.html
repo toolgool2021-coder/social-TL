@@ -1,7 +1,46 @@
 
 <!DOCTYPE html>
 <html lang="ru">
-<head>
+<head><style id="tl-browser-notice-style">
+html.tl-browser-notice{overflow:hidden!important}
+#tlBrowserNotice{position:fixed;inset:0;z-index:2147483647;background:#080a10;color:#f5f6fa;display:grid;place-items:center;padding:26px;font-family:system-ui,-apple-system,sans-serif;text-align:center;opacity:1;transition:opacity .55s ease}
+#tlBrowserNotice.tl-exit{opacity:0;pointer-events:none}
+.tl-notice-inner{width:min(440px,100%);animation:tlNoticeEnter .65s ease both}
+.tl-notice-symbol{width:70px;height:70px;margin:0 auto 28px;border:1px solid #ffffff35;border-radius:50%;display:grid;place-items:center;font-size:32px;font-weight:300}
+.tl-notice-kicker{font-size:11px;letter-spacing:.32em;color:#a6a8b0;font-weight:700}
+#tlBrowserNotice h2{font-size:clamp(26px,6vw,38px);letter-spacing:-.04em;margin:15px 0;font-weight:750}
+#tlBrowserNotice p{font-size:14px;line-height:1.85;color:#b1b5c0;margin:0 auto;max-width:360px}
+.tl-notice-line{width:54px;height:2px;background:#e5e6ed;margin:30px auto 0;animation:tlNoticePulse 1.2s ease-in-out infinite alternate}
+html.tl-browser-notice #nxLoadingScreen,html.tl-browser-notice #anonLoadingScreen{visibility:hidden!important;opacity:0!important}
+#tlWorkLoader{position:fixed;inset:0;z-index:2147483640;display:none;place-items:center;background:#080a10;color:white;font:700 22px system-ui;letter-spacing:.25em}
+html.tl-work-loading #tlWorkLoader{display:grid}
+@keyframes tlNoticeEnter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tlNoticePulse{to{opacity:.3;transform:scaleX(.65)}}
+@media(prefers-reduced-motion:reduce){.tl-notice-inner,.tl-notice-line{animation:none}}
+</style><script id="tl-browser-notice-script">
+(function(){
+document.documentElement.classList.add('tl-browser-notice');
+var isWork=document.title.indexOf('WORKERS')>=0;
+function start(){
+if(document.getElementById('tlBrowserNotice'))return;
+var notice=document.createElement('div');
+notice.id='tlBrowserNotice';
+notice.setAttribute('role','status');
+notice.setAttribute('aria-live','polite');
+notice.innerHTML='<div class="tl-notice-inner"><div class="tl-notice-symbol">!</div><div class="tl-notice-kicker">ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ</div><h2>Откройте в браузере</h2><p>Для корректной работы используйте обычный браузер: Google Chrome, Яндекс Браузер, Firefox или другой. Не открывайте сайт во встроенном браузере Telegram и других приложений.</p><div class="tl-notice-line"></div></div>';
+document.body.appendChild(notice);
+if(isWork){var loader=document.createElement('div');loader.id='tlWorkLoader';loader.textContent='WORKERS';document.body.appendChild(loader)}
+setTimeout(function(){
+notice.classList.add('tl-exit');
+document.documentElement.classList.remove('tl-browser-notice');
+if(isWork)document.documentElement.classList.add('tl-work-loading');
+setTimeout(function(){notice.remove()},600);
+if(isWork)setTimeout(function(){document.documentElement.classList.remove('tl-work-loading');var loader=document.getElementById('tlWorkLoader');if(loader)loader.remove()},1100);
+},2600);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
 <script>document.documentElement.classList.add("nx-booting");window.__nxBootStart=Date.now();setTimeout(()=>{if(document.documentElement.classList.contains("nx-booting")){const p=document.getElementById("nxLoadMessage"),b=document.getElementById("nxLoadRetry");if(p)p.textContent="Загрузка занимает слишком много времени. Проверь подключение.";if(b)b.hidden=false}},14000)</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
