@@ -1,3 +1,4 @@
+import {assertClean} from "./profanity-filter.mjs";
 
 import {
   initializeApp,
@@ -871,6 +872,7 @@ $("postForm").addEventListener(
         data.imagePosition = imagePosition;
       }
 
+      assertClean(text);
       const published = await addDoc(
         collection(db, "posts"),
         data
@@ -1217,6 +1219,7 @@ function openPostEditor(postId) {
         changes.imageUrl = deleteField();
         changes.imagePosition = deleteField();
       }
+      assertClean(text);
       await updateDoc(doc(db,"posts",postId),changes);
       close();
       toast("Публикация обновлена.");
@@ -1493,6 +1496,7 @@ async function openComments(postId, box) {
     state.sending = true;
     button.disabled = true;
     try {
+      assertClean(text);
       await addDoc(collection(db, "posts", postId, "comments"), {
         uid, text, createdAt:serverTimestamp()
       });
@@ -1969,6 +1973,7 @@ $("settingsForm").addEventListener(
       if (username && !/^[a-z0-9_]{3,20}$/.test(username)) throw Error("Юзернейм: 3–20 латинских букв, цифр или _.");
       const accentColor = $("settingsAccent").value;
       if (!/^#[0-9a-fA-F]{6}$/.test(accentColor)) throw Error("Некорректный цвет профиля.");
+      assertClean(name, bio, username);
       const changes = {name, bio, avatarUrl, bannerUrl, websiteUrl, accentColor};
       const oldUsername = String(myProfile.username || "").toLowerCase();
       if (username !== oldUsername) {

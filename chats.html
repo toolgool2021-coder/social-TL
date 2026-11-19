@@ -1698,6 +1698,8 @@ async function ensureChat(uid){
 }
 
 async function sendMessage(payload){
+  const {assertClean}=await import("./profanity-filter.mjs");
+  assertClean(payload.text);
   if(!me||!activeUid||!chatReady)throw Error("Диалог ещё загружается");
   if(peerBlocked||blockedByPeer)throw Error("Отправка сообщений недоступна из-за блокировки");
   if(sending)throw Error("Сообщение ещё отправляется");

@@ -1,3 +1,4 @@
+import {assertClean} from "./profanity-filter.mjs";
 
 /* NEXORA 3.1 Stable — reposts, quotes, counters and status */
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
@@ -322,6 +323,7 @@ async function createRepost(id,comment=''){
   }
 
   const clean=String(comment||'').trim();
+  assertClean(clean);
 
   if(clean.length>350){
     throw Error('Комментарий слишком длинный.');
