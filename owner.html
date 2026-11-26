@@ -452,8 +452,6 @@ onAuthStateChanged(auth,async user=>{
 async function loadUsers(){
   if(!canManage())return;
   $("usersList").textContent="Загрузка...";
-
-  if(!canManage())return;
   const uid=currentUser.uid;
   const request={};
   tabRequests.set("users",request);
@@ -627,8 +625,8 @@ $("saveUser").onclick=()=>execute(async()=>{
 });
 
 async function loadReports(){
-  $("reportsList").textContent="Загрузка...";
   if(!canManage())return;
+  $("reportsList").textContent="Загрузка...";
   const uid=currentUser.uid;
   const request={};
   tabRequests.set("reports",request);
@@ -720,8 +718,8 @@ $("reportsList").onclick=event=>execute(async()=>{
 });
 
 async function loadVerification(){
-  $("verificationList").textContent="Загрузка...";
   if(!canManage())return;
+  $("verificationList").textContent="Загрузка...";
   const uid=currentUser.uid;
   const request={};
   tabRequests.set("verification",request);
@@ -816,8 +814,8 @@ $("verificationList").onclick=event=>execute(async()=>{
 });
 
 async function loadAudit(){
-  $("auditList").textContent="Загрузка...";
   if(!canManage())return;
+  $("auditList").textContent="Загрузка...";
   const uid=currentUser.uid;
   const request={};
   tabRequests.set("audit",request);
