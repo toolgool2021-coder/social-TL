@@ -1,5 +1,6 @@
 
 import {getApps,initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getDatabase,ref as rtRef,onValue,set as rtSet,serverTimestamp as rtTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {
   getFirestore,doc,getDoc,getDocs,collection,
@@ -20,6 +21,7 @@ const config={
 const app=getApps()[0]||initializeApp(config);
 const auth=getAuth(app);
 const db=getFirestore(app);
+const realtime=getDatabase(app,"https://toolchat-bfac8-default-rtdb.europe-west1.firebasedatabase.app");
 const $=id=>document.getElementById(id);
 
 let me=null;
@@ -474,11 +476,11 @@ function watchPresence(uid){
   status.textContent="Статус неизвестен";
   controls.append(status);
 
-  unsubscribePresence=onSnapshot(
-    doc(db,"presence",uid),
+  unsubscribePresence=onValue(
+    rtRef(realtime,"presence/"+uid),
     snap=>{
       if(profileUid!==uid||!status.isConnected)return;
-      const seen=snap.data()?.lastSeen?.toMillis?.()||0;
+      const seen=Number(snap.val()?.lastSeen)||0;
       const active=seen>0&&Date.now()-seen<120000;
       status.textContent=active
         ?"● Недавно был активен"
@@ -521,9 +523,7 @@ async function heartbeat(){
   const request={};
   heartbeatPending=request;
   try{
-    await setDoc(doc(db,"presence",uid),{
-      uid,lastSeen:serverTimestamp()
-    },{merge:true});
+    await rtSet(rtRef(realtime,"presence/"+uid),{lastSeen:rtTimestamp()});
     if(heartbeatPending===request)heartbeatAt=Date.now();
   }catch(e){
     console.warn("Presence:",e);
