@@ -795,22 +795,22 @@ async function loadUsers(token = authToken) {
   users = result;
 }
 
+const pendingUsers = new Map();
 async function ensureUser(uid) {
-  if (users[uid]) {
+  if (Object.prototype.hasOwnProperty.call(users, uid)) return users[uid];
+  const token = authToken;
+  const key = token + ":" + uid;
+  if (pendingUsers.has(key)) return pendingUsers.get(key);
+  const request = (async () => {
+    const snapshot = await getDoc(doc(db, "users", uid));
+    if (token !== authToken) throw Error("Сессия изменилась.");
+    if (!snapshot.exists()) throw Error("Пользователь не найден.");
+    users[uid] = snapshot.data();
     return users[uid];
-  }
-
-  const snapshot = await getDoc(
-    doc(db, "users", uid)
-  );
-
-  if (!snapshot.exists()) {
-    throw Error("Пользователь не найден.");
-  }
-
-  users[uid] = snapshot.data();
-
-  return users[uid];
+  })();
+  pendingUsers.set(key, request);
+  try { return await request; }
+  finally { pendingUsers.delete(key); }
 }
 
 /* =========================================
