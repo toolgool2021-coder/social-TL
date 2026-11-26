@@ -3,7 +3,7 @@ import {getApps,initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {
   getFirestore,doc,getDoc,getDocs,collection,
-  query,limit,setDoc,updateDoc,addDoc,deleteDoc,
+  query,where,orderBy,limit,setDoc,updateDoc,addDoc,deleteDoc,
   serverTimestamp,onSnapshot,writeBatch
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
@@ -168,7 +168,7 @@ function renderNotificationCenter(){
 async function loadNotifications(version=panelVersion){
  const body=$("nx21body");
  try{
-   const snap=await getDocs(query(collection(db,"users",me.uid,"notifications"),limit(100)));
+   const snap=await getDocs(query(collection(db,"users",me.uid,"notifications"),orderBy("createdAt","desc"),limit(100)));
    if(panel!=="notifications"||version!==panelVersion)return;
    notificationItems=snap.docs.sort((a,b)=>
      (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
@@ -529,8 +529,9 @@ function applyExtraAuth(user){
   presenceTimer=setInterval(heartbeat,60000);
 
   unsubscribeNotifications=onSnapshot(
-    collection(db,"users",user.uid,"notifications"),
+    query(collection(db,"users",user.uid,"notifications"),where("read","==",false)),
     snap=>{
+      if(me?.uid!==user.uid)return;
       const count=snap.docs.filter(d=>d.data().read!==true).length;
       const button=document.querySelector(
         '[data-nx-panel="notifications"]'
@@ -540,9 +541,7 @@ function applyExtraAuth(user){
         button.setAttribute("aria-label",button.title);
       }
       if(panel==="notifications"){
-        notificationItems=snap.docs.sort((a,b)=>
-          (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
-        renderNotificationCenter();
+        void loadNotifications(panelVersion);
       }
     },
     e=>console.warn("Notifications:",e)
