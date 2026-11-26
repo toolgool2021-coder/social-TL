@@ -467,6 +467,21 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 @keyframes studioSweep{from{transform:translateX(-110%)}to{transform:translateX(300%)}}
 @media(prefers-reduced-motion:reduce){#nxLoadingScreen *,#nxLoadingScreen *::before{animation:none!important}}
 </style>
+<style>
+#studioMore{display:none!important}
+@media(max-width:760px){
+ body .sidebar #studioNav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:auto;grid-auto-flow:row;grid-auto-columns:auto;overflow:visible}
+ body #studioNav>button,body #studioNav>a{order:0!important;min-height:48px;flex-direction:column;gap:3px;padding:5px 2px}
+ body #studioNav> :not([data-page=feed]):not([data-page=search]):not([data-page=profile]):not([data-nx-inbox-link]):not(#studioMore){display:none}
+ body #studioNav.studio-expanded> :not([hidden]):not(.hidden){display:flex}
+ body #studioNav.studio-expanded{max-height:55dvh;overflow-y:auto}
+ body #studioMore:not([hidden]){display:flex!important}
+ body #studioNav [data-nx-inbox-link]{position:relative}
+ body #studioNav [data-nx-inbox-link] #nxInboxBadge{position:absolute;top:2px;right:4px}
+ body .layout{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+ body #nx21notice{bottom:calc(95px + env(safe-area-inset-bottom))}
+}
+</style>
 </head>
 
 <body>
@@ -555,7 +570,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar glass">
-      <nav class="nav" aria-label="Основная навигация">
+      <nav id="studioNav" class="nav" aria-label="Основная навигация">
 <button type="button" data-page="feed" class="active">
           ⌂ <span>Главная</span>
         </button>
@@ -568,6 +583,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 <button type="button" data-page="profile">
           ♙ <span>Мой профиль</span>
         </button>
+<button type="button" id="studioMore" aria-expanded="false" aria-controls="studioNav" hidden>☰ <span>Ещё</span></button>
 <button type="button" data-nx-panel="notifications">
           ♢ <span>Уведомления</span>
         </button>
@@ -1119,5 +1135,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 
 <script type="module" src="./randomizer-integrated.js?v=14"></script>
   
-</body>
+<script>
+(()=>{const nav=document.getElementById("studioNav"),more=document.getElementById("studioMore");if(!nav||!more)return;more.hidden=false;function close(){nav.classList.remove("studio-expanded");more.setAttribute("aria-expanded","false")}more.addEventListener("click",()=>{const open=nav.classList.toggle("studio-expanded");more.setAttribute("aria-expanded",String(open))});nav.addEventListener("click",e=>{const item=e.target.closest("button,a");if(item&&item!==more)close()});document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});document.addEventListener("click",e=>{if(!nav.contains(e.target))close()});})();
+</script></body>
 </html>
