@@ -308,6 +308,8 @@ let currentUser=null;
 let ownerVerified=false;
 let users=[];
 let auditItems=[];
+const loadedAt=new Map();
+const fresh=tab=>Date.now()-(loadedAt.get(tab)||0)<30000;
 let selected=null;
 let toastTimer=null;
 let busy=false;
@@ -379,6 +381,7 @@ async function commit(action,target,details,operation){
   });
 
   await batch.commit();
+  loadedAt.clear();
 }
 
 async function execute(fn){
@@ -399,10 +402,10 @@ function selectTab(name){
     button.classList.toggle("active",button.dataset.tab===name);
   });
 
-  if(name==="users")loadUsers();
-  if(name==="reports")loadReports();
-  if(name==="verification")loadVerification();
-  if(name==="audit")loadAudit();
+  if(name==="users"&&!fresh(name))loadUsers();
+  if(name==="reports"&&!fresh(name))loadReports();
+  if(name==="verification"&&!fresh(name))loadVerification();
+  if(name==="audit"&&!fresh(name))loadAudit();
 }
 
 document.querySelectorAll("[data-tab]").forEach(button=>{
@@ -410,6 +413,7 @@ document.querySelectorAll("[data-tab]").forEach(button=>{
 });
 
 onAuthStateChanged(auth,async user=>{
+  loadedAt.clear();
   currentUser=user;
   ownerVerified=false;
   $("dashboard").classList.add("hidden");
@@ -447,8 +451,12 @@ async function loadUsers(){
   if(!canManage())return;
   $("usersList").textContent="Загрузка...";
 
+  if(!canManage())return;
+  const uid=currentUser.uid;
+  loadedAt.delete("users");
   try{
     const snap=await getDocs(query(collection(db,"users"),limit(200)));
+    if(!canManage()||currentUser.uid!==uid)return;
     users=snap.docs.map(d=>({uid:d.id,...d.data()}));
 
     $("countUsers").textContent=users.length;
@@ -460,6 +468,7 @@ async function loadUsers(){
     ).length;
 
     renderUsers();
+    loadedAt.set("users",Date.now());
   }catch(e){
     $("usersList").textContent="Ошибка: "+e.message;
   }
@@ -614,8 +623,12 @@ $("saveUser").onclick=()=>execute(async()=>{
 
 async function loadReports(){
   $("reportsList").textContent="Загрузка...";
+  if(!canManage())return;
+  const uid=currentUser.uid;
+  loadedAt.delete("reports");
   try{
     const snap=await getDocs(query(collection(db,"reports"),limit(100)));
+    if(!canManage()||currentUser.uid!==uid)return;
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
@@ -643,6 +656,7 @@ async function loadReports(){
           </div>`:""}
       </div>
     `).join("")||'<p class="muted">Жалоб нет.</p>';
+    loadedAt.set("reports",Date.now());
   }catch(e){
     $("reportsList").textContent="Ошибка: "+e.message;
   }
@@ -699,10 +713,14 @@ $("reportsList").onclick=event=>execute(async()=>{
 
 async function loadVerification(){
   $("verificationList").textContent="Загрузка...";
+  if(!canManage())return;
+  const uid=currentUser.uid;
+  loadedAt.delete("verification");
   try{
     const snap=await getDocs(query(
       collection(db,"verificationRequests"),limit(100)
     ));
+    if(!canManage()||currentUser.uid!==uid)return;
 
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
@@ -727,6 +745,7 @@ async function loadVerification(){
           </div>`:""}
       </div>
     `).join("")||'<p class="muted">Заявок нет.</p>';
+    loadedAt.set("verification",Date.now());
   }catch(e){
     $("verificationList").textContent="Ошибка: "+e.message;
   }
@@ -787,15 +806,20 @@ $("verificationList").onclick=event=>execute(async()=>{
 
 async function loadAudit(){
   $("auditList").textContent="Загрузка...";
+  if(!canManage())return;
+  const uid=currentUser.uid;
+  loadedAt.delete("audit");
   try{
     const snap=await getDocs(query(
       collection(db,"auditLogs"),orderBy("createdAt","desc"),limit(100)
     ));
+    if(!canManage()||currentUser.uid!==uid)return;
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
     auditItems=items;
     renderAudit();
+    loadedAt.set("audit",Date.now());
   }catch(e){$("auditList").textContent="Ошибка: "+e.message;}
 }
 function renderAudit(){
