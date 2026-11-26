@@ -499,15 +499,23 @@ function detectProfile(){
   refreshPinned();
 }
 
+let heartbeatUid=null,heartbeatAt=0,heartbeatPending=null;
 async function heartbeat(){
   if(!me||document.visibilityState!=="visible")return;
+  const uid=me.uid;
+  if(heartbeatUid===uid&&(heartbeatPending||Date.now()-heartbeatAt<30000))return;
+  if(heartbeatUid!==uid)heartbeatAt=0;
+  heartbeatUid=uid;
+  const request={};
+  heartbeatPending=request;
   try{
-    await setDoc(doc(db,"presence",me.uid),{
-      uid:me.uid,lastSeen:serverTimestamp()
+    await setDoc(doc(db,"presence",uid),{
+      uid,lastSeen:serverTimestamp()
     },{merge:true});
+    if(heartbeatPending===request)heartbeatAt=Date.now();
   }catch(e){
     console.warn("Presence:",e);
-  }
+  }finally{if(heartbeatPending===request)heartbeatPending=null;}
 }
 
 function applyExtraAuth(user){
