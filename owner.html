@@ -140,7 +140,7 @@ body[data-nx-page=owner] .toolbar select{width:auto;max-width:100%}
 body[data-nx-page=owner] .item{padding:16px 12px}
 body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
 @media(max-width:760px){body[data-nx-page=owner] main{padding:0 12px 40px}body[data-nx-page=owner] #dashboard:not(.hidden){grid-template-columns:minmax(0,1fr);gap:12px}.owner-rail{position:static;padding:10px}.owner-rail .rail-label,.owner-rail>.button{display:none}body[data-nx-page=owner] .owner-rail .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0}.owner-rail .tabs button{justify-content:center;font-size:12px}body[data-nx-page=owner] #dashboard>.mg-control{grid-column:1}}
-</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style><style>.owner-overview #ownerDistribution{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.owner-meter>div{display:flex;justify-content:space-between;gap:8px}.owner-meter progress{width:100%;height:8px;accent-color:#5ee3c2}.owner-meter b{font-variant-numeric:tabular-nums}@media(max-width:760px){.owner-overview #ownerDistribution{grid-template-columns:1fr}}</style><style>.owner-account-heading{padding:16px;background:#111719;border-radius:12px;margin-bottom:16px}.owner-account-heading small{color:#a3b3b1;letter-spacing:.12em}.owner-account-heading h3{font-size:22px;margin:6px 0}.owner-editor-section{padding:16px;border:1px solid #30383c;border-radius:12px;margin-bottom:16px}.owner-sanctions{border-color:#75434a;background:#40232a22}.owner-sanctions h3{color:#ffb5bf}#editor>.actions{justify-content:flex-end}#editor .toolbar{border-bottom:1px solid #30383c;padding-bottom:12px}</style><style>.report-summary{padding:12px;background:#111719;border-radius:10px;margin-bottom:12px}.report-ticket{margin:12px 0;border:1px solid #30383c!important;border-radius:12px;padding:16px!important}.report-ticket[data-report-status=pending]{border-left:3px solid #e6b86c!important}.report-ticket[hidden]{display:none!important}.audit-event{position:relative;margin-left:10px;padding-left:24px!important;border-left:2px solid #39464a}.audit-event:before{content:"";position:absolute;left:-6px;top:24px;width:10px;height:10px;background:#5ee3c2;border-radius:50%}.audit-event details{background:#111719;padding:10px;border-radius:8px}</style></head>
+</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style><style>.owner-overview #ownerDistribution{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.owner-meter>div{display:flex;justify-content:space-between;gap:8px}.owner-meter progress{width:100%;height:8px;accent-color:#5ee3c2}.owner-meter b{font-variant-numeric:tabular-nums}@media(max-width:760px){.owner-overview #ownerDistribution{grid-template-columns:1fr}}</style><style>.owner-account-heading{padding:16px;background:#111719;border-radius:12px;margin-bottom:16px}.owner-account-heading small{color:#a3b3b1;letter-spacing:.12em}.owner-account-heading h3{font-size:22px;margin:6px 0}.owner-editor-section{padding:16px;border:1px solid #30383c;border-radius:12px;margin-bottom:16px}.owner-sanctions{border-color:#75434a;background:#40232a22}.owner-sanctions h3{color:#ffb5bf}#editor>.actions{justify-content:flex-end}#editor .toolbar{border-bottom:1px solid #30383c;padding-bottom:12px}</style><style>.report-summary{padding:12px;background:#111719;border-radius:10px;margin-bottom:12px}.report-ticket{margin:12px 0;border:1px solid #30383c!important;border-radius:12px;padding:16px!important}.report-ticket[data-report-status=pending]{border-left:3px solid #e6b86c!important}.report-ticket[hidden]{display:none!important}.audit-event{position:relative;margin-left:10px;padding-left:24px!important;border-left:2px solid #39464a}.audit-event:before{content:"";position:absolute;left:-6px;top:24px;width:10px;height:10px;background:#5ee3c2;border-radius:50%}.audit-event details{background:#111719;padding:10px;border-radius:8px}</style><style>.verification-ticket{border:1px solid #30383c!important;border-radius:12px;margin:10px 0;padding:16px!important}.verification-ticket[data-verification-status=pending]{border-left:3px solid #e6b86c!important}.verification-ticket[hidden]{display:none!important}.verification-ticket .badge{width:24px;height:24px;object-fit:contain;vertical-align:middle}</style></head>
 <body data-nx-page="owner">
 
 <header>
@@ -228,7 +228,7 @@ body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
         <h2 style="flex:1">Заявки на верификацию</h2>
         <button id="reloadVerification">Обновить</button>
       </div>
-      <div id="verificationList"></div>
+      <div id="verificationSummary" class="report-summary" aria-live="polite"></div><label>Статус заявки<select id="verificationFilter"><option value="all">Все заявки</option><option value="pending">Ожидают решения</option><option value="approved">Одобрены</option><option value="rejected">Отклонены</option></select></label><div id="verificationList"></div>
     </section>
 
     <section id="auditTab" class="glass panel hidden">
@@ -753,13 +753,14 @@ async function loadVerification(){
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
+    $("verificationSummary").textContent=`Загружено: ${items.length} · Ожидают: ${items.filter(r=>r.status==="pending").length}`;
     $("verificationList").innerHTML=items.map(r=>`
-      <div class="item">
+      <div class="item verification-ticket" data-verification-status="${esc(r.status||"pending")}">
         <div class="item-main">
-          <strong>${esc(BADGE_NAMES[Number(r.type)]||"Неизвестная категория")}</strong>
+          <strong>${[1,2,3,4,5].includes(Number(r.type))?`<img class="badge" src="./image/Verified_${Number(r.type)}.png" alt="">`:""} ${esc(BADGE_NAMES[Number(r.type)]||"Неизвестная категория")}</strong>
           <p>${esc(r.reason||"")}</p>
           <p class="uid">UID: ${esc(r.uid||r.id)}</p>
-          <span class="pill">${esc(r.status||"pending")}</span>
+          <span class="pill">${esc(({pending:"Ожидает решения",approved:"Одобрена",rejected:"Отклонена"})[r.status]||r.status||"Ожидает решения")}</span>
           <p class="muted">${esc(date(r.createdAt))}</p>
         </div>
         ${r.status==="pending"?`
@@ -773,6 +774,7 @@ async function loadVerification(){
           </div>`:""}
       </div>
     `).join("")||'<p class="muted">Заявок нет.</p>';
+    filterVerification();
     loadedAt.set("verification",Date.now());
   }catch(e){if(tabRequests.get("verification")!==request||currentUser?.uid!==uid)return;
     $("verificationList").textContent="Ошибка: "+e.message;
@@ -780,6 +782,8 @@ async function loadVerification(){
   finally{if(tabRequests.get("verification")===request)tabRequests.delete("verification");}
 }
 
+function filterVerification(){const value=$("verificationFilter").value;document.querySelectorAll("#verificationList .verification-ticket").forEach(el=>el.hidden=value!=="all"&&el.dataset.verificationStatus!==value)}
+$("verificationFilter").onchange=filterVerification;
 $("reloadVerification").onclick=loadVerification;
 
 $("verificationList").onclick=event=>execute(async()=>{
