@@ -47,6 +47,7 @@ function harness(){
     location:{search:""},innerWidth:1000,innerHeight:800,confirm:()=>true,
     Date:class extends Date{static now(){return control.now;}},
     setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,clearInterval(){},
+    requestAnimationFrame:callback=>{queueMicrotask(callback);return 1;},
     initializeApp:()=>({}),getApps:()=>[],getApp:()=>({}),getAuth:()=>auth,getFirestore:()=>({}),
     getDatabase:()=>({}),
     rtRef:(_,path)=>({path}),
