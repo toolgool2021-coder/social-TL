@@ -140,7 +140,7 @@ body[data-nx-page=owner] .toolbar select{width:auto;max-width:100%}
 body[data-nx-page=owner] .item{padding:16px 12px}
 body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
 @media(max-width:760px){body[data-nx-page=owner] main{padding:0 12px 40px}body[data-nx-page=owner] #dashboard:not(.hidden){grid-template-columns:minmax(0,1fr);gap:12px}.owner-rail{position:static;padding:10px}.owner-rail .rail-label,.owner-rail>.button{display:none}body[data-nx-page=owner] .owner-rail .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0}.owner-rail .tabs button{justify-content:center;font-size:12px}body[data-nx-page=owner] #dashboard>.mg-control{grid-column:1}}
-</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style></head>
+</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style><style>.owner-overview #ownerDistribution{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.owner-meter>div{display:flex;justify-content:space-between;gap:8px}.owner-meter progress{width:100%;height:8px;accent-color:#5ee3c2}.owner-meter b{font-variant-numeric:tabular-nums}@media(max-width:760px){.owner-overview #ownerDistribution{grid-template-columns:1fr}}</style></head>
 <body data-nx-page="owner">
 
 <header>
@@ -192,6 +192,7 @@ body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
 
 
 
+    <section class="glass panel owner-overview"><h2>Структура аудитории</h2><p class="muted">По загруженной выборке аккаунтов (до 200)</p><div id="ownerDistribution"></div></section>
     <section id="usersTab" class="glass panel">
       <h2>Пользователи</h2>
       <div class="toolbar">
@@ -487,6 +488,8 @@ async function loadUsers(){
       u=>["owner","admin","moderator"].includes(u.role)
     ).length;
 
+    const groups=[["Владельцы",users.filter(u=>u.role==="owner").length],["Администраторы",users.filter(u=>u.role==="admin").length],["Модераторы",users.filter(u=>u.role==="moderator").length],["Пользователи",users.filter(u=>!["owner","admin","moderator"].includes(u.role)).length],["С бейджем",users.filter(u=>Number(u.verification||0)>0&&(!u.verificationExpiresAt||u.verificationExpiresAt.toMillis?.()>Date.now())).length]];
+    $("ownerDistribution").innerHTML=groups.map(([label,count])=>'<div class="owner-meter"><div><span>'+label+'</span><b>'+count+'</b></div><progress max="'+Math.max(1,users.length)+'" value="'+count+'" aria-label="'+label+'"></progress></div>').join("");
     renderUsers();
     loadedAt.set("users",Date.now());
   }catch(e){if(tabRequests.get("users")!==request||currentUser?.uid!==uid)return;
