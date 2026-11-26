@@ -12,6 +12,8 @@ let stopChats=null,stops=new Map(),counts=new Map(),session=0;
 
 function render(){
  const total=[...counts.values()].filter(Boolean).length;
+ if(!badge)return;
+ if(badge.textContent===(total>99?"99+":String(total))&&badge.hidden===!total)return;
  badge.hidden=!total;
  badge.textContent=total>99?"99+":String(total);
  badge.setAttribute("aria-label",total+" диалогов с непрочитанными сообщениями");
@@ -38,7 +40,7 @@ onAuthStateChanged(auth,user=>{
    if(!peer)continue;
    const id=chat.id;
    const stop=onSnapshot(query(collection(db,"chats",id,"messages"),orderBy("createdAt","desc"),limit(100)),messages=>{
-    if(token!==session)return;
+    if(token!==session||!stops.has(id))return;
     counts.set(id,messages.docs.some(d=>d.data().senderId===peer&&!d.data().readAt));
     render();
    },error=>console.warn("Inbox badge:",error.message));
