@@ -83,7 +83,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   <link rel="icon" href="./image/icon.png">
   <link rel="apple-touch-icon" href="./image/icon.png">
 
-  <style>html.nx-booting #nxLoadingScreen{display:flex!important;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:radial-gradient(circle at 50% 30%,#1d2951,#080c18 65%);color:#f2f5ff;font-family:system-ui,sans-serif;text-align:center;padding:24px}html.nx-booting{overflow:hidden}html.nx-booting #nxLoadingScreen~*{pointer-events:none}</style>
+  <style>html.nx-booting #nxLoadingScreen{display:flex!important;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:radial-gradient(ellipse at 50% 40%,#203b34,#101315 65%);color:#f2f5ff;font-family:system-ui,sans-serif;text-align:center;padding:24px}html.nx-booting{overflow:hidden}html.nx-booting #nxLoadingScreen~*{pointer-events:none}</style>
 <link rel="stylesheet" href="./style.css?v=3">
   <link rel="stylesheet" href="./nexora21.css?v=3">
   <link rel="stylesheet" href="./posts22.css?v=31">
@@ -451,6 +451,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .nx-owner-control-link{display:inline-flex;margin-top:12px;padding:9px 13px;border-radius:10px;background:#f1cf9030;color:#ffe6b4;border:1px solid #f1cf9066;text-decoration:none;font-size:12px;font-weight:800}
 .nx-owner-control-link:hover{background:#f1cf9050}
 @media(prefers-reduced-motion:no-preference){#profilePage.nx-owner-profile .nx-owner-badge{animation:nx-owner-badge-pulse 4s ease-in-out infinite}@keyframes nx-owner-badge-pulse{50%{box-shadow:0 0 25px #ffd18a88}}}
+</style>
+<style>
+html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#203b34,#101315 65%)!important;gap:16px}
+#nxLoadingScreen .nx-loader-mark{width:100px;height:100px;background:#192b26;border:1px solid #426b5e;box-shadow:none;animation:studioArrival .65s cubic-bezier(.2,.8,.2,1) both}
+#nxLoadingScreen .nx-loader-mark::before{inset:-12px;border:2px solid #34574c;border-top-color:#5ee3c2;border-right-color:#5ee3c2;border-radius:50%;animation:studioOrbit 1.4s linear infinite}
+#nxLoadingScreen .nx-loader-avatar{box-shadow:none}
+#nxLoadingScreen .nx-loader-track{height:5px;background:#293b36}
+#nxLoadingScreen .nx-loader-track span{background:linear-gradient(90deg,#2e8975,#8af5d8);animation:studioSweep 1.3s ease-in-out infinite}
+#nxLoadingScreen h2{animation:studioArrival .5s .12s both}
+#nxLoadingScreen p{color:#a3b3b1;animation:studioArrival .5s .24s both}
+#nxLoadRetry:not([hidden]){background:#5ee3c2;color:#10251f;border-color:transparent}
+@keyframes studioArrival{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes studioOrbit{to{transform:rotate(360deg)}}
+@keyframes studioSweep{from{transform:translateX(-110%)}to{transform:translateX(300%)}}
+@media(prefers-reduced-motion:reduce){#nxLoadingScreen *,#nxLoadingScreen *::before{animation:none!important}}
 </style>
 </head>
 
