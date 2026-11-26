@@ -1995,7 +1995,7 @@ onAuthStateChanged(auth,async user=>{
   },9000);
   // Opening a direct chat must not wait for the entire users directory.
   if(requestedChat && requestedChat!==user.uid) void openChat(requestedChat);
-  stopMessageAlerts=onSnapshot(collection(db,"users",user.uid,"notifications"),snap=>{
+  stopMessageAlerts=onSnapshot(query(collection(db,"users",user.uid,"notifications"),where("read","==",false)),snap=>{
     if(session!==authGeneration)return;
     const nextCounts=new Map(),nextIds=new Map();
     snap.forEach(item=>{
