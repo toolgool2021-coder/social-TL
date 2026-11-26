@@ -540,6 +540,7 @@ function applyExtraAuth(user){
   notificationRequest++;
   clearTimeout(notificationRefreshTimer);
   notificationItems=[];
+  notificationFilter="all";
   me=user?.emailVerified ? user : null;
   clearInterval(presenceTimer);
   unsubscribeNotifications?.();
@@ -561,7 +562,7 @@ function applyExtraAuth(user){
     query(collection(db,"users",user.uid,"notifications"),where("read","==",false)),
     snap=>{
       if(me?.uid!==user.uid)return;
-      const count=snap.docs.filter(d=>d.data().read!==true).length;
+      const count=snap.size;
       const button=document.querySelector(
         '[data-nx-panel="notifications"]'
       );
@@ -570,6 +571,13 @@ function applyExtraAuth(user){
         button.setAttribute("aria-label",button.title);
       }
       if(panel==="notifications"){
+        const changes=snap.docChanges();
+        if(changes.length&&changes.every(change=>change.type==="removed")){
+          const ids=new Set(changes.map(change=>change.doc.id));
+          notificationItems=notificationItems.map(item=>ids.has(item.id)?{id:item.id,data:()=>({...item.data(),read:true})}:item);
+          renderNotificationCenter();
+          return;
+        }
         clearTimeout(notificationRefreshTimer);
         const version=panelVersion;
         notificationRefreshTimer=setTimeout(()=>{
