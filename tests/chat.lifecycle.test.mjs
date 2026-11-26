@@ -48,6 +48,15 @@ function harness(){
     Date:class extends Date{static now(){return control.now;}},
     setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,clearInterval(){},
     initializeApp:()=>({}),getApps:()=>[],getApp:()=>({}),getAuth:()=>auth,getFirestore:()=>({}),
+    getDatabase:()=>({}),
+    rtRef:(_,path)=>({path}),
+    rtTimestamp:()=>control.now,
+    rtSet:async(ref,data)=>{writes.push({path:ref.path,data});},
+    onValue:(ref,callback,error)=>{
+      const listener={path:ref.path,callback,error,stopped:false};
+      listeners.push(listener);
+      return ()=>{listener.stopped=true;};
+    },
     onAuthStateChanged:(_,callback)=>{authCallback=callback;},
     serverTimestamp:()=>({serverTimestamp:true}),
     doc:(parent,...parts)=>({path:parts.length?parts.join("/"):parent.path+"/auto"}),
