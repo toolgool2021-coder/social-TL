@@ -122,7 +122,25 @@ label input,label select{margin-top:7px}
 <link rel="stylesheet" href="./nexora-unified.css?v=1">
 <link rel="stylesheet" href="./nexora-aurora.css?v=studio2">
   <script type="module" src="./suspension-screen.js?v=2"></script>
-</head>
+<style>
+body[data-nx-page=owner] main{max-width:1500px;padding:0 24px 60px}
+body[data-nx-page=owner] #dashboard:not(.hidden){display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start}
+.owner-rail{position:sticky;top:90px;background:#151a1c;border:1px solid #30383c;border-radius:16px;padding:16px}
+.rail-label{font-size:10px;letter-spacing:.14em;color:#a3b3b1;margin:12px 4px}
+body[data-nx-page=owner] .owner-rail .tabs{display:flex;flex-direction:column;align-items:stretch;background:none;border:0;padding:0;margin:0 0 24px}
+.owner-rail .tabs button{justify-content:flex-start;min-height:44px}
+.owner-rail .button{width:100%;font-size:12px}
+.owner-work{min-width:0}
+.owner-heading{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.owner-heading h2{font-size:26px;margin:0}
+.owner-heading small,.owner-heading span{color:#5ee3c2;letter-spacing:.1em;font-size:11px}
+body[data-nx-page=owner] .stats{margin:12px 0 24px}
+body[data-nx-page=owner] #dashboard>.mg-control{grid-column:2}
+body[data-nx-page=owner] .toolbar select{width:auto;max-width:100%}
+body[data-nx-page=owner] .item{padding:16px 12px}
+body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
+@media(max-width:760px){body[data-nx-page=owner] main{padding:0 12px 40px}body[data-nx-page=owner] #dashboard:not(.hidden){grid-template-columns:minmax(0,1fr);gap:12px}.owner-rail{position:static;padding:10px}.owner-rail .rail-label,.owner-rail>.button{display:none}body[data-nx-page=owner] .owner-rail .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0}.owner-rail .tabs button{justify-content:center;font-size:12px}body[data-nx-page=owner] #dashboard>.mg-control{grid-column:1}}
+</style></head>
 <body data-nx-page="owner">
 
 <header>
@@ -146,7 +164,12 @@ label input,label select{margin-top:7px}
     <p id="status">Проверка доступа...</p>
   </section>
 
-  <div id="dashboard" class="hidden">
+  <div id="dashboard" class="hidden"><aside class="owner-rail"><div class="rail-label">УПРАВЛЕНИЕ</div>    <nav class="tabs" aria-label="Разделы управления">
+      <button class="active" data-tab="users">Пользователи</button>
+      <button data-tab="reports">Жалобы</button>
+      <button data-tab="verification">Верификация</button>
+      <button data-tab="audit">Журнал</button>
+    </nav><div class="rail-label">СИСТЕМА</div><a class="button" href="./index.html">Вернуться в NEXORA</a></aside><div class="owner-work"><div class="owner-heading"><div><small>CONTROL CENTER</small><h2>Обзор платформы</h2></div><span>OWNER</span></div>
 
     <div class="stats">
       <div class="glass stat">
@@ -167,12 +190,7 @@ label input,label select{margin-top:7px}
       </div>
     </div>
 
-    <nav class="tabs" aria-label="Разделы управления">
-      <button class="active" data-tab="users">Пользователи</button>
-      <button data-tab="reports">Жалобы</button>
-      <button data-tab="verification">Верификация</button>
-      <button data-tab="audit">Журнал</button>
-    </nav>
+
 
     <section id="usersTab" class="glass panel">
       <h2>Пользователи</h2>
@@ -267,7 +285,7 @@ label input,label select{margin-top:7px}
         <button id="cancelEditor">Отмена</button>
       </div>
     </section>
-  </div>
+  </div></div>
 </main>
 
 <div id="toast" class="hidden" role="status" aria-live="polite"></div>
