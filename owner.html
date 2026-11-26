@@ -280,7 +280,7 @@ body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
         Роль Owner нельзя назначить через эту панель.
       </p>
 
-      </div><div class="owner-editor-section owner-sanctions"><h3>Ограничения аккаунта</h3><div class="form-grid"><label>Блокировка аккаунта<select id="banDuration"><option value="0">Нет блокировки / разблокировать</option><option value="1">1 час</option><option value="24">24 часа</option><option value="168">7 дней</option><option value="720">30 дней</option><option value="876000">Бессрочно (100 лет)</option></select></label><label>Причина блокировки<input id="banReason" maxlength="300" placeholder="Например: спам или нарушение правил"></label></div><p class="muted">Блокировка вступает в силу после публикации обновлённых правил Firestore. Блокировка Firebase Auth не удаляет аккаунт.</p><div class="actions"><button id="saveBan" class="danger">Применить блокировку</button></div></div>
+      </div><div class="owner-editor-section owner-sanctions"><h3>Ограничения аккаунта</h3><div class="form-grid"><label>Блокировка аккаунта<select id="banDuration"><option value="0">Нет блокировки / разблокировать</option><option value="1">1 час</option><option value="24">24 часа</option><option value="168">7 дней</option><option value="720">30 дней</option><option value="876000">Бессрочно (100 лет)</option></select></label><label>Причина блокировки<input id="banReason" maxlength="300" placeholder="Например: спам или нарушение правил"></label></div><p class="muted">Блокировка вступает в силу после публикации обновлённых правил Firestore. Блокировка Firebase Auth не удаляет аккаунт.</p><div class="actions"><button id="saveBan" class="danger">Применить блокировку</button></div><p id="currentSanction" class="muted"></p><button id="loadSanctions" type="button">История наказаний</button><div id="sanctionHistory" aria-live="polite"></div></div>
       <div class="actions">
         <button id="saveUser" class="primary">Сохранить</button>
         <button id="cancelEditor">Отмена</button>
@@ -581,6 +581,9 @@ $("usersList").onclick=event=>{
   $("banReason").disabled=protectedAccount;
   $("banDuration").value="0";
   $("banReason").value=user.bannedReason||"";
+  $("sanctionHistory").replaceChildren();
+  const until=user.bannedUntil?.toMillis?.()||0;
+  $("currentSanction").textContent=until>Date.now()?"Активная блокировка до "+date(user.bannedUntil):"Активной блокировки нет.";
 
   $("editor").classList.remove("hidden");
   $("editor").scrollIntoView({behavior:"smooth"});
@@ -588,6 +591,17 @@ $("usersList").onclick=event=>{
   if(protectedAccount)toast("Аккаунт владельца защищён.");
 };
 
+$("loadSanctions").onclick=async()=>{
+  if(!canManage()||!selected)return;
+  const target=selected,actor=currentUser.uid;
+  $("sanctionHistory").textContent="Загрузка...";
+  try{
+    const snap=await getDocs(query(collection(db,"auditLogs"),orderBy("createdAt","desc"),limit(100)));
+    if(!canManage()||currentUser.uid!==actor||selected!==target)return;
+    const items=snap.docs.map(d=>d.data()).filter(a=>a.targetId===target&&["user.ban","user.unban"].includes(a.action));
+    $("sanctionHistory").innerHTML='<p class="muted">По последним 100 операциям журнала</p>'+ (items.map(a=>`<div class="item"><div class="item-main"><strong>${a.action==="user.ban"?"Блокировка":"Разблокировка"}</strong><p>${esc(a.details?.reason||"Причина не указана")}</p><p class="muted">${esc(date(a.createdAt))} · ${esc(a.actorId||"")}</p><p class="muted">Срок: ${esc(a.details?.hours||0)} ч.</p></div></div>`).join("")||'<p class="muted">В этой выборке наказаний нет.</p>');
+  }catch(e){if(canManage()&&currentUser.uid===actor&&selected===target)$("sanctionHistory").textContent="Ошибка: "+e.message}
+};
 $("saveBan").onclick=()=>execute(async()=>{
  if(!canManage()||!selected||isOwnerUid(selected))return;
  const user=users.find(u=>u.uid===selected);
