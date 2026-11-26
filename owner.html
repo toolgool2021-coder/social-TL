@@ -858,8 +858,25 @@ function renderOwnerPosts(){
   const term=$("ownerPostSearch").value.trim().toLowerCase();
   const items=ownerPosts.filter(p=>[p.text,p.uid,p.id].some(v=>String(v||"").toLowerCase().includes(term)));
   $("ownerPostCount").textContent="Показано "+items.length+" из "+ownerPosts.length+" последних публикаций";
-  $("ownerPosts").innerHTML=items.map(p=>`<article class="item"><div class="item-main"><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.text||"Без текста")}</p><p class="uid">Автор: ${esc(p.uid||"")}</p><p class="uid">ID: ${esc(p.id)}</p><p class="muted">${esc(date(p.createdAt))}</p><a href="./index.html?profile=${encodeURIComponent(p.uid||"")}">Профиль автора</a></div></article>`).join("")||'<p class="muted">Публикаций нет.</p>';
+  $("ownerPosts").innerHTML=items.map(p=>`<article class="item"><div class="item-main"><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.text||"Без текста")}</p><p class="uid">Автор: ${esc(p.uid||"")}</p><p class="uid">ID: ${esc(p.id)}</p><p class="muted">${esc(date(p.createdAt))}</p><a href="./index.html?profile=${encodeURIComponent(p.uid||"")}">Профиль автора</a></div><div class="actions"><button class="danger" data-owner-post-delete="${esc(p.id)}">Удалить</button></div></article>`).join("")||'<p class="muted">Публикаций нет.</p>';
 }
+$("ownerPosts").onclick=event=>execute(async()=>{
+  const button=event.target.closest("[data-owner-post-delete]");
+  if(!button||!canManage())return;
+  const id=button.dataset.ownerPostDelete;
+  const uid=currentUser.uid;
+  const reason=prompt("Причина удаления публикации (для журнала действий):");
+  if(reason===null)return;
+  if(!reason.trim()||reason.trim().length>300)throw Error("Укажи причину от 1 до 300 символов.");
+  if(!confirm("Удалить публикацию без возможности восстановления?"))return;
+  const ref=doc(db,"posts",id),snap=await getDoc(ref);
+  if(!canManage()||currentUser.uid!==uid)return;
+  if(!snap.exists())throw Error("Публикация уже удалена.");
+  await commit("post.remove",id,{authorId:snap.data().uid||"",reason:reason.trim()},batch=>batch.delete(ref));
+  if(!canManage()||currentUser.uid!==uid)return;
+  ownerPosts=ownerPosts.filter(p=>p.id!==id);
+  renderOwnerPosts();toast("Публикация удалена.");
+});
 $("reloadPosts").onclick=loadOwnerPosts;
 $("ownerPostSearch").oninput=renderOwnerPosts;
 async function loadAudit(){
