@@ -1011,7 +1011,7 @@ function postHTML(post) {
     :(post.imageUrl?[post.imageUrl]:[]);
   const images=imageList.map(safeStoredImage).filter(Boolean);
   const imageMarkup=images.length?`<div class="nx-post-gallery" style="display:grid;grid-template-columns:repeat(${images.length===1?1:2},minmax(0,1fr));gap:8px;margin:12px 0">
-    ${images.map((url,i)=>`<img class="postimage" src="${esc(url)}" alt="Изображение публикации ${i+1}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:12px" onerror="this.hidden=true">`).join("")}
+    ${images.map((url,i)=>`<img class="postimage" src="${esc(url)}" alt="Изображение публикации ${i+1}" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:12px" onerror="this.hidden=true">`).join("")}
   </div>`:"";
 
   return `
