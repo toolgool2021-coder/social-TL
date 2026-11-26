@@ -239,7 +239,7 @@ body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
       <p class="muted">
         Здесь отображаются операции, записанные этой панелью.
       </p>
-      <div class="toolbar"><input id="auditSearch" placeholder="Поиск по действию, объекту или исполнителю"><button id="auditReset" type="button">Сбросить</button></div><p id="auditCount" class="muted"></p><div id="auditList"></div>
+      <div class="toolbar"><input id="auditSearch" placeholder="Поиск по действию, объекту или исполнителю"><button id="auditReset" type="button">Сбросить</button><select id="auditCategory" aria-label="Категория действия"><option value="">Все действия</option></select><button id="auditExport" type="button">Экспорт JSON</button></div><p id="auditCount" class="muted"></p><div id="auditList"></div>
     </section>
 
     <section id="editor" class="glass panel hidden">
@@ -858,10 +858,17 @@ async function loadAudit(){
   }catch(e){if(tabRequests.get("audit")!==request||currentUser?.uid!==uid)return;$("auditList").textContent="Ошибка: "+e.message;}
   finally{if(tabRequests.get("audit")===request)tabRequests.delete("audit");}
 }
+function filteredAudit(){
+  const term=$("auditSearch").value.trim().toLowerCase(),category=$("auditCategory").value;
+  return auditItems.filter(item=>(!category||String(item.action||"").split(".")[0]===category)&&[item.action,item.targetId,item.actorId].some(value=>String(value||"").toLowerCase().includes(term)));
+}
 function renderAudit(){
   if(!canManage())return;
-  const term=$("auditSearch").value.trim().toLowerCase();
-  const items=auditItems.filter(item=>[item.action,item.targetId,item.actorId].some(value=>String(value||"").toLowerCase().includes(term)));
+  const select=$("auditCategory"),previous=select.value;
+  const categories=[...new Set(auditItems.map(item=>String(item.action||"").split(".")[0]).filter(Boolean))].sort();
+  select.replaceChildren(new Option("Все действия",""),...categories.map(c=>new Option(c,c)));
+  select.value=categories.includes(previous)?previous:"";
+  const items=filteredAudit();
   $("auditCount").textContent=`Показано ${items.length} из ${auditItems.length} последних записей`;
   $("auditList").innerHTML=items.map(item=>`
       <div class="item audit-event">
@@ -881,7 +888,14 @@ function renderAudit(){
     `).join("")||'<p class="muted">Записей нет.</p>';
 }
 $("auditSearch").oninput=renderAudit;
-$("auditReset").onclick=()=>{$("auditSearch").value="";renderAudit()};
+$("auditCategory").onchange=renderAudit;
+$("auditReset").onclick=()=>{$("auditSearch").value="";$("auditCategory").value="";renderAudit()};
+$("auditExport").onclick=()=>{
+  if(!canManage())return;
+  const rows=filteredAudit().map(item=>({...item,createdAt:item.createdAt?.toDate?.().toISOString()||null}));
+  const url=URL.createObjectURL(new Blob([JSON.stringify(rows,null,2)],{type:"application/json"}));
+  const link=document.createElement("a");link.href=url;link.download="nexora-audit-"+new Date().toISOString().slice(0,10)+".json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
 $("reloadAudit").onclick=loadAudit;
 window.addEventListener("nexora:email-verified", () => location.reload());
 </script>
