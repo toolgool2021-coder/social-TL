@@ -122,3 +122,36 @@ body[data-nx-page=owner] .stat{border-top:3px solid #5ee3c2!important}
  body[data-nx-page=chats] .chathead .peerinfo{flex-basis:45%}
  body[data-nx-page=groups] #newBtn{margin-inline-start:0}
 }
+
+/* Studio detail pass */
+body[data-nx-page=chats] .messages{background:#101719!important;padding-inline:clamp(12px,3vw,36px)}
+body[data-nx-page=chats] .bubble:not(.sticker){background:#242d30!important;border:1px solid #354246;border-radius:16px 16px 16px 5px!important;color:#edf4f2}
+body[data-nx-page=chats] .mine .bubble:not(.sticker){background:#244b41!important;border-color:#39685b;border-radius:16px 16px 5px 16px!important}
+body[data-nx-page=chats] .person{border-radius:10px;margin:3px 6px}
+body[data-nx-page=chats] .composer{background:#20292b!important;border-color:#39464a!important;border-radius:18px!important}
+body[data-nx-page=chats] .composer textarea{border:0!important;background:transparent!important;box-shadow:none!important}
+body[data-nx-page=chats] .composer:focus-within{border-color:#5ee3c2!important}
+body #nx21notice{background:#253b36!important;border-color:#4b796c!important;backdrop-filter:none}
+body .nx21actions button{background:#242e30;border-color:#3b4a4b;color:#e3efeb}
+body .nx21actions button:hover{background:#30483f;border-color:#5ee3c2}
+body .auth{max-width:420px;border-top:3px solid #5ee3c2!important}
+body .auth .heroicon{box-shadow:none!important}
+body .auth h1{font-size:clamp(25px,5vw,34px)}
+body #postInput{min-height:90px}
+body #postForm .between{gap:10px}
+body .nx-official-links{display:flex;flex-wrap:wrap;gap:8px}
+body .nx-official-link{flex:1 1 120px}
+body[data-nx-page=explore] #refresh{margin-bottom:12px}
+body[data-nx-page=owner] .stats{gap:10px}
+body[data-nx-page=owner] .stat b{color:#a0f5df}
+body[data-nx-page=groups] #groupSearch{margin-block:8px}
+body button:focus-visible,body a:focus-visible{outline-color:#5ee3c2}
+@media(max-width:760px){
+ body #nx21notice{bottom:calc(145px + env(safe-area-inset-bottom))}
+ body .nx21actions button{min-height:40px}
+ body[data-nx-page=chats] .chathead .iconbtn{min-height:40px;min-width:40px}
+ body[data-nx-page=owner] .toolbar>*{max-width:100%}
+}
+@media(prefers-reduced-motion:no-preference){
+ body .nav button,body .nav a,body .tabs button{transition:background-color .16s ease,color .16s ease,border-color .16s ease!important}
+}
