@@ -721,7 +721,7 @@ function avatar(user){
   const url=safeImage(user?.avatarUrl);
   return url
     ?`<img src="${esc(url)}" alt=""
-       loading="lazy" referrerpolicy="no-referrer">`
+       loading="lazy" decoding="async" referrerpolicy="no-referrer">`
     :esc((user?.name||"N").slice(0,2).toUpperCase());
 }
 
@@ -730,7 +730,7 @@ function badge(user){
   return v>=1&&v<=5
     ?`<img class="badge"
        src="./image/Verified_${v}.png"
-       alt="Верификация">`
+       alt="Верификация" loading="lazy" decoding="async">`
     :"";
 }
 
@@ -1906,7 +1906,7 @@ function renderStickers(){
       return `
         <button data-sticker="${esc(key)}">
           <img src="${esc(stickerSource(key))}"
-            alt="Стикер">
+            alt="Стикер" loading="lazy" decoding="async">
         </button>`;
     }).join("")
     :'<div style="color:#93a1bc">Стикеры ещё не загружены</div>';
