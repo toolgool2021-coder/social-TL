@@ -48,6 +48,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD9prfvOQGMeniL3U8WD2HeeZ6NNArY8J8",
   authDomain: "toolchat-bfac8.firebaseapp.com",
   projectId: "toolchat-bfac8",
+  databaseURL: "https://toolchat-bfac8-default-rtdb.europe-west1.firebasedatabase.app",
   storageBucket: "toolchat-bfac8.firebasestorage.app",
   messagingSenderId: "52396840735",
   appId: "1:52396840735:web:a608b9c037c8481f2dc22a",
