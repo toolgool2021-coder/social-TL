@@ -600,6 +600,7 @@ setTimeout(nexoraShowBootFailure,12000);
 import {initializeApp,getApps,getApp} from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
+import {getDatabase,ref as rtRef,onValue,set as rtSet,serverTimestamp as rtTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 import {getAuth,onAuthStateChanged} from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
@@ -624,6 +625,7 @@ const cfg={
 const app=getApps().length ? getApp() : initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
+const realtime=getDatabase(app,"https://toolchat-bfac8-default-rtdb.europe-west1.firebasedatabase.app");
 window.nexoraChatBooted=true;
 const $=id=>document.getElementById(id);
 
@@ -1129,11 +1131,11 @@ async function openChat(uid){
     updateStatus();
     statusTimer=setInterval(updateStatus,1000);
 
-    stopPresence=onSnapshot(
-      doc(db,"presence",uid),
+    stopPresence=onValue(
+    rtRef(realtime,"presence/"+uid),
       snap=>{
         if(g!==generation)return;
-        const last=snap.data()?.lastSeen?.toMillis?.()||0;
+        const last=Number(snap.val()?.lastSeen)||0;
         peerLastSeen=last;
         updateStatus();
       },
@@ -1889,9 +1891,7 @@ async function heartbeat(){
   const request={};
   heartbeatPending=request;
   try{
-    await setDoc(doc(db,"presence",uid),{
-      uid,lastSeen:serverTimestamp()
-    });
+    await rtSet(rtRef(realtime,"presence/"+uid),{lastSeen:rtTimestamp()});
     if(heartbeatPending===request)heartbeatAt=Date.now();
   }catch(err){console.warn("Presence:",err.message);}
   finally{if(heartbeatPending===request)heartbeatPending=null;}
