@@ -5,7 +5,7 @@
  * Firebase Admin SDK bypasses Firestore Rules; never accept arbitrary client
  * supplied recipient IDs or notification text as authoritative.
  */
-const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {onDocumentCreated, onDocumentDeleted} = require("firebase-functions/v2/firestore");
 const {createHash} = require("node:crypto");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
@@ -137,4 +137,13 @@ exports.onNewVerificationRequest = onDocumentCreated({
     notificationId("verification",event),
     "Поступила новая заявка на верификацию.",
     "verification",event.params.uid);
+});
+
+exports.onPostDeleted = onDocumentDeleted({
+  document:"posts/{postId}",region:REGION,retry:true
+},async event=>{
+  const ref=db.collection("posts").doc(event.params.postId);
+  if((await ref.get()).exists)return;
+  await db.recursiveDelete(ref.collection("comments"));
+  await db.recursiveDelete(ref.collection("likes"));
 });
