@@ -1450,9 +1450,9 @@ function renderPostList(container, html) {
   const selection = focused && typeof focused.selectionStart === "number"
     ? [focused.selectionStart, focused.selectionEnd] : null;
   container.innerHTML = html;
+  const placeholders = new Map([...container.querySelectorAll("[data-comments-for]")].map(item => [item.dataset.commentsFor, item]));
   for (const box of open) {
-    const placeholder = [...container.querySelectorAll("[data-comments-for]")]
-      .find(item => item.dataset.commentsFor === box.dataset.commentsFor);
+    const placeholder = placeholders.get(box.dataset.commentsFor);
     if (placeholder) placeholder.replaceWith(box);
     else closeComments(box);
   }
