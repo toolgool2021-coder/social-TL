@@ -1615,15 +1615,19 @@ $("editSave").onclick=async()=>{
 
 $("cancelReply").onclick=clearReply;
 
+const pendingAlertWrites=new Set();
 async function acknowledgeChatAlerts(cid){
  if(!me||!cid)return;
- const alerts=pendingMessageAlerts.get(cid)||[];
+ const uid=me.uid;
+ const alerts=(pendingMessageAlerts.get(cid)||[]).filter(id=>!pendingAlertWrites.has(uid+":"+id)).slice(0,400);
  if(!alerts.length)return;
  const batch=writeBatch(db);
- for(const id of alerts.slice(0,400)){
-   batch.update(doc(db,"users",me.uid,"notifications",id),{read:true});
+ for(const id of alerts){
+   pendingAlertWrites.add(uid+":"+id);
+   batch.update(doc(db,"users",uid,"notifications",id),{read:true});
  }
  try{await batch.commit()}catch(err){console.warn("Notification receipts:",err.message)}
+ finally{for(const id of alerts)pendingAlertWrites.delete(uid+":"+id)}
 }
 async function markRead(cid,peer,g=generation){
   if(!me||g!==generation||activeUid!==peer||cid!==activeChat()||
