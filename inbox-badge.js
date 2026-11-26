@@ -9,6 +9,8 @@ const link=document.querySelector('[data-nx-inbox-link]');
 const badge=document.getElementById("nxInboxBadge");
 const hint=document.getElementById("nxInboxHint");
 let stopChats=null,stops=new Map(),counts=new Map(),session=0;
+let renderQueued=false;
+function scheduleRender(){if(renderQueued)return;renderQueued=true;requestAnimationFrame(()=>{renderQueued=false;render()})}
 
 function render(){
  const total=[...counts.values()].filter(Boolean).length;
@@ -42,10 +44,10 @@ onAuthStateChanged(auth,user=>{
    const stop=onSnapshot(query(collection(db,"chats",id,"messages"),orderBy("createdAt","desc"),limit(100)),messages=>{
     if(token!==session||!stops.has(id))return;
     counts.set(id,messages.docs.some(d=>d.data().senderId===peer&&!d.data().readAt));
-    render();
+    scheduleRender();
    },error=>console.warn("Inbox badge:",error.message));
    stops.set(id,stop);
   }
-  render();
+  scheduleRender();
  },error=>console.warn("Inbox list:",error.message));
 });
