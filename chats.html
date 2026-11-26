@@ -1874,14 +1874,22 @@ document.addEventListener("visibilitychange",()=>{
 
 window.addEventListener("pagehide",()=>setTyping(false));
 
+let heartbeatUid=null,heartbeatAt=0,heartbeatPending=null;
 async function heartbeat(){
   if(!me||document.visibilityState==="hidden")return;
   const uid=me.uid;
+  if(heartbeatUid===uid&&(heartbeatPending||Date.now()-heartbeatAt<30000))return;
+  if(heartbeatUid!==uid)heartbeatAt=0;
+  heartbeatUid=uid;
+  const request={};
+  heartbeatPending=request;
   try{
     await setDoc(doc(db,"presence",uid),{
       uid,lastSeen:serverTimestamp()
     });
+    if(heartbeatPending===request)heartbeatAt=Date.now();
   }catch(err){console.warn("Presence:",err.message);}
+  finally{if(heartbeatPending===request)heartbeatPending=null;}
 }
 
 document.addEventListener("keydown",event=>{
