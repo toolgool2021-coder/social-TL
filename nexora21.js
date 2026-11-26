@@ -144,20 +144,22 @@ async function loadSaved(version=panelVersion){
   }
 }
 
+function notificationPrefs(){try{return JSON.parse(localStorage.getItem("nx-notification-view:"+me.uid)||"{}")||{}}catch{return {}}}
 function renderNotificationCenter(){
  if(panel!=="notifications")return;
  const body=$("nx21body");
  const uid=me.uid;
  const version=panelVersion;
  const unread=notificationItems.filter(item=>item.data().read!==true);
- const visible=notificationFilter==="unread"?unread:notificationFilter==="all"?notificationItems:notificationItems.filter(item=>item.data().kind===notificationFilter);
+ const prefs=notificationPrefs();
+ const visible=(notificationFilter==="unread"?unread:notificationFilter==="all"?notificationItems:notificationItems.filter(item=>item.data().kind===notificationFilter)).filter(item=>!prefs.hideRead||item.data().read!==true);
  body.innerHTML=`
  <div class="nx21actions" style="margin-bottom:16px">
    <button type="button" data-nx-filter="all" aria-pressed="${notificationFilter==="all"}">Все (${notificationItems.length})</button>
    <button type="button" data-nx-filter="unread" aria-pressed="${notificationFilter==="unread"}">Непрочитанные (${unread.length})</button>
    <button type="button" data-nx-read-all ${unread.length?"":"disabled"}>✓ Прочитать все загруженные</button>
    ${[["message","Сообщения"],["comment","Комментарии"],["follow","Подписки"],["like","Лайки"]].map(([kind,label])=>`<button type="button" data-nx-filter="${kind}" aria-pressed="${notificationFilter===kind}">${label}</button>`).join("")}
- </div>`+visible.map(item=>{
+ </div><label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="nxHideRead" ${prefs.hideRead?"checked":""}> Скрывать прочитанные</label><small class="muted">Настройка действует только в этом браузере.</small>`+visible.map(item=>{
    const n=item.data();
    const kind={message:"✉",comment:"💬",follow:"♙",like:"♥"}[n.kind]||"✦";
    const link=n.kind==="message"&&typeof n.actorId==="string"
@@ -170,6 +172,7 @@ function renderNotificationCenter(){
      </div>
    </article>`;
  }).join("")+(visible.length?"":'<p class="muted">Здесь пока нет уведомлений.</p>');
+ $("nxHideRead").onchange=()=>{try{localStorage.setItem("nx-notification-view:"+uid,JSON.stringify({hideRead:$("nxHideRead").checked}))}catch{notice("Не удалось сохранить настройку.");return}renderNotificationCenter()};
 }
 let notificationRequest=0;
 let notificationRefreshTimer=null;
