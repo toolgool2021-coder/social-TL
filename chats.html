@@ -918,8 +918,9 @@ function syncUnreadMessageListeners(){
     if(!peer)continue;
     const cid=chat.id,session=authGeneration;
     const stop=onSnapshot(query(collection(db,"chats",cid,"messages"),orderBy("createdAt","desc"),limit(100)),snap=>{
-      if(session!==authGeneration)return;
+      if(session!==authGeneration||!stopUnreadMessages.has(cid))return;
       const unread=snap.docs.some(d=>d.data().senderId===peer&&!d.data().readAt);
+      if(unreadMessages.has(cid)&&unreadMessages.get(cid)===unread)return;
       unreadMessages.set(cid,unread);
       renderChats();
     },err=>console.warn("Unread messages:",cid,err.message));
@@ -930,7 +931,7 @@ function syncUnreadMessageListeners(){
 function renderChats(){
   if(!me)return;
   $("showArchive").textContent=archiveVisible?"Диалоги":"Архив";
-  $("chats").innerHTML=chatRecords.filter(item=>{
+  const markup=chatRecords.filter(item=>{
     const pref=chatPreferences.get(item.id)||{};
     if(Boolean(pref.archived)!==archiveVisible)return false;
     const cutoff=hiddenChats.get(item.id)?.toMillis?.()||0;
@@ -951,6 +952,12 @@ function renderChats(){
       :"";
   }).join("")||
     (archiveVisible?'<div class="empty">Архив пуст</div>':'<div class="empty">Диалогов пока нет</div>');
+  const list=$("chats");
+  if(list.innerHTML!==markup){
+    const scroll=list.scrollTop;
+    list.innerHTML=markup;
+    list.scrollTop=scroll;
+  }
 }
 
 function updateStatus(){
