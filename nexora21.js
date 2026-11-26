@@ -185,6 +185,8 @@ async function loadNotifications(version=panelVersion){
 }
 async function markAllNotifications(){
  if(!me)return;
+ const uid=me.uid;
+ const version=panelVersion;
  const unread=notificationItems.filter(item=>item.data().read!==true);
  if(!unread.length)return;
  const batch=writeBatch(db);
