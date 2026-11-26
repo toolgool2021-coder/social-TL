@@ -468,7 +468,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 @media(prefers-reduced-motion:reduce){#nxLoadingScreen *,#nxLoadingScreen *::before{animation:none!important}}
 </style>
 
-<style>.studio-icon{width:20px;height:20px;flex:none} @media(max-width:760px){body #studioNav .studio-icon{width:22px;height:22px}body #studioNav>button,body #studioNav>a{font-size:10px}body #studioNav [data-page=profile]>span{font-size:10px}}</style><style>@media(max-width:760px){body .sidebar #studioNav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:none;grid-auto-flow:row;grid-auto-columns:auto;overflow:visible;gap:4px}body .layout>.sidebar{position:static!important;order:-1;width:100%;border-radius:14px!important}body #studioNav>button,body #studioNav>a{min-height:48px;flex-direction:column;gap:4px;font-size:11px;order:0!important}body .layout{padding-bottom:24px}body #nx21notice{bottom:24px}}</style></head>
+<style>.studio-icon{width:20px;height:20px;flex:none} @media(max-width:760px){body #studioNav .studio-icon{width:22px;height:22px}body #studioNav>button,body #studioNav>a{font-size:10px}body #studioNav [data-page=profile]>span{font-size:10px}}</style><style>@media(max-width:760px){body .sidebar #studioNav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:none;grid-auto-flow:row;grid-auto-columns:auto;overflow:visible;gap:4px}body .layout>.sidebar{position:static!important;order:-1;width:100%;border-radius:14px!important}body #studioNav>button,body #studioNav>a{min-height:48px;flex-direction:column;gap:4px;font-size:11px;order:0!important}body .layout{padding-bottom:24px}body #nx21notice{bottom:24px}}</style><style>.studio-feed-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px}.studio-feed-heading h2{margin:4px 0;font-size:25px}.studio-feed-heading small{color:#5ee3c2;letter-spacing:.12em;font-size:10px}.studio-feed-heading a{font-size:12px}.studio-media{border:1px solid #39464a;border-radius:12px;padding:12px}.studio-media summary{cursor:pointer;color:#a0f5df}.studio-media[open] summary{margin-bottom:12px}.studio-media input,.studio-media textarea,.studio-media select{margin:8px 0}.studio-media label{display:block;margin-top:8px}</style></head>
 
 <body>
 
@@ -608,30 +608,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 </section>
       <!-- FEED -->
       <section id="feedPage">
-<div class="glass panel nx-official" aria-label="Официальные ресурсы NEXORA">
-<img class="nx-official-cover" src="./image/BackFon.png" alt="Баннер NEXORA" loading="lazy" decoding="async">
-<div class="nx-official-body"><h2 class="nx-official-title">Официальные ресурсы</h2>
-<nav class="nx-official-links" aria-label="Ссылки NEXORA">
-<a class="nx-official-link" href="https://t.me/toolgool" target="_blank" rel="noopener noreferrer" aria-label="Telegram разработчика"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m21 3-7.5 18-4-7-7-4L21 3Z"/><path d="m9.5 14 5-5"/></svg></span><span>Мой Telegram</span></a>
-<a class="nx-official-link" href="https://t.me/Nexora_TL" target="_blank" rel="noopener noreferrer" aria-label="Telegram-канал NEXORA"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m3 11 18-8-7 18-4-7-7-3Z"/><path d="m10 14 5-5"/></svg></span><span>ТГ-канал</span></a>
-<a class="nx-official-link" href="https://t.me/NexoraTL_bot" target="_blank" rel="noopener noreferrer" aria-label="Бот NEXORA"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M12 3v4M9 3h6M8 13h.01M16 13h.01M9 17h6"/></svg></span><span>Бот</span></a>
-<a class="nx-official-link" href="https://tlnexora-ai.duckdns.org/" target="_blank" rel="noopener noreferrer" aria-label="NEXORA AI"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></svg></span><span>NEXORA AI</span></a>
-</nav></div></div>
-        <div class="glass panel nx-welcome">
-          <div class="nx-eyebrow">
-            <span class="nx-version-dot"></span>
-            NEXORA SOCIAL
-          </div>
-
-          <h2>Твоё пространство.</h2>
-
-          <p class="muted">
-            Делись мыслями, находи интересных людей
-            и оставайся на связи. Здесь начинается
-            твоя история.
-          </p>
-        </div>
-
+<div class="studio-feed-heading"><div><small>NEXORA SOCIAL</small><h2>Лента публикаций</h2></div><a href="./explore.html">Рекомендации →</a></div>
         <div class="glass panel" style="padding:14px 18px">
           <nav class="nx-stream-switch" aria-label="Выбор ленты публикаций">
             <button type="button" data-stream="official" class="active" aria-pressed="true">✦ Главная</button>
@@ -659,7 +636,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
               aria-label="Текст публикации"
             ></textarea>
 
-            <label class="fieldlabel" for="postImage">
+            <details class="studio-media"><summary>Добавить изображения и настроить расположение</summary><label class="fieldlabel" for="postImage">
               Изображение
             </label>
 
@@ -683,7 +660,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
             </select>
 
             <div id="postImagePreview" aria-live="polite" style="display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div>
-            <div class="between">
+            </details><div class="between">
               <small class="muted">
                 <span id="postCount">0</span> / 1000
               </small>
@@ -710,6 +687,16 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 
         <!-- FIREBASE POSTS -->
         <div id="feedList" aria-live="polite"></div>
+<div class="glass panel nx-official" aria-label="Официальные ресурсы NEXORA">
+<img class="nx-official-cover" src="./image/BackFon.png" alt="Баннер NEXORA" loading="lazy" decoding="async">
+<div class="nx-official-body"><h2 class="nx-official-title">Официальные ресурсы</h2>
+<nav class="nx-official-links" aria-label="Ссылки NEXORA">
+<a class="nx-official-link" href="https://t.me/toolgool" target="_blank" rel="noopener noreferrer" aria-label="Telegram разработчика"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m21 3-7.5 18-4-7-7-4L21 3Z"/><path d="m9.5 14 5-5"/></svg></span><span>Мой Telegram</span></a>
+<a class="nx-official-link" href="https://t.me/Nexora_TL" target="_blank" rel="noopener noreferrer" aria-label="Telegram-канал NEXORA"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m3 11 18-8-7 18-4-7-7-3Z"/><path d="m10 14 5-5"/></svg></span><span>ТГ-канал</span></a>
+<a class="nx-official-link" href="https://t.me/NexoraTL_bot" target="_blank" rel="noopener noreferrer" aria-label="Бот NEXORA"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M12 3v4M9 3h6M8 13h.01M16 13h.01M9 17h6"/></svg></span><span>Бот</span></a>
+<a class="nx-official-link" href="https://tlnexora-ai.duckdns.org/" target="_blank" rel="noopener noreferrer" aria-label="NEXORA AI"><span class="nx-official-icon"><svg viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></svg></span><span>NEXORA AI</span></a>
+</nav></div></div>
+
       </section>
 
       <!-- SEARCH -->
