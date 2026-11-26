@@ -165,16 +165,20 @@ function renderNotificationCenter(){
    </article>`;
  }).join("")+(visible.length?"":'<p class="muted">Здесь пока нет уведомлений.</p>');
 }
+let notificationRequest=0;
 async function loadNotifications(version=panelVersion){
+ if(!me)return;
+ const uid=me.uid;
+ const request=++notificationRequest;
  const body=$("nx21body");
  try{
-   const snap=await getDocs(query(collection(db,"users",me.uid,"notifications"),orderBy("createdAt","desc"),limit(100)));
-   if(panel!=="notifications"||version!==panelVersion)return;
+   const snap=await getDocs(query(collection(db,"users",uid,"notifications"),orderBy("createdAt","desc"),limit(100)));
+   if(panel!=="notifications"||version!==panelVersion||me?.uid!==uid||request!==notificationRequest)return;
    notificationItems=snap.docs.sort((a,b)=>
      (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
    renderNotificationCenter();
  }catch(e){
-   if(panel==="notifications"&&version===panelVersion)body.textContent=errorMessage(e);
+   if(panel==="notifications"&&version===panelVersion&&me?.uid===uid&&request===notificationRequest)body.textContent=errorMessage(e);
  }
 }
 async function markAllNotifications(){
@@ -519,6 +523,8 @@ async function heartbeat(){
 }
 
 function applyExtraAuth(user){
+  notificationRequest++;
+  notificationItems=[];
   me=user?.emailVerified ? user : null;
   clearInterval(presenceTimer);
   unsubscribeNotifications?.();
