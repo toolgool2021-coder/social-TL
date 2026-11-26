@@ -309,6 +309,7 @@ let ownerVerified=false;
 let users=[];
 let auditItems=[];
 const loadedAt=new Map();
+const tabRequests=new Map();
 const fresh=tab=>Date.now()-(loadedAt.get(tab)||0)<30000;
 let selected=null;
 let toastTimer=null;
@@ -414,6 +415,7 @@ document.querySelectorAll("[data-tab]").forEach(button=>{
 
 onAuthStateChanged(auth,async user=>{
   loadedAt.clear();
+  tabRequests.clear();
   currentUser=user;
   ownerVerified=false;
   $("dashboard").classList.add("hidden");
@@ -453,10 +455,12 @@ async function loadUsers(){
 
   if(!canManage())return;
   const uid=currentUser.uid;
+  const request={};
+  tabRequests.set("users",request);
   loadedAt.delete("users");
   try{
     const snap=await getDocs(query(collection(db,"users"),limit(200)));
-    if(!canManage()||currentUser.uid!==uid)return;
+    if(!canManage()||currentUser.uid!==uid||tabRequests.get("users")!==request)return;
     users=snap.docs.map(d=>({uid:d.id,...d.data()}));
 
     $("countUsers").textContent=users.length;
@@ -469,7 +473,7 @@ async function loadUsers(){
 
     renderUsers();
     loadedAt.set("users",Date.now());
-  }catch(e){
+  }catch(e){if(tabRequests.get("users")!==request||currentUser?.uid!==uid)return;
     $("usersList").textContent="Ошибка: "+e.message;
   }
 }
@@ -625,10 +629,12 @@ async function loadReports(){
   $("reportsList").textContent="Загрузка...";
   if(!canManage())return;
   const uid=currentUser.uid;
+  const request={};
+  tabRequests.set("reports",request);
   loadedAt.delete("reports");
   try{
     const snap=await getDocs(query(collection(db,"reports"),limit(100)));
-    if(!canManage()||currentUser.uid!==uid)return;
+    if(!canManage()||currentUser.uid!==uid||tabRequests.get("reports")!==request)return;
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
@@ -657,7 +663,7 @@ async function loadReports(){
       </div>
     `).join("")||'<p class="muted">Жалоб нет.</p>';
     loadedAt.set("reports",Date.now());
-  }catch(e){
+  }catch(e){if(tabRequests.get("reports")!==request||currentUser?.uid!==uid)return;
     $("reportsList").textContent="Ошибка: "+e.message;
   }
 }
@@ -715,12 +721,14 @@ async function loadVerification(){
   $("verificationList").textContent="Загрузка...";
   if(!canManage())return;
   const uid=currentUser.uid;
+  const request={};
+  tabRequests.set("verification",request);
   loadedAt.delete("verification");
   try{
     const snap=await getDocs(query(
       collection(db,"verificationRequests"),limit(100)
     ));
-    if(!canManage()||currentUser.uid!==uid)return;
+    if(!canManage()||currentUser.uid!==uid||tabRequests.get("verification")!==request)return;
 
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
@@ -746,7 +754,7 @@ async function loadVerification(){
       </div>
     `).join("")||'<p class="muted">Заявок нет.</p>';
     loadedAt.set("verification",Date.now());
-  }catch(e){
+  }catch(e){if(tabRequests.get("verification")!==request||currentUser?.uid!==uid)return;
     $("verificationList").textContent="Ошибка: "+e.message;
   }
 }
@@ -808,19 +816,21 @@ async function loadAudit(){
   $("auditList").textContent="Загрузка...";
   if(!canManage())return;
   const uid=currentUser.uid;
+  const request={};
+  tabRequests.set("audit",request);
   loadedAt.delete("audit");
   try{
     const snap=await getDocs(query(
       collection(db,"auditLogs"),orderBy("createdAt","desc"),limit(100)
     ));
-    if(!canManage()||currentUser.uid!==uid)return;
+    if(!canManage()||currentUser.uid!==uid||tabRequests.get("audit")!==request)return;
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
     auditItems=items;
     renderAudit();
     loadedAt.set("audit",Date.now());
-  }catch(e){$("auditList").textContent="Ошибка: "+e.message;}
+  }catch(e){if(tabRequests.get("audit")!==request||currentUser?.uid!==uid)return;$("auditList").textContent="Ошибка: "+e.message;}
 }
 function renderAudit(){
   if(!canManage())return;
