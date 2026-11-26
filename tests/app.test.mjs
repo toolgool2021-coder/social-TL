@@ -1,3 +1,4 @@
+import {assertClean} from "../profanity-filter.mjs";
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -89,6 +90,7 @@ function harness(initialProfiles = {}) {
   const doc = (_db, ...parts) => parts.join('/');
   const snapshot = data => ({exists:() => data !== undefined, data:() => data});
   const context = vm.createContext({
+    assertClean,
     console: {info(){}, warn(){}, error(){}},
     setTimeout:(callback,delay) => { if (delay === 1100) queueMicrotask(callback); return 1; }, clearTimeout(){}, URL, Date,
     SOCIAL:{}, TRUSTED_HOSTS:[], location:{origin:'https://tlnexora.duckdns.org'},
