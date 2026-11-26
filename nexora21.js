@@ -150,12 +150,13 @@ function renderNotificationCenter(){
  const uid=me.uid;
  const version=panelVersion;
  const unread=notificationItems.filter(item=>item.data().read!==true);
- const visible=notificationFilter==="unread"?unread:notificationItems;
+ const visible=notificationFilter==="unread"?unread:notificationFilter==="all"?notificationItems:notificationItems.filter(item=>item.data().kind===notificationFilter);
  body.innerHTML=`
  <div class="nx21actions" style="margin-bottom:16px">
    <button type="button" data-nx-filter="all" aria-pressed="${notificationFilter==="all"}">Все (${notificationItems.length})</button>
    <button type="button" data-nx-filter="unread" aria-pressed="${notificationFilter==="unread"}">Непрочитанные (${unread.length})</button>
-   <button type="button" data-nx-read-all ${unread.length?"":"disabled"}>✓ Прочитать все</button>
+   <button type="button" data-nx-read-all ${unread.length?"":"disabled"}>✓ Прочитать все загруженные</button>
+   ${[["message","Сообщения"],["comment","Комментарии"],["follow","Подписки"],["like","Лайки"]].map(([kind,label])=>`<button type="button" data-nx-filter="${kind}" aria-pressed="${notificationFilter===kind}">${label}</button>`).join("")}
  </div>`+visible.map(item=>{
    const n=item.data();
    const kind={message:"✉",comment:"💬",follow:"♙",like:"♥"}[n.kind]||"✦";
@@ -334,17 +335,19 @@ async function unpinPost(){
 }
 
 async function markRead(id){
-  await updateDoc(doc(db,"users",me.uid,"notifications",id),{
-    read:true
-  });
-  if(panel==="notifications")await loadNotifications();
+  if(!me)return;
+  const uid=me.uid,version=panelVersion;
+  await updateDoc(doc(db,"users",uid,"notifications",id),{read:true});
+  if(me?.uid!==uid||panelVersion!==version||panel!=="notifications")return;
+  notificationItems=notificationItems.map(item=>item.id===id?{id:item.id,data:()=>({...item.data(),read:true})}:item);
+  renderNotificationCenter();
 }
 
 document.addEventListener("click",async event=>{
   if(!me)return;
   const button=event.target.closest(
     "[data-nx-save],[data-nx-unsave],[data-nx-report],"+
-    "[data-nx-pin],[data-nx-unpin],[data-nx-read]"
+    "[data-nx-pin],[data-nx-unpin],[data-nx-read],[data-nx-filter],[data-nx-read-all]"
   );
   if(!button||button.disabled)return;
 
@@ -363,7 +366,7 @@ document.addEventListener("click",async event=>{
       else if(button.hasAttribute("data-nx-unpin"))
         await unpinPost();
       else if(button.hasAttribute("data-nx-filter")){
-        notificationFilter=button.dataset.nxFilter==="unread"?"unread":"all";
+        notificationFilter=["all","unread","message","comment","follow","like"].includes(button.dataset.nxFilter)?button.dataset.nxFilter:"all";
         renderNotificationCenter();
       }
       else if(button.hasAttribute("data-nx-read-all"))
