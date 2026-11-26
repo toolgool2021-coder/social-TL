@@ -144,6 +144,8 @@ async function loadSaved(version=panelVersion){
 function renderNotificationCenter(){
  if(panel!=="notifications")return;
  const body=$("nx21body");
+ const uid=me.uid;
+ const version=panelVersion;
  const unread=notificationItems.filter(item=>item.data().read!==true);
  const visible=notificationFilter==="unread"?unread:notificationItems;
  body.innerHTML=`
@@ -186,10 +188,12 @@ async function markAllNotifications(){
  const unread=notificationItems.filter(item=>item.data().read!==true);
  if(!unread.length)return;
  const batch=writeBatch(db);
- unread.forEach(item=>batch.update(doc(db,"users",me.uid,"notifications",item.id),{read:true}));
+ unread.forEach(item=>batch.update(doc(db,"users",uid,"notifications",item.id),{read:true}));
  await batch.commit();
+ if(me?.uid!==uid||panelVersion!==version||panel!=="notifications")return;
+ const readIds=new Set(unread.map(item=>item.id));
  notificationItems=notificationItems.map(item=>
-   unread.some(u=>u.id===item.id)
+   readIds.has(item.id)
      ?{id:item.id,data:()=>({...item.data(),read:true})}:item);
  renderNotificationCenter();
 }
