@@ -68,3 +68,57 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
  html{scroll-behavior:auto}
  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Studio: shared visual system, existing controls and state remain intact. */
+:root{--nx-bg:#101315;--nx-surface:#191e21;--nx-card:#191e21;--nx-line:#30383c;--nx-border:#30383c;--nx-ink:#edf4f2;--nx-muted:#a3b3b1;--nx-primary:#5ee3c2;--nx-blue:#5ee3c2;--nx-violet:#91c9bd;--nx-shadow:none}
+html{scrollbar-color:#52635f #101315}
+body{background:#101315!important;color:#edf4f2}
+body::before,.ambient{display:none!important}
+body .glass,body .panel,body .card,body .rx-card,body .nx21item{background:#191e21!important;border:1px solid #30383c!important;border-radius:16px!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body .glass:hover,body .card:hover{box-shadow:none!important}
+body button,body .button{border-radius:10px!important}
+body button.primary,body .primary:not(input):not(textarea),body .rx-primary{background:#5ee3c2!important;color:#10251f!important;border-color:transparent!important;box-shadow:none!important}
+body input:not([type=checkbox]):not([type=radio]):not([type=range]),body textarea,body select{background:#111719!important;color:#edf4f2!important;border-color:#39464a!important;border-radius:10px!important}
+body input:focus,body textarea:focus,body select:focus{border-color:#5ee3c2!important;box-shadow:0 0 0 2px #5ee3c233!important}
+body .muted,body .small{color:#a3b3b1}
+body .nav button.active,body .tabs button.active,body .person.active{background:#24423b!important;color:#a0f5df!important;border-color:#38685b!important}
+body .nav .active::before,body .tabs .active::before{background:#5ee3c2!important;box-shadow:none!important}
+body .topbar,body[data-nx-page] header{background:#151a1c!important;border-color:#30383c!important;backdrop-filter:none!important}
+body .topbar{box-shadow:none!important}
+body .layout{grid-template-columns:210px minmax(0,780px) 240px;gap:16px}
+body .sidebar .nav{gap:4px}
+body .sidebar .nav button,body .sidebar .nav a{min-height:42px;font-size:13px}
+body .sidebar .nav [data-page=feed]{order:-10}
+body .sidebar .nav [data-nx-inbox-link]{order:-9}
+body .sidebar .nav [data-page=search]{order:-8}
+body .sidebar .nav [data-page=profile]{order:-7}
+body .sidebar .nav [data-nx-panel=notifications]{order:-6}
+body .sidebar .nav [data-page=settings]{order:10}
+body .sidebar .nav .owner-nav{order:11}
+body #feedList,body #profilePosts{gap:10px}
+body .nx-official-cover{max-height:140px;object-fit:cover}
+body .profilebody{padding-top:12px}
+body .nx-settings-section{border-top:1px solid #30383c;padding-top:14px}
+body[data-nx-page=chats] .chathead{display:flex;flex-wrap:wrap;gap:6px;background:#151a1c!important}
+body[data-nx-page=chats] .peerinfo{flex:1 1 45%;min-width:0}
+body[data-nx-page=chats] .chathead .iconbtn{min-width:36px;min-height:36px}
+body[data-nx-page=chats] .sidehead{padding:16px}
+body[data-nx-page=chats] .composer-area{background:#151a1c!important}
+body[data-nx-page=chats] #sidebar .footer{border-top:1px solid #30383c}
+body[data-nx-page=groups] .tabs,body[data-nx-page=explore] .tabs,body[data-nx-page=owner] .tabs{display:flex;flex-wrap:wrap;gap:6px!important;padding:8px;background:#151a1c;border:1px solid #30383c;border-radius:12px}
+body[data-nx-page=groups] #newBtn{margin-inline-start:auto}
+body[data-nx-page=owner] .toolbar{display:flex;flex-wrap:wrap;gap:8px}
+body[data-nx-page=owner] .toolbar input{flex:1 1 220px;min-width:0}
+body[data-nx-page=owner] .stat{border-top:3px solid #5ee3c2!important}
+@media(min-width:761px) and (max-width:1190px){body .layout{grid-template-columns:190px minmax(0,1fr)}}
+@media(max-width:760px){
+ body .layout{display:flex;flex-direction:column;padding:12px 10px calc(150px + env(safe-area-inset-bottom));gap:10px}
+ body .layout>.sidebar{position:fixed!important;top:auto!important;bottom:0;left:0;right:0;width:100%;z-index:80;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0!important;background:#151a1c!important}
+ body .sidebar .nav{display:grid!important;grid-auto-flow:column;grid-template-rows:repeat(2,44px);grid-auto-columns:minmax(112px,1fr);overflow-x:auto;gap:4px;scrollbar-width:thin}
+ body .sidebar .nav button,body .sidebar .nav a{width:100%;min-width:0;padding:6px;font-size:11px;white-space:normal;line-height:1.15;justify-content:center;text-align:center}
+ body .sidebar .nx-inbox-hint{font-size:10px;margin:3px 0;text-align:center}
+ body .layout>main{width:100%}
+ body .panel{padding:14px}
+ body[data-nx-page=chats] .chathead .peerinfo{flex-basis:45%}
+ body[data-nx-page=groups] #newBtn{margin-inline-start:0}
+}
