@@ -178,7 +178,7 @@ textarea{min-height:145px;resize:vertical}
 <link rel="stylesheet" href="./nexora-aurora.css?v=studio2">
 <link rel="stylesheet" href="./nexora-explore-v4.css?v=1">
   <script type="module" src="./suspension-screen.js?v=2"></script>
-</head>
+<style>.explore-workspace{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:start}.explore-rail{position:sticky;top:80px}body[data-nx-page=explore] .explore-rail .tabs{display:flex;flex-direction:column;align-items:stretch;margin:0}.explore-rail button{justify-content:flex-start}.explore-content{min-width:0}.explore-content>.panel{margin-top:0}@media(max-width:760px){.explore-workspace{grid-template-columns:1fr}.explore-rail{position:static}body[data-nx-page=explore] .explore-rail .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}</style></head>
 <body data-nx-page="explore">
 
 <header>
@@ -194,7 +194,7 @@ textarea{min-height:145px;resize:vertical}
   Публикации, темы, рекомендации и черновики.
  </p>
 
- <nav class="tabs">
+ <div class="explore-workspace"><aside class="explore-rail"><nav class="tabs">
   <button class="active" data-tab="recommendations">
    ✦ Рекомендации
   </button>
@@ -205,7 +205,7 @@ textarea{min-height:145px;resize:vertical}
   <button data-tab="drafts">
    ◫ Черновики
   </button>
- </nav>
+ </nav></aside><div class="explore-content">
 
  <section id="recommendations" class="glass panel">
   <h2>Рекомендации</h2>
@@ -266,7 +266,7 @@ textarea{min-height:145px;resize:vertical}
   </h2>
   <div id="draftList"></div>
  </section>
-</main>
+</div></div></main>
 
 <div id="notice" hidden role="status"></div>
 
