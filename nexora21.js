@@ -168,6 +168,7 @@ function renderNotificationCenter(){
  }).join("")+(visible.length?"":'<p class="muted">Здесь пока нет уведомлений.</p>');
 }
 let notificationRequest=0;
+let notificationRefreshTimer=null;
 async function loadNotifications(version=panelVersion){
  if(!me)return;
  const uid=me.uid;
@@ -530,6 +531,7 @@ async function heartbeat(){
 
 function applyExtraAuth(user){
   notificationRequest++;
+  clearTimeout(notificationRefreshTimer);
   notificationItems=[];
   me=user?.emailVerified ? user : null;
   clearInterval(presenceTimer);
@@ -561,7 +563,11 @@ function applyExtraAuth(user){
         button.setAttribute("aria-label",button.title);
       }
       if(panel==="notifications"){
-        void loadNotifications(panelVersion);
+        clearTimeout(notificationRefreshTimer);
+        const version=panelVersion;
+        notificationRefreshTimer=setTimeout(()=>{
+          if(me?.uid===user.uid&&panel==="notifications"&&panelVersion===version)void loadNotifications(version);
+        },250);
       }
     },
     e=>console.warn("Notifications:",e)
