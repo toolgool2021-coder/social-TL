@@ -140,7 +140,7 @@ body[data-nx-page=owner] .toolbar select{width:auto;max-width:100%}
 body[data-nx-page=owner] .item{padding:16px 12px}
 body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
 @media(max-width:760px){body[data-nx-page=owner] main{padding:0 12px 40px}body[data-nx-page=owner] #dashboard:not(.hidden){grid-template-columns:minmax(0,1fr);gap:12px}.owner-rail{position:static;padding:10px}.owner-rail .rail-label,.owner-rail>.button{display:none}body[data-nx-page=owner] .owner-rail .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0}.owner-rail .tabs button{justify-content:center;font-size:12px}body[data-nx-page=owner] #dashboard>.mg-control{grid-column:1}}
-</style></head>
+</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style></head>
 <body data-nx-page="owner">
 
 <header>
@@ -520,22 +520,17 @@ function renderUsers(){
   });
 
   $("userInsights").textContent=`Показано ${filtered.length} из ${users.length} загруженных · Новых за 7 дней: ${users.filter(u=>(u.createdAt?.toMillis?.()||0)>=Date.now()-7*86400000).length} · Активных блокировок: ${users.filter(u=>(u.bannedUntil?.toMillis?.()||0)>Date.now()).length}`;
-  $("usersList").innerHTML=filtered.map(u=>{
+  $("usersList").innerHTML=filtered.length?`<div class="owner-table-scroll"><table class="owner-table"><thead><tr><th>Аккаунт</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${filtered.map(u=>{
     const v=Number(u.verification||0);
     const badge=v>=1&&v<=6&&(!u.verificationExpiresAt||u.verificationExpiresAt.toMillis?.()>Date.now())
       ?`<img class="badge" src="./image/Verified_${v}.png" alt="">`
       :"";
 
-    return `<div class="item">
-      <div class="item-main">
-        <strong>${userAvatar(u)} ${esc(u.name||"Без имени")} ${badge}</strong>
+    return `<tr><td><div class="owner-identity">${userAvatar(u)}<div><strong>${esc(u.name||"Без имени")} ${badge}</strong>
         <p class="uid">${esc(u.uid)}</p>
         ${u.username?`<p class="uid">@${esc(u.username)}</p>`:""}
-        <span class="pill">${esc(roleName(u.role))}</span>${u.bannedUntil?.toMillis?.()>Date.now()?` <span class="pill" style="color:#ffb4bd;background:#80374b55">Заблокирован до ${esc(date(u.bannedUntil))}</span>`:""}
-      </div>
-      <button data-edit="${esc(u.uid)}">Управлять</button>
-    </div>`;
-  }).join("")||'<p class="muted">Ничего не найдено.</p>';
+        </div></div></td><td><span class="pill">${esc(roleName(u.role))}</span></td><td>${u.bannedUntil?.toMillis?.()>Date.now()?`<span class="pill" style="color:#ffb4bd;background:#80374b55">До ${esc(date(u.bannedUntil))}</span>`:"Активен"}</td><td><button data-edit="${esc(u.uid)}">Управлять</button></td></tr>`;
+  }).join("")}</tbody></table></div>`:'<p class="muted">Ничего не найдено.</p>';
 }
 
 $("search").oninput=renderUsers;
