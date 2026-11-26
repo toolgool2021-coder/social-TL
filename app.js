@@ -977,9 +977,13 @@ function listenFeed() {
       collection(db, "users", uid, "likes"),
       snapshot => {
         if (!active()) return;
-        likes = {};
+        const nextLikes = Object.create(null);
+        snapshot.forEach(item => { nextLikes[item.id] = true; });
+        const previousKeys = Object.keys(likes);
+        const changed = Boolean(likesError) || previousKeys.length !== Object.keys(nextLikes).length || previousKeys.some(id => !nextLikes[id]);
+        likes = nextLikes;
         likesError = "";
-        snapshot.forEach(item => { likes[item.id] = true; });
+        if (!changed) return;
         if (feedStatus === "ready") renderFeed();
         if (currentPage === "profile") renderProfilePosts();
       },
