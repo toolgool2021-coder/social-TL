@@ -403,10 +403,10 @@ function selectTab(name){
     button.classList.toggle("active",button.dataset.tab===name);
   });
 
-  if(name==="users"&&!fresh(name))loadUsers();
-  if(name==="reports"&&!fresh(name))loadReports();
-  if(name==="verification"&&!fresh(name))loadVerification();
-  if(name==="audit"&&!fresh(name))loadAudit();
+  if(name==="users"&&!fresh(name)&&!tabRequests.has(name))loadUsers();
+  if(name==="reports"&&!fresh(name)&&!tabRequests.has(name))loadReports();
+  if(name==="verification"&&!fresh(name)&&!tabRequests.has(name))loadVerification();
+  if(name==="audit"&&!fresh(name)&&!tabRequests.has(name))loadAudit();
 }
 
 document.querySelectorAll("[data-tab]").forEach(button=>{
@@ -476,6 +476,7 @@ async function loadUsers(){
   }catch(e){if(tabRequests.get("users")!==request||currentUser?.uid!==uid)return;
     $("usersList").textContent="Ошибка: "+e.message;
   }
+  finally{if(tabRequests.get("users")===request)tabRequests.delete("users");}
 }
 
 function renderUsers(){
@@ -666,6 +667,7 @@ async function loadReports(){
   }catch(e){if(tabRequests.get("reports")!==request||currentUser?.uid!==uid)return;
     $("reportsList").textContent="Ошибка: "+e.message;
   }
+  finally{if(tabRequests.get("reports")===request)tabRequests.delete("reports");}
 }
 
 $("reloadReports").onclick=loadReports;
@@ -757,6 +759,7 @@ async function loadVerification(){
   }catch(e){if(tabRequests.get("verification")!==request||currentUser?.uid!==uid)return;
     $("verificationList").textContent="Ошибка: "+e.message;
   }
+  finally{if(tabRequests.get("verification")===request)tabRequests.delete("verification");}
 }
 
 $("reloadVerification").onclick=loadVerification;
@@ -831,6 +834,7 @@ async function loadAudit(){
     renderAudit();
     loadedAt.set("audit",Date.now());
   }catch(e){if(tabRequests.get("audit")!==request||currentUser?.uid!==uid)return;$("auditList").textContent="Ошибка: "+e.message;}
+  finally{if(tabRequests.get("audit")===request)tabRequests.delete("audit");}
 }
 function renderAudit(){
   if(!canManage())return;
