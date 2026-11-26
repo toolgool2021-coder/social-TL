@@ -571,13 +571,6 @@ function applyExtraAuth(user){
         button.setAttribute("aria-label",button.title);
       }
       if(panel==="notifications"){
-        const changes=snap.docChanges();
-        if(changes.length&&changes.every(change=>change.type==="removed")){
-          const ids=new Set(changes.map(change=>change.doc.id));
-          notificationItems=notificationItems.map(item=>ids.has(item.id)?{id:item.id,data:()=>({...item.data(),read:true})}:item);
-          renderNotificationCenter();
-          return;
-        }
         clearTimeout(notificationRefreshTimer);
         const version=panelVersion;
         notificationRefreshTimer=setTimeout(()=>{
