@@ -375,7 +375,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 @keyframes rx-pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){#nxRandomizer .rx-wheel,#nxRandomizer .rx-reel{transition-duration:.01ms}}
 </style>  <link rel="stylesheet" href="./visual-refresh.css?v=5">
-  <link rel="stylesheet" href="./nexora-aurora.css?v=1">
+  <link rel="stylesheet" href="./nexora-aurora.css?v=studio2">
 <style>
 .nx-inbox-badge{margin-left:auto;min-width:21px;height:21px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:linear-gradient(135deg,#658fff,#8c75e8);color:white;font-size:11px;font-weight:800;box-shadow:0 0 15px #6c8bff55}
 .nx-inbox-badge[hidden]{display:none!important}
@@ -541,54 +541,42 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar glass">
       <nav class="nav" aria-label="Основная навигация">
-        <button type="button" data-page="feed" class="active">
+<button type="button" data-page="feed" class="active">
           ⌂ <span>Главная</span>
         </button>
-
-        <a href="./explore.html">
-          ✦ <span>Рекомендации</span>
-        </a>
-
-        <button type="button" data-stream="community">☷ <span>Лента сообщества</span></button>
-
-        <button type="button" data-page="search">
-          ⌕ <span>Поиск</span>
-        </button>
-
-        <a href="./chats.html" data-nx-inbox-link title="Открыть личные сообщения">
+<a href="./chats.html" data-nx-inbox-link title="Открыть личные сообщения">
           ✉ <span>Сообщения</span> <span id="nxInboxBadge" class="nx-inbox-badge" hidden aria-live="polite">0</span>
         </a>
-
-        <a href="./groups.html">
-          ◈ <span>Кланы и сообщества</span>
-        </a>
-
-        <button type="button" id="nxRandomizerNav">◇ <span>Рандомайзер</span></button>
-
-        <button type="button" data-page="profile">
+<button type="button" data-page="search">
+          ⌕ <span>Поиск</span>
+        </button>
+<button type="button" data-page="profile">
           ♙ <span>Мой профиль</span>
         </button>
-
-        <button type="button" data-nx-panel="saved">
-          ☆ <span>Сохранённое</span>
-        </button>
-
-        <button type="button" data-nx-panel="notifications">
+<button type="button" data-nx-panel="notifications">
           ♢ <span>Уведомления</span>
         </button>
-
-        <button type="button" data-nx-panel="verification">
+<a href="./explore.html">
+          ✦ <span>Рекомендации</span>
+        </a>
+<button type="button" data-stream="community">☷ <span>Лента сообщества</span></button>
+<a href="./groups.html">
+          ◈ <span>Кланы и сообщества</span>
+        </a>
+<button type="button" id="nxRandomizerNav">◇ <span>Рандомайзер</span></button>
+<button type="button" data-nx-panel="saved">
+          ☆ <span>Сохранённое</span>
+        </button>
+<button type="button" data-nx-panel="verification">
           ✓ <span>Верификация</span>
         </button>
-
-        <button type="button" data-page="settings">
+<button type="button" data-page="settings">
           ⚙ <span>Настройки</span>
         </button>
-
-        <a id="ownerButton" href="./owner.html" class="hidden owner-nav">
+<a id="ownerButton" href="./owner.html" class="hidden owner-nav">
           🛡 <span>Панель управления</span>
         </a>
-      </nav>
+</nav>
       <div class="nx-inbox-hint" id="nxInboxHint" aria-live="polite">Все сообщения прочитаны</div>
     </aside>
 
