@@ -468,7 +468,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 @media(prefers-reduced-motion:reduce){#nxLoadingScreen *,#nxLoadingScreen *::before{animation:none!important}}
 </style>
 
-<style>.studio-icon{width:20px;height:20px;flex:none} @media(max-width:760px){body #studioNav .studio-icon{width:22px;height:22px}body #studioNav>button,body #studioNav>a{font-size:10px}body #studioNav [data-page=profile]>span{font-size:10px}}</style><style>@media(max-width:760px){body .sidebar #studioNav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:none;grid-auto-flow:row;grid-auto-columns:auto;overflow:visible;gap:4px}body .layout>.sidebar{position:static!important;order:-1;width:100%;border-radius:14px!important}body #studioNav>button,body #studioNav>a{min-height:48px;flex-direction:column;gap:4px;font-size:11px;order:0!important}body .layout{padding-bottom:24px}body #nx21notice{bottom:24px}}</style><style>.studio-feed-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px}.studio-feed-heading h2{margin:4px 0;font-size:25px}.studio-feed-heading small{color:#5ee3c2;letter-spacing:.12em;font-size:10px}.studio-feed-heading a{font-size:12px}.studio-media{border:1px solid #39464a;border-radius:12px;padding:12px}.studio-media summary{cursor:pointer;color:#a0f5df}.studio-media[open] summary{margin-bottom:12px}.studio-media input,.studio-media textarea,.studio-media select{margin:8px 0}.studio-media label{display:block;margin-top:8px}</style></head>
+<style>.studio-icon{width:20px;height:20px;flex:none} @media(max-width:760px){body #studioNav .studio-icon{width:22px;height:22px}body #studioNav>button,body #studioNav>a{font-size:10px}body #studioNav [data-page=profile]>span{font-size:10px}}</style><style>@media(max-width:760px){body .sidebar #studioNav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:none;grid-auto-flow:row;grid-auto-columns:auto;overflow:visible;gap:4px}body .layout>.sidebar{position:static!important;order:-1;width:100%;border-radius:14px!important}body #studioNav>button,body #studioNav>a{min-height:48px;flex-direction:column;gap:4px;font-size:11px;order:0!important}body .layout{padding-bottom:24px}body #nx21notice{bottom:24px}}</style><style>.studio-feed-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px}.studio-feed-heading h2{margin:4px 0;font-size:25px}.studio-feed-heading small{color:#5ee3c2;letter-spacing:.12em;font-size:10px}.studio-feed-heading a{font-size:12px}.studio-media{border:1px solid #39464a;border-radius:12px;padding:12px}.studio-media summary{cursor:pointer;color:#a0f5df}.studio-media[open] summary{margin-bottom:12px}.studio-media input,.studio-media textarea,.studio-media select{margin:8px 0}.studio-media label{display:block;margin-top:8px}</style><style>.studio-profile-body{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px}.studio-profile-identity{min-width:0}.studio-profile-body #profileControls{align-self:end}.studio-profile-about,.studio-profile-body .stats{grid-column:1/-1}.studio-profile-about{padding:16px;border:1px solid #30383c;border-radius:12px}.studio-profile-about small{font-size:10px;letter-spacing:.12em;color:#a0b2b6}.studio-profile-body .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.studio-profile-body .stats>span{padding:12px;background:#111719;border-radius:10px}.studio-swatches{display:flex;flex-wrap:wrap;gap:10px}.studio-swatches button{width:38px;height:38px;padding:0;border-radius:50%;background:var(--swatch)!important;border:2px solid #ffffff40}.studio-swatches button[aria-pressed=true]{outline:2px solid white;outline-offset:3px}@media(max-width:600px){.studio-profile-body{grid-template-columns:1fr}.studio-profile-body #profileControls{width:100%}}</style></head>
 
 <body>
 
@@ -736,7 +736,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
             aria-label="Обложка профиля"
           ></div>
 
-          <div class="profilebody">
+          <div class="profilebody studio-profile-body"><div class="studio-profile-identity">
             <div id="profileAvatar" class="avatar large">
               N
             </div>
@@ -744,7 +744,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
             <div id="profileName" class="profilename"></div>
             <div id="profileHandle" class="muted"></div>
 
-            <p id="profileBio"></p>
+            </div><div id="profileControls" class="buttons"></div><div class="studio-profile-about"><small>О СЕБЕ</small><p id="profileBio"></p><div id="profileLinks"></div></div>
 
             <div class="stats">
               <span>
@@ -758,12 +758,11 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
               </span>
             </div>
 
-            <div id="profileLinks"></div>
-            <div id="profileControls" class="buttons"></div>
+
           </div>
         </div>
 
-        <div id="profilePosts"></div>
+        <div class="studio-feed-heading"><h2>Публикации профиля</h2></div><div id="profilePosts"></div>
       </section>
 
       <!-- SETTINGS -->
@@ -841,7 +840,7 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
             <label for="settingsAccent">Акцентный цвет профиля</label>
             <div class="row" style="display:flex;gap:12px;align-items:center">
               <input id="settingsAccent" type="color" value="#638dff" aria-label="Выбрать цвет" style="width:62px;height:48px;padding:4px;cursor:pointer">
-              <button type="button" id="nxAccentReset" class="quiet">Стандартный цвет</button>
+              <button type="button" id="nxAccentReset" class="quiet">Стандартный цвет</button></div><div class="studio-swatches" aria-label="Готовые цвета"><button type="button" data-profile-color="#638dff" style="--swatch:#638dff" aria-label="Цвет #638dff" title="#638dff"></button><button type="button" data-profile-color="#5ee3c2" style="--swatch:#5ee3c2" aria-label="Цвет #5ee3c2" title="#5ee3c2"></button><button type="button" data-profile-color="#e6b86c" style="--swatch:#e6b86c" aria-label="Цвет #e6b86c" title="#e6b86c"></button><button type="button" data-profile-color="#c084fc" style="--swatch:#c084fc" aria-label="Цвет #c084fc" title="#c084fc"></button><button type="button" data-profile-color="#f472b6" style="--swatch:#f472b6" aria-label="Цвет #f472b6" title="#f472b6"></button><button type="button" data-profile-color="#94a3b8" style="--swatch:#94a3b8" aria-label="Цвет #94a3b8" title="#94a3b8"></button></div><div hidden>
             </div>
             <small class="nx-field-help">Цвет будет виден другим пользователям после сохранения профиля.</small>
             <div class="nx-settings-section" style="margin:15px 0 0">
@@ -1108,5 +1107,5 @@ html.nx-booting #nxLoadingScreen{background:radial-gradient(ellipse at 50% 40%,#
 
 <script type="module" src="./randomizer-integrated.js?v=14"></script>
   
-</body>
+<script>(()=>{const input=document.getElementById("settingsAccent");const buttons=document.querySelectorAll("[data-profile-color]");function sync(){buttons.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.profileColor===input.value)))}buttons.forEach(b=>b.addEventListener("click",()=>{input.value=b.dataset.profileColor;input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));sync()}));input.addEventListener("input",sync);sync()})();</script></body>
 </html>
