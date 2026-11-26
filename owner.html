@@ -140,7 +140,7 @@ body[data-nx-page=owner] .toolbar select{width:auto;max-width:100%}
 body[data-nx-page=owner] .item{padding:16px 12px}
 body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
 @media(max-width:760px){body[data-nx-page=owner] main{padding:0 12px 40px}body[data-nx-page=owner] #dashboard:not(.hidden){grid-template-columns:minmax(0,1fr);gap:12px}.owner-rail{position:static;padding:10px}.owner-rail .rail-label,.owner-rail>.button{display:none}body[data-nx-page=owner] .owner-rail .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0}.owner-rail .tabs button{justify-content:center;font-size:12px}body[data-nx-page=owner] #dashboard>.mg-control{grid-column:1}}
-</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style><style>.owner-overview #ownerDistribution{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.owner-meter>div{display:flex;justify-content:space-between;gap:8px}.owner-meter progress{width:100%;height:8px;accent-color:#5ee3c2}.owner-meter b{font-variant-numeric:tabular-nums}@media(max-width:760px){.owner-overview #ownerDistribution{grid-template-columns:1fr}}</style></head>
+</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style><style>.owner-overview #ownerDistribution{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.owner-meter>div{display:flex;justify-content:space-between;gap:8px}.owner-meter progress{width:100%;height:8px;accent-color:#5ee3c2}.owner-meter b{font-variant-numeric:tabular-nums}@media(max-width:760px){.owner-overview #ownerDistribution{grid-template-columns:1fr}}</style><style>.owner-account-heading{padding:16px;background:#111719;border-radius:12px;margin-bottom:16px}.owner-account-heading small{color:#a3b3b1;letter-spacing:.12em}.owner-account-heading h3{font-size:22px;margin:6px 0}.owner-editor-section{padding:16px;border:1px solid #30383c;border-radius:12px;margin-bottom:16px}.owner-sanctions{border-color:#75434a;background:#40232a22}.owner-sanctions h3{color:#ffb5bf}#editor>.actions{justify-content:flex-end}#editor .toolbar{border-bottom:1px solid #30383c;padding-bottom:12px}</style></head>
 <body data-nx-page="owner">
 
 <header>
@@ -248,8 +248,8 @@ body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
         <button id="closeEditor">✕</button>
       </div>
 
-      <h3 id="selectedName"></h3>
-      <p id="selectedUid" class="uid"></p>
+      <div class="owner-account-heading"><small>ВЫБРАННЫЙ АККАУНТ</small><h3 id="selectedName"></h3>
+      <p id="selectedUid" class="uid"></p></div><div class="owner-editor-section"><h3>Права и идентификация</h3>
 
       <div class="form-grid">
         <label>
@@ -280,7 +280,7 @@ body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
         Роль Owner нельзя назначить через эту панель.
       </p>
 
-      <div class="form-grid"><label>Блокировка аккаунта<select id="banDuration"><option value="0">Нет блокировки / разблокировать</option><option value="1">1 час</option><option value="24">24 часа</option><option value="168">7 дней</option><option value="720">30 дней</option><option value="876000">Бессрочно (100 лет)</option></select></label><label>Причина блокировки<input id="banReason" maxlength="300" placeholder="Например: спам или нарушение правил"></label></div><p class="muted">Блокировка вступает в силу после публикации обновлённых правил Firestore. Блокировка Firebase Auth не удаляет аккаунт.</p><div class="actions"><button id="saveBan" class="danger">Применить блокировку</button></div>
+      </div><div class="owner-editor-section owner-sanctions"><h3>Ограничения аккаунта</h3><div class="form-grid"><label>Блокировка аккаунта<select id="banDuration"><option value="0">Нет блокировки / разблокировать</option><option value="1">1 час</option><option value="24">24 часа</option><option value="168">7 дней</option><option value="720">30 дней</option><option value="876000">Бессрочно (100 лет)</option></select></label><label>Причина блокировки<input id="banReason" maxlength="300" placeholder="Например: спам или нарушение правил"></label></div><p class="muted">Блокировка вступает в силу после публикации обновлённых правил Firestore. Блокировка Firebase Auth не удаляет аккаунт.</p><div class="actions"><button id="saveBan" class="danger">Применить блокировку</button></div></div>
       <div class="actions">
         <button id="saveUser" class="primary">Сохранить</button>
         <button id="cancelEditor">Отмена</button>
