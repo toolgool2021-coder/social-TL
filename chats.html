@@ -920,6 +920,8 @@ $("pinConversation").onclick=()=>{
 $("archiveConversation").onclick=()=>changeChatPreference("archived",!(chatPreferences.get(activeChat())?.archived));
 $("muteConversation").onclick=()=>changeChatPreference("muted",!(chatPreferences.get(activeChat())?.muted));
 
+let chatRenderQueued=false;
+function scheduleChatRender(){if(chatRenderQueued)return;chatRenderQueued=true;requestAnimationFrame(()=>{chatRenderQueued=false;renderChats()})}
 function syncUnreadMessageListeners(){
   if(!me)return;
   // Limit expensive per-conversation listeners; chat list itself stays complete.
@@ -937,7 +939,7 @@ function syncUnreadMessageListeners(){
       const unread=snap.docs.some(d=>d.data().senderId===peer&&!d.data().readAt);
       if(unreadMessages.has(cid)&&unreadMessages.get(cid)===unread)return;
       unreadMessages.set(cid,unread);
-      renderChats();
+      scheduleChatRender();
     },err=>console.warn("Unread messages:",cid,err.message));
     stopUnreadMessages.set(cid,stop);
   }
@@ -1852,6 +1854,7 @@ $("message").addEventListener("keydown",event=>{
 
 async function setTyping(value){
   if(!me||!activeUid||!chatReady)return;
+  if(value&&document.visibilityState==="hidden")return;
   if(typingActive===value&&(!value||Date.now()-lastTypingSent<3000))return;
 
   const cid=activeChat();
