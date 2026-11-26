@@ -183,7 +183,7 @@ label input,label select{margin-top:7px}
           <option value="staff">Команда</option>
           <option value="verified">Верифицированные</option>
           <option value="banned">Заблокированные</option>
-          <option value="regular">Обычные</option>
+          <option value="regular">Обычные</option><option value="unverified">Без бейджа</option><option value="expired">Просроченный бейдж</option><option value="recent">Новые за 7 дней</option>
         </select>
         <select id="userSort" aria-label="Сортировка пользователей">
           <option value="name">По имени</option>
@@ -193,7 +193,7 @@ label input,label select{margin-top:7px}
         <button id="exportUsers" type="button" title="Экспортировать только загруженные данные пользователей в CSV">↓ CSV</button>
         <button id="reloadUsers">Обновить</button>
       </div>
-      <div id="usersList">Загрузка...</div>
+      <p id="userInsights" class="muted" aria-live="polite"></p><div id="usersList">Загрузка...</div>
     </section>
 
     <section id="reportsTab" class="glass panel hidden">
@@ -220,7 +220,7 @@ label input,label select{margin-top:7px}
       <p class="muted">
         Здесь отображаются операции, записанные этой панелью.
       </p>
-      <div id="auditList"></div>
+      <div class="toolbar"><input id="auditSearch" placeholder="Поиск по действию, объекту или исполнителю"><button id="auditReset" type="button">Сбросить</button></div><p id="auditCount" class="muted"></p><div id="auditList"></div>
     </section>
 
     <section id="editor" class="glass panel hidden">
@@ -281,7 +281,7 @@ import {getAuth,onAuthStateChanged} from
 
 import {
   getFirestore,collection,doc,getDoc,getDocs,Timestamp,
-  query,limit,writeBatch,serverTimestamp
+  query,orderBy,limit,writeBatch,serverTimestamp
 } from
 "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
@@ -307,6 +307,7 @@ const $=id=>document.getElementById(id);
 let currentUser=null;
 let ownerVerified=false;
 let users=[];
+let auditItems=[];
 let selected=null;
 let toastTimer=null;
 let busy=false;
@@ -473,6 +474,9 @@ function renderUsers(){
     u.uid.toLowerCase().includes(term)
   ).filter(u=>{
     const filter=$("userFilter").value;
+    if(filter==="unverified")return !Number(u.verification||0);
+    if(filter==="expired")return Number(u.verification||0)>0&&Boolean(u.verificationExpiresAt)&&u.verificationExpiresAt.toMillis?.()<=Date.now();
+    if(filter==="recent")return (u.createdAt?.toMillis?.()||0)>=Date.now()-7*86400000;
     if(filter==="staff")return ["owner","admin","moderator"].includes(u.role);
     if(filter==="verified")return Number(u.verification||0)>0;
     if(filter==="banned")return (u.bannedUntil?.toMillis?.()||0)>Date.now();
@@ -485,6 +489,7 @@ function renderUsers(){
     return sort==="oldest"?time(a)-time(b):time(b)-time(a);
   });
 
+  $("userInsights").textContent=`Показано ${filtered.length} из ${users.length} загруженных · Новых за 7 дней: ${users.filter(u=>(u.createdAt?.toMillis?.()||0)>=Date.now()-7*86400000).length} · Активных блокировок: ${users.filter(u=>(u.bannedUntil?.toMillis?.()||0)>Date.now()).length}`;
   $("usersList").innerHTML=filtered.map(u=>{
     const v=Number(u.verification||0);
     const badge=v>=1&&v<=6&&(!u.verificationExpiresAt||u.verificationExpiresAt.toMillis?.()>Date.now())
@@ -784,12 +789,21 @@ async function loadAudit(){
   $("auditList").textContent="Загрузка...";
   try{
     const snap=await getDocs(query(
-      collection(db,"auditLogs"),limit(100)
+      collection(db,"auditLogs"),orderBy("createdAt","desc"),limit(100)
     ));
     const items=snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
-    $("auditList").innerHTML=items.map(item=>`
+    auditItems=items;
+    renderAudit();
+  }catch(e){$("auditList").textContent="Ошибка: "+e.message;}
+}
+function renderAudit(){
+  if(!canManage())return;
+  const term=$("auditSearch").value.trim().toLowerCase();
+  const items=auditItems.filter(item=>[item.action,item.targetId,item.actorId].some(value=>String(value||"").toLowerCase().includes(term)));
+  $("auditCount").textContent=`Показано ${items.length} из ${auditItems.length} последних записей`;
+  $("auditList").innerHTML=items.map(item=>`
       <div class="item">
         <div class="item-main">
           <strong>${esc(item.action||"Действие")}</strong>
@@ -805,11 +819,9 @@ async function loadAudit(){
         </div>
       </div>
     `).join("")||'<p class="muted">Записей нет.</p>';
-  }catch(e){
-    $("auditList").textContent="Ошибка: "+e.message;
-  }
 }
-
+$("auditSearch").oninput=renderAudit;
+$("auditReset").onclick=()=>{$("auditSearch").value="";renderAudit()};
 $("reloadAudit").onclick=loadAudit;
 window.addEventListener("nexora:email-verified", () => location.reload());
 </script>
