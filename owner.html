@@ -140,7 +140,7 @@ body[data-nx-page=owner] .toolbar select{width:auto;max-width:100%}
 body[data-nx-page=owner] .item{padding:16px 12px}
 body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
 @media(max-width:760px){body[data-nx-page=owner] main{padding:0 12px 40px}body[data-nx-page=owner] #dashboard:not(.hidden){grid-template-columns:minmax(0,1fr);gap:12px}.owner-rail{position:static;padding:10px}.owner-rail .rail-label,.owner-rail>.button{display:none}body[data-nx-page=owner] .owner-rail .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0}.owner-rail .tabs button{justify-content:center;font-size:12px}body[data-nx-page=owner] #dashboard>.mg-control{grid-column:1}}
-</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style><style>.owner-overview #ownerDistribution{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.owner-meter>div{display:flex;justify-content:space-between;gap:8px}.owner-meter progress{width:100%;height:8px;accent-color:#5ee3c2}.owner-meter b{font-variant-numeric:tabular-nums}@media(max-width:760px){.owner-overview #ownerDistribution{grid-template-columns:1fr}}</style><style>.owner-account-heading{padding:16px;background:#111719;border-radius:12px;margin-bottom:16px}.owner-account-heading small{color:#a3b3b1;letter-spacing:.12em}.owner-account-heading h3{font-size:22px;margin:6px 0}.owner-editor-section{padding:16px;border:1px solid #30383c;border-radius:12px;margin-bottom:16px}.owner-sanctions{border-color:#75434a;background:#40232a22}.owner-sanctions h3{color:#ffb5bf}#editor>.actions{justify-content:flex-end}#editor .toolbar{border-bottom:1px solid #30383c;padding-bottom:12px}</style></head>
+</style><style>.owner-table-scroll{overflow-x:auto}.owner-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}.owner-table th{background:#111719;color:#a3b3b1;font-weight:600;white-space:nowrap}.owner-table td,.owner-table th{padding:12px;border-bottom:1px solid #30383c;vertical-align:middle}.owner-identity{display:flex;align-items:center;gap:10px}.owner-identity p{margin:2px 0}.owner-table td:last-child{text-align:right}.owner-table tr:hover td{background:#ffffff04}@media(max-width:760px){.owner-table{min-width:570px}.owner-table td,.owner-table th{padding:9px}}</style><style>.owner-overview #ownerDistribution{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.owner-meter>div{display:flex;justify-content:space-between;gap:8px}.owner-meter progress{width:100%;height:8px;accent-color:#5ee3c2}.owner-meter b{font-variant-numeric:tabular-nums}@media(max-width:760px){.owner-overview #ownerDistribution{grid-template-columns:1fr}}</style><style>.owner-account-heading{padding:16px;background:#111719;border-radius:12px;margin-bottom:16px}.owner-account-heading small{color:#a3b3b1;letter-spacing:.12em}.owner-account-heading h3{font-size:22px;margin:6px 0}.owner-editor-section{padding:16px;border:1px solid #30383c;border-radius:12px;margin-bottom:16px}.owner-sanctions{border-color:#75434a;background:#40232a22}.owner-sanctions h3{color:#ffb5bf}#editor>.actions{justify-content:flex-end}#editor .toolbar{border-bottom:1px solid #30383c;padding-bottom:12px}</style><style>.report-summary{padding:12px;background:#111719;border-radius:10px;margin-bottom:12px}.report-ticket{margin:12px 0;border:1px solid #30383c!important;border-radius:12px;padding:16px!important}.report-ticket[data-report-status=pending]{border-left:3px solid #e6b86c!important}.report-ticket[hidden]{display:none!important}.audit-event{position:relative;margin-left:10px;padding-left:24px!important;border-left:2px solid #39464a}.audit-event:before{content:"";position:absolute;left:-6px;top:24px;width:10px;height:10px;background:#5ee3c2;border-radius:50%}.audit-event details{background:#111719;padding:10px;border-radius:8px}</style></head>
 <body data-nx-page="owner">
 
 <header>
@@ -220,7 +220,7 @@ body[data-nx-page=owner] .item:nth-child(even){background:#ffffff03}
         <h2 style="flex:1">Жалобы</h2>
         <button id="reloadReports">Обновить</button>
       </div>
-      <div id="reportsList"></div>
+      <div id="reportSummary" class="report-summary"></div><label>Статус жалобы<select id="reportFilter"><option value="all">Все</option><option value="pending">На рассмотрении</option><option value="resolved">Решённые</option><option value="dismissed">Отклонённые</option></select></label><div id="reportsList"></div>
     </section>
 
     <section id="verificationTab" class="glass panel hidden">
@@ -657,14 +657,15 @@ async function loadReports(){
       r=>r.status==="pending"
     ).length;
 
+    $("reportSummary").textContent=`Загружено: ${items.length} · Ожидают: ${items.filter(r=>r.status==="pending").length}`;
     $("reportsList").innerHTML=items.map(r=>`
-      <div class="item">
+      <article class="item report-ticket" data-report-status="${esc(r.status||"pending")}">
         <div class="item-main">
           <strong>Жалоба: ${esc(r.kind||"объект")}</strong>
           <p>${esc(r.reason||"Без причины")}</p>
           <p class="uid">Объект: ${esc(r.targetId||"")}</p>
           <p class="uid">Заявитель: ${esc(r.reporterId||"")}</p>
-          <span class="pill">${esc(r.status||"pending")}</span>
+          <span class="pill">${esc(({pending:"На рассмотрении",resolved:"Решена",dismissed:"Отклонена"})[r.status]||r.status||"На рассмотрении")}</span>
           <p class="muted">${esc(date(r.createdAt))}</p>
         </div>
         ${r.status==="pending"?`
@@ -675,8 +676,9 @@ async function loadReports(){
                 Удалить публикацию
               </button>`:""}
           </div>`:""}
-      </div>
+      </article>
     `).join("")||'<p class="muted">Жалоб нет.</p>';
+    filterReports();
     loadedAt.set("reports",Date.now());
   }catch(e){if(tabRequests.get("reports")!==request||currentUser?.uid!==uid)return;
     $("reportsList").textContent="Ошибка: "+e.message;
@@ -684,6 +686,8 @@ async function loadReports(){
   finally{if(tabRequests.get("reports")===request)tabRequests.delete("reports");}
 }
 
+function filterReports(){const value=$("reportFilter").value;document.querySelectorAll("#reportsList .report-ticket").forEach(el=>el.hidden=value!=="all"&&el.dataset.reportStatus!==value)}
+$("reportFilter").onchange=filterReports;
 $("reloadReports").onclick=loadReports;
 
 $("reportsList").onclick=event=>execute(async()=>{
@@ -856,7 +860,7 @@ function renderAudit(){
   const items=auditItems.filter(item=>[item.action,item.targetId,item.actorId].some(value=>String(value||"").toLowerCase().includes(term)));
   $("auditCount").textContent=`Показано ${items.length} из ${auditItems.length} последних записей`;
   $("auditList").innerHTML=items.map(item=>`
-      <div class="item">
+      <div class="item audit-event">
         <div class="item-main">
           <strong>${esc(item.action||"Действие")}</strong>
           <p class="uid">Объект: ${esc(item.targetId||"")}</p>
