@@ -430,7 +430,18 @@ input:focus,textarea:focus{border-color:var(--accent)}
 <link rel="stylesheet" href="./nexora-unified.css?v=1">
 <link rel="stylesheet" href="./nexora-aurora.css?v=studio2">
   <script type="module" src="./suspension-screen.js?v=2"></script>
-</head>
+<style>
+body[data-nx-page=chats] .chathead{flex-wrap:nowrap!important;padding:12px 16px;gap:10px}
+body[data-nx-page=chats] .peerinfo{flex:1;min-width:0}
+.conversation-tools{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:6px 12px;border-bottom:1px solid #30383c;background:#151a1c}
+.conversation-tools .iconbtn{width:100%;height:34px;min-width:0;border-radius:8px!important}
+body[data-nx-page=chats] .chat-help{margin:0;padding:5px 12px;font-size:11px}
+body[data-nx-page=chats] .composer-area{padding:10px}
+body[data-nx-page=chats] .composer{display:flex;align-items:flex-end;gap:8px}
+body[data-nx-page=chats] .composer textarea{flex:1;min-width:0}
+body[data-nx-page=chats] .send{background:#5ee3c2!important;color:#10251f!important;border-radius:12px!important}
+@media(max-width:760px){body[data-nx-page=chats] .chathead{padding:8px 10px}.conversation-tools{padding:4px 8px}.conversation-tools .iconbtn{height:36px}}
+</style></head>
 <body data-nx-page="chats">
 <main class="app" id="app">
   <aside class="panel" id="sidebar">
@@ -461,13 +472,14 @@ input:focus,textarea:focus{border-color:var(--accent)}
         <div id="peer">Выбери диалог</div>
         <div id="status">Личные сообщения</div>
       </div>
+      <button id="toggleSearch" class="iconbtn" title="Поиск в переписке" aria-label="Поиск в переписке">⌕</button>
+    </div>
+    <div class="conversation-tools" aria-label="Управление диалогом">
       <button id="pinConversation" class="iconbtn" title="Закрепить чат" disabled>☆</button>
       <button id="archiveConversation" class="iconbtn" title="В архив" disabled>▣</button>
       <button id="muteConversation" class="iconbtn" title="Отключить уведомления" disabled>♧</button>
       <button id="blockConversation" class="iconbtn" title="Заблокировать пользователя" disabled>⛔</button>
       <button id="deleteConversation" class="iconbtn" title="Удалить чат только у себя" disabled>✕</button>
-      <button id="toggleSearch" class="iconbtn"
-        title="Поиск в переписке">⌕</button>
     </div>
 
     <div id="error" hidden></div>
